@@ -16,24 +16,24 @@ app.get("/player", (req, res) =>
 );
 
 // ─── Hex Grid Config ──────────────────────────────────────────────────────────
-const COLS = 34;
-const ROWS = 22;
+const COLS = 33;
+const ROWS = 28;
 
-// 6 starting positions on the borders (evenly spread)
+// 6 starting positions on the borders
 const START_POSITIONS = [
-  { q: 0,  r: 0  },  // top-left
-  { q: 17, r: 0  },  // top-center
-  { q: 33, r: 0  },  // top-right
-  { q: 33, r: 21 },  // bottom-right
-  { q: 17, r: 21 },  // bottom-center
-  { q: 0,  r: 21 },  // bottom-left
+  { q: 0,  r: 0  },
+  { q: 16, r: 0  },
+  { q: 32, r: 0  },
+  { q: 32, r: 27 },
+  { q: 16, r: 27 },
+  { q: 0,  r: 27 },
 ];
 
 function hexNeighbors(q, r) {
-  // Flat-top, odd-q offset DOWN
-  const dirs = (q % 2 === 0)
-    ? [[1,0],[-1,0],[1,-1],[-1,-1],[0,-1],[0,1]]
-    : [[1,0],[-1,0],[1,1],[-1,1],[0,-1],[0,1]];
+  // Pointy-top, odd-r offset RIGHT
+  const dirs = (r % 2 === 0)
+    ? [[-1,0],[1,0],[0,-1],[-1,-1],[0,1],[-1,1]]
+    : [[-1,0],[1,0],[0,-1],[1,-1],[0,1],[1,1]];
   return dirs
     .map(([dq, dr]) => ({ q: q + dq, r: r + dr }))
     .filter(n => n.q >= 0 && n.q < COLS && n.r >= 0 && n.r < ROWS);
