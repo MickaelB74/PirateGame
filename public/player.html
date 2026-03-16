@@ -120,23 +120,48 @@
       border-radius: 8px;
       overflow: hidden;
       border: 1px solid rgba(184,134,11,.3);
+      transition: all .3s ease;
+    }
+    /* Container that clips to the zoomed viewport */
+    #mapViewport {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 8px;
     }
     #miniMap {
       display: block;
+      /* width/height set dynamically to show full image scaled */
       width: 100%;
       height: auto;
-      max-height: 260px;
-      object-fit: cover;
-      object-position: center;
+      transition: transform .4s ease, transform-origin .4s ease;
+      transform-origin: 0 0;
     }
     #miniSvg {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
       pointer-events: all;
+      transition: transform .4s ease, transform-origin .4s ease;
+      transform-origin: 0 0;
     }
     .hex-clickable { cursor: pointer; }
     .hex-clickable:hover polygon { fill: rgba(255,200,50,.45) !important; }
+
+    /* Zoom label */
+    #zoomLabel {
+      position: absolute;
+      top: 6px; right: 8px;
+      background: rgba(0,0,0,.6);
+      color: #ffc832;
+      font-size: .68rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,200,50,.3);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    #zoomLabel.visible { opacity: 1; }
 
     /* Action buttons */
     .btn-action {
@@ -322,8 +347,11 @@
 
     <!-- Mini map for start picking / movement -->
     <div id="mapSection" style="display:none">
-      <img id="miniMap" src="/Map.jpg" alt="Carte" />
-      <svg id="miniSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="mapViewport">
+        <img id="miniMap" src="/Map.jpg" alt="Carte" />
+        <svg id="miniSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <span id="zoomLabel">🔍 Zone de déplacement</span>
+      </div>
     </div>
 
     <!-- End turn -->
@@ -354,20 +382,20 @@
   </div>
 
   <div class="slider-row">
-    <label>Rayon (HEX_R) <span id="vR">21.70</span>px</label>
-    <input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()">
+    <label>Rayon (HEX_R) <span id="vR">21.00</span>px</label>
+    <input type="range" id="sR" min="10" max="50" step="0.1" value="21" oninput="updateCalib()">
   </div>
   <div class="slider-row">
-    <label>Marge gauche (MARGIN_X) <span id="vMX">48.0</span>px</label>
-    <input type="range" id="sMX" min="0" max="120" step="0.5" value="48" oninput="updateCalib()">
+    <label>Marge gauche (MARGIN_X) <span id="vMX">48.5</span>px</label>
+    <input type="range" id="sMX" min="0" max="120" step="0.5" value="48.5" oninput="updateCalib()">
   </div>
   <div class="slider-row">
-    <label>Marge haute (MARGIN_Y) <span id="vMY">44.0</span>px</label>
-    <input type="range" id="sMY" min="0" max="120" step="0.5" value="44" oninput="updateCalib()">
+    <label>Marge haute (MARGIN_Y) <span id="vMY">26.5</span>px</label>
+    <input type="range" id="sMY" min="0" max="120" step="0.5" value="26.5" oninput="updateCalib()">
   </div>
   <div class="slider-row">
-    <label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label>
-    <input type="range" id="sCS" min="20" max="80" step="0.1" value="48.6" oninput="updateCalib()">
+    <label>Espacement col (COL_SP) <span id="vCS">48.40</span>px</label>
+    <input type="range" id="sCS" min="20" max="80" step="0.1" value="48.4" oninput="updateCalib()">
   </div>
   <div class="slider-row">
     <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
@@ -387,11 +415,11 @@
 const COLS = 25, ROWS = 21;
 const IMG_W = 1288, IMG_H = 952;
 
-let MARGIN_X   = 48.0;
-let MARGIN_Y   = 44.0;
-let COL_SP     = 48.600;
+let MARGIN_X   = 48.5;
+let MARGIN_Y   = 26.5;
+let COL_SP     = 48.400;
 let ROW_SP     = 41.600;
-let HEX_R      = 21.700;
+let HEX_R      = 21.000;
 let ROW_OFFSET = 24.400;
 
 function hexCenter(q, r, scale) {
@@ -576,40 +604,115 @@ function renderGame(state) {
 
 // ─── Mini Map ─────────────────────────────────────────────────────────────────
 function renderMiniMap(state, isPickPhase) {
-  const img    = document.getElementById("miniMap");
-  const svg    = document.getElementById("miniSvg");
-  const scale  = img.clientWidth / IMG_W;
+  const img      = document.getElementById("miniMap");
+  const svg      = document.getElementById("miniSvg");
+  const viewport = document.getElementById("mapViewport");
+  const label    = document.getElementById("zoomLabel");
 
-  svg.setAttribute("width",  img.clientWidth);
-  svg.setAttribute("height", img.clientHeight);
+  // Base scale: image rendered width vs original
+  const baseScale = img.clientWidth / IMG_W;
+  // Full image rendered height
+  const imgH = IMG_H * baseScale;
+
+  // ── Compute zoom viewport (only for move phase, not picking) ──
+  let zoom = 1;
+  let panX = 0;
+  let panY = 0;
+  const VIEWPORT_H = 260; // px — fixed container height
+
+  const hexes = isPickPhase
+    ? (state.pendingStartSlots || [])
+    : (state.moveOptions || []);
+
+  if (!isPickPhase && hexes.length > 0) {
+    // Compute bounding box of all reachable hexes + current position
+    const myPos = state.players[myId]?.position;
+    const allHexes = myPos ? [myPos, ...hexes] : hexes;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const { q, r } of allHexes) {
+      const { x, y } = hexCenter(q, r, 1); // in image coords (scale=1)
+      minX = Math.min(minX, x - HEX_R);
+      minY = Math.min(minY, y - HEX_R);
+      maxX = Math.max(maxX, x + HEX_R);
+      maxY = Math.max(maxY, y + HEX_R);
+    }
+
+    // Add padding
+    const PAD = HEX_R * 2.5;
+    minX = Math.max(0, minX - PAD);
+    minY = Math.max(0, minY - PAD);
+    maxX = Math.min(IMG_W, maxX + PAD);
+    maxY = Math.min(IMG_H, maxY + PAD);
+
+    const regionW = maxX - minX;
+    const regionH = maxY - minY;
+
+    // Zoom so that the region fills the container width
+    const containerW = img.clientWidth;
+    const zoomX = containerW / (regionW * baseScale);
+    const zoomY = VIEWPORT_H / (regionH * baseScale);
+    zoom = Math.min(zoomX, zoomY, 3.5); // cap at 3.5×
+
+    // Pan: translate so that minX,minY goes to 0,0 after zoom
+    panX = -minX * baseScale * zoom;
+    panY = -minY * baseScale * zoom;
+
+    // Set viewport height
+    viewport.style.height = VIEWPORT_H + "px";
+    label.classList.add("visible");
+  } else {
+    // Full map view for picking phase
+    viewport.style.height = "auto";
+    label.classList.remove("visible");
+  }
+
+  // Apply transform to image and SVG together
+  img.style.transform    = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+  img.style.transformOrigin = "0 0";
+  img.style.width  = img.clientWidth + "px"; // lock width before transform
+  img.style.height = imgH + "px";
+
+  // SVG must match the full image exactly
+  const svgW = img.clientWidth;
+  const svgH = imgH;
+  svg.setAttribute("width",  svgW);
+  svg.setAttribute("height", svgH);
+  svg.style.width  = svgW + "px";
+  svg.style.height = svgH + "px";
+  svg.style.transform    = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+  svg.style.transformOrigin = "0 0";
 
   let html = "";
+  const s = baseScale;
 
-  // Grid lines (very faint)
+  // Grid lines (faint) — only draw hexes near the viewport area for perf
   for (let r = 0; r < ROWS; r++) {
     for (let q = 0; q < COLS; q++) {
-      const { x, y } = hexCenter(q, r, scale);
-      const pts = hexPoints(x, y, scale);
-      html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.07)" stroke-width="${scale}"/>`;
+      const { x, y } = hexCenter(q, r, s);
+      const pts = hexPoints(x, y, s);
+      html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.10)" stroke-width="${s}"/>`;
     }
   }
 
   if (isPickPhase) {
-    // Highlight available start slots
     for (const { q, r } of (state.pendingStartSlots || [])) {
-      const { x, y } = hexCenter(q, r, scale);
-      const pts = hexPoints(x, y, scale);
+      const { x, y } = hexCenter(q, r, s);
+      const pts = hexPoints(x, y, s);
       html += `<g class="hex-clickable" onclick="pickStart(${q},${r})">
-        <polygon points="${pts}" fill="rgba(74,238,204,0.3)" stroke="#4aedcc" stroke-width="${2*scale}"/>
+        <polygon points="${pts}" fill="rgba(74,238,204,0.3)" stroke="#4aedcc" stroke-width="${2*s}"/>
       </g>`;
     }
   } else {
-    // Highlight move options
+    // Dim overlay on entire map, punch out reachable hexes
+    html += `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="rgba(0,0,0,0.35)"/>`;
+
+    // Highlight reachable hexes (clear + clickable)
     for (const { q, r } of (state.moveOptions || [])) {
-      const { x, y } = hexCenter(q, r, scale);
-      const pts = hexPoints(x, y, scale);
+      const { x, y } = hexCenter(q, r, s);
+      const pts = hexPoints(x, y, s);
       html += `<g class="hex-clickable" onclick="moveHere(${q},${r})">
-        <polygon points="${pts}" fill="rgba(255,200,50,0.28)" stroke="#ffc832" stroke-width="${2*scale}"/>
+        <polygon points="${pts}" fill="rgba(255,200,50,0.30)" stroke="#ffc832" stroke-width="${2*s}"/>
       </g>`;
     }
   }
@@ -617,15 +720,17 @@ function renderMiniMap(state, isPickPhase) {
   // Draw all player tokens
   for (const [id, p] of Object.entries(state.players)) {
     if (!p.position) continue;
-    const { x, y } = hexCenter(p.position.q, p.position.r, scale);
-    const radius = 7 * scale;
-    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}"/>`;
-    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${6*scale}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
+    const { x, y } = hexCenter(p.position.q, p.position.r, s);
+    const isMe = id === myId;
+    const radius = (isMe ? 9 : 7) * s;
+    if (isMe) {
+      html += `<circle cx="${x}" cy="${y}" r="${radius+3*s}" fill="none" stroke="${p.color}" stroke-width="${1.5*s}" opacity="0.7"/>`;
+    }
+    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${s}"/>`;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*s}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
   }
 
   svg.innerHTML = html;
-  svg.style.width  = img.clientWidth + "px";
-  svg.style.height = img.clientHeight + "px";
 }
 
 document.getElementById("miniMap").addEventListener("load", () => {
