@@ -16,17 +16,17 @@ app.get("/player", (req, res) =>
 );
 
 // ─── Hex Grid Config ──────────────────────────────────────────────────────────
-const COLS = 33;
-const ROWS = 28;
+const COLS = 29;
+const ROWS = 24;
 
 // 6 starting positions on the borders
 const START_POSITIONS = [
   { q: 0,  r: 0  },
-  { q: 16, r: 0  },
-  { q: 32, r: 0  },
-  { q: 32, r: 27 },
-  { q: 16, r: 27 },
-  { q: 0,  r: 27 },
+  { q: 14, r: 0  },
+  { q: 28, r: 0  },
+  { q: 28, r: 23 },
+  { q: 14, r: 23 },
+  { q: 0,  r: 23 },
 ];
 
 function hexNeighbors(q, r) {
