@@ -200,6 +200,79 @@
       padding: 6px 0;
     }
     .instruction strong { color: var(--gold2); font-style: normal; }
+
+    /* ── CALIBRATION PANEL ── */
+    .calib-toggle {
+      background: rgba(74,238,204,.1);
+      border: 1px solid rgba(74,238,204,.35);
+      color: #4aedcc;
+      font-family: 'Crimson Pro', serif;
+      font-size: .75rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #calibDrawer {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(15, 10, 5, 0.97);
+      border-top: 2px solid rgba(74,238,204,.4);
+      padding: 14px 16px 20px;
+      z-index: 100;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    #calibDrawer.open { display: block; }
+
+    .calib-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .calib-header h3 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .75rem; color: #4aedcc; letter-spacing: .06em;
+    }
+    .calib-close {
+      background: none; border: none; color: #4aedcc;
+      font-size: 1.2rem; cursor: pointer; padding: 0 4px;
+    }
+
+    .slider-row {
+      display: flex; flex-direction: column; gap: 3px;
+      margin-bottom: 10px;
+    }
+    .slider-row label {
+      display: flex; justify-content: space-between;
+      font-size: .72rem; color: var(--gold); letter-spacing: .03em;
+    }
+    .slider-row label span { color: #4aedcc; font-family: monospace; }
+    .slider-row input[type=range] {
+      width: 100%; accent-color: #4aedcc; cursor: pointer; height: 4px;
+    }
+
+    .calib-code {
+      background: rgba(0,0,0,.6);
+      border: 1px solid rgba(74,238,204,.2);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-family: monospace;
+      font-size: .68rem;
+      color: #4aedcc;
+      white-space: pre;
+      line-height: 1.7;
+      margin-top: 4px;
+    }
+    .calib-copy {
+      width: 100%; margin-top: 8px; padding: 8px;
+      background: rgba(74,238,204,.15);
+      border: 1px solid rgba(74,238,204,.4);
+      color: #4aedcc;
+      font-family: 'Crimson Pro', serif; font-size: .82rem;
+      border-radius: 4px; cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -222,6 +295,7 @@
   <header>
     <span class="player-name"><span class="dot" id="myColorDot"></span><span id="headerName">Joueur</span></span>
     <span id="turnBadge" class="waiting">En attente</span>
+    <button class="calib-toggle" onclick="toggleCalib()">⚙</button>
   </header>
 
   <div class="content">
@@ -269,7 +343,43 @@
       <ul id="logList"><li>En attente…</li></ul>
     </div>
 
+  </div><!-- end .content -->
+</div><!-- end #gameScreen -->
+
+<!-- ── CALIBRATION DRAWER ── -->
+<div id="calibDrawer">
+  <div class="calib-header">
+    <h3>⚙ Calibration grille</h3>
+    <button class="calib-close" onclick="toggleCalib()">✕</button>
   </div>
+
+  <div class="slider-row">
+    <label>Rayon (HEX_R) <span id="vR">21.70</span>px</label>
+    <input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()">
+  </div>
+  <div class="slider-row">
+    <label>Marge gauche (MARGIN_X) <span id="vMX">48.0</span>px</label>
+    <input type="range" id="sMX" min="0" max="120" step="0.5" value="48" oninput="updateCalib()">
+  </div>
+  <div class="slider-row">
+    <label>Marge haute (MARGIN_Y) <span id="vMY">44.0</span>px</label>
+    <input type="range" id="sMY" min="0" max="120" step="0.5" value="44" oninput="updateCalib()">
+  </div>
+  <div class="slider-row">
+    <label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label>
+    <input type="range" id="sCS" min="20" max="80" step="0.1" value="48.6" oninput="updateCalib()">
+  </div>
+  <div class="slider-row">
+    <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
+    <input type="range" id="sRS" min="15" max="70" step="0.1" value="41.6" oninput="updateCalib()">
+  </div>
+  <div class="slider-row">
+    <label>Offset rang impaire <span id="vOF">24.40</span>px</label>
+    <input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()">
+  </div>
+
+  <div class="calib-code" id="calibCode"></div>
+  <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
 </div>
 
 <script>
@@ -277,16 +387,17 @@
 const COLS = 25, ROWS = 21;
 const IMG_W = 1288, IMG_H = 952;
 
-const MARGIN_X = 48.0;
-const MARGIN_Y = 44.0;
-const COL_SP  = 48.600;
-const ROW_SP  = 41.600;
-const HEX_R   = 21.700;
+let MARGIN_X   = 48.0;
+let MARGIN_Y   = 44.0;
+let COL_SP     = 48.600;
+let ROW_SP     = 41.600;
+let HEX_R      = 21.700;
+let ROW_OFFSET = 24.400;
 
 function hexCenter(q, r, scale) {
   const s = scale || 1;
   return {
-    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? 24.400 : 0)) * s,
+    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? ROW_OFFSET : 0)) * s,
     y: (MARGIN_Y + r * ROW_SP) * s,
   };
 }
@@ -535,6 +646,61 @@ function rollDice() {
 function pickStart(q, r) { socket.emit("player:pickStart", { q, r }); }
 function moveHere(q, r)  { socket.emit("player:move",      { q, r }); }
 function endTurn()        { socket.emit("player:endTurn"); }
+
+// ─── Calibration ──────────────────────────────────────────────────────────────
+function toggleCalib() {
+  document.getElementById("calibDrawer").classList.toggle("open");
+  updateCalibDisplay();
+}
+
+function updateCalib() {
+  HEX_R      = parseFloat(document.getElementById("sR").value);
+  MARGIN_X   = parseFloat(document.getElementById("sMX").value);
+  MARGIN_Y   = parseFloat(document.getElementById("sMY").value);
+  COL_SP     = parseFloat(document.getElementById("sCS").value);
+  ROW_SP     = parseFloat(document.getElementById("sRS").value);
+  ROW_OFFSET = parseFloat(document.getElementById("sOF").value);
+
+  document.getElementById("vR").textContent  = HEX_R.toFixed(2);
+  document.getElementById("vMX").textContent = MARGIN_X.toFixed(1);
+  document.getElementById("vMY").textContent = MARGIN_Y.toFixed(1);
+  document.getElementById("vCS").textContent = COL_SP.toFixed(2);
+  document.getElementById("vRS").textContent = ROW_SP.toFixed(2);
+  document.getElementById("vOF").textContent = ROW_OFFSET.toFixed(2);
+
+  updateCalibDisplay();
+  // Re-render mini map if visible
+  if (document.getElementById("mapSection").style.display !== "none") {
+    renderMiniMap(gameState, gameState.status === "picking" && gameState.isMyTurn);
+  }
+}
+
+function updateCalibDisplay() {
+  document.getElementById("calibCode").textContent =
+`HEX_R      = ${HEX_R.toFixed(3)}
+MARGIN_X   = ${MARGIN_X.toFixed(1)}
+MARGIN_Y   = ${MARGIN_Y.toFixed(1)}
+COL_SP     = ${COL_SP.toFixed(3)}
+ROW_SP     = ${ROW_SP.toFixed(3)}
+ROW_OFFSET = ${ROW_OFFSET.toFixed(3)}`;
+}
+
+function copyCalib() {
+  const txt =
+`const HEX_R      = ${HEX_R.toFixed(3)};
+const MARGIN_X   = ${MARGIN_X.toFixed(1)};
+const MARGIN_Y   = ${MARGIN_Y.toFixed(1)};
+const COL_SP     = ${COL_SP.toFixed(3)};
+const ROW_SP     = ${ROW_SP.toFixed(3)};
+const ROW_OFFSET = ${ROW_OFFSET.toFixed(3)};`;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector(".calib-copy");
+    btn.textContent = "✓ Copié !";
+    setTimeout(() => btn.textContent = "📋 Copier les constantes", 1500);
+  });
+}
+
+updateCalibDisplay();
 </script>
 </body>
 </html>
