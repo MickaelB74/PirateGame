@@ -17,27 +17,26 @@ app.get("/player", (req, res) =>
 
 // ─── Hex Grid Config ──────────────────────────────────────────────────────────
 const COLS = 18;
-const ROWS = 13;
+const ROWS = 12;
 
 // 6 starting positions on the borders (evenly spread)
 const START_POSITIONS = [
   { q: 0,  r: 0  },  // top-left
   { q: 9,  r: 0  },  // top-center
   { q: 17, r: 0  },  // top-right
-  { q: 17, r: 12 },  // bottom-right
-  { q: 9,  r: 12 },  // bottom-center
-  { q: 0,  r: 12 },  // bottom-left
+  { q: 17, r: 11 },  // bottom-right
+  { q: 9,  r: 11 },  // bottom-center
+  { q: 0,  r: 11 },  // bottom-left
 ];
 
 function hexNeighbors(q, r) {
-  // Offset hex neighbors (even-r offset)
-  const isEven = r % 2 === 0;
-  const dirs = isEven
-    ? [[-1,-1],[0,-1],[1,0],[0,1],[-1,1],[-1,0]]
-    : [[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,0]];
+  // Flat-top, odd-q offset DOWN
+  const dirs = (q % 2 === 0)
+    ? [[1,0],[-1,0],[1,-1],[-1,-1],[0,-1],[0,1]]
+    : [[1,0],[-1,0],[1,1],[-1,1],[0,-1],[0,1]];
   return dirs
     .map(([dq, dr]) => ({ q: q + dq, r: r + dr }))
-    .filter(({ q, r }) => q >= 0 && q < COLS && r >= 0 && r < ROWS);
+    .filter(n => n.q >= 0 && n.q < COLS && n.r >= 0 && n.r < ROWS);
 }
 
 function hexesInRange(q, r, range) {
