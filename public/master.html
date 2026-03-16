@@ -301,28 +301,28 @@
       <h2>⚙ Calibration grille</h2>
 
       <div class="slider-row">
-        <label>Rayon (HEX_R) <span id="vR">24.99</span>px</label>
-        <input type="range" id="sR" min="10" max="50" step="0.1" value="24.99" oninput="updateCalib()">
+        <label>Rayon (HEX_R) <span id="vR">21.70</span>px</label>
+        <input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()">
       </div>
       <div class="slider-row">
         <label>Marge gauche (MARGIN_X) <span id="vMX">38</span>px</label>
-        <input type="range" id="sMX" min="0" max="100" step="0.5" value="38" oninput="updateCalib()">
+        <input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()">
       </div>
       <div class="slider-row">
         <label>Marge haute (MARGIN_Y) <span id="vMY">38</span>px</label>
-        <input type="range" id="sMY" min="0" max="100" step="0.5" value="38" oninput="updateCalib()">
+        <input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()">
       </div>
       <div class="slider-row">
-        <label>Espacement col (COL_SP) <span id="vCS">43.29</span>px</label>
-        <input type="range" id="sCS" min="20" max="70" step="0.1" value="43.29" oninput="updateCalib()">
+        <label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label>
+        <input type="range" id="sCS" min="20" max="70" step="0.1" value="48.6" oninput="updateCalib()">
       </div>
       <div class="slider-row">
-        <label>Espacement rang (ROW_SP) <span id="vRS">37.49</span>px</label>
-        <input type="range" id="sRS" min="15" max="60" step="0.1" value="37.49" oninput="updateCalib()">
+        <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
+        <input type="range" id="sRS" min="15" max="60" step="0.1" value="41.6" oninput="updateCalib()">
       </div>
       <div class="slider-row">
-        <label>Décalage rang impaire (offset) <span id="vOF">21.64</span>px</label>
-        <input type="range" id="sOF" min="0" max="50" step="0.1" value="21.64" oninput="updateCalib()">
+        <label>Décalage rang impaire (offset) <span id="vOF">24.40</span>px</label>
+        <input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()">
       </div>
 
       <div class="calib-code" id="calibCode"></div>
@@ -357,20 +357,24 @@
 
 <script>
 // ─── Hex Grid Math (POINTY-TOP, odd-r offset RIGHT) ──────────────────────────
-const COLS = 29, ROWS = 24;
+const COLS = 25, ROWS = 21;
 const IMG_W = 1288, IMG_H = 952;
 
 // Live calibration values (updated by sliders)
-let MARGIN_X = 38.0;
-let MARGIN_Y = 38.0;
-let COL_SP   = 43.286;
-let ROW_SP   = 37.487;
-let HEX_R    = 24.991;
-let ROW_OFFSET = COL_SP / 2;  // odd-row right shift
+let MARGIN_X = 48.0;
+let MARGIN_Y = 44.0;
+let COL_SP   = 48.600;
+let ROW_SP   = 41.600;
+let HEX_R    = 21.700;
+let ROW_OFFSET = 24.400;
 
 const START_POSITIONS = [
-  { q:0,  r:0  }, { q:14, r:0  }, { q:28, r:0  },
-  { q:28, r:23 }, { q:14, r:23 }, { q:0,  r:23 },
+  { q: 0,  r: 0  },
+  { q: 12, r: 0  },
+  { q: 24, r: 0  },
+  { q: 24, r: 20 },
+  { q: 12, r: 20 },
+  { q: 0,  r: 20 },
 ];
 
 function hexCenter(q, r, scale) {

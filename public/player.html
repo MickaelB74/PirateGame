@@ -274,19 +274,19 @@
 
 <script>
 // ─── Hex Math (POINTY-TOP, odd-r offset RIGHT) ────────────────────────────────
-const COLS = 29, ROWS = 24;
+const COLS = 25, ROWS = 21;
 const IMG_W = 1288, IMG_H = 952;
 
-const MARGIN_X = 38.0;
-const MARGIN_Y = 38.0;
-const COL_SP  = 43.286;
-const ROW_SP  = 37.487;
-const HEX_R   = 24.991;
+const MARGIN_X = 48.0;
+const MARGIN_Y = 44.0;
+const COL_SP  = 48.600;
+const ROW_SP  = 41.600;
+const HEX_R   = 21.700;
 
 function hexCenter(q, r, scale) {
   const s = scale || 1;
   return {
-    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? COL_SP / 2 : 0)) * s,
+    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? 24.400 : 0)) * s,
     y: (MARGIN_Y + r * ROW_SP) * s,
   };
 }
@@ -304,8 +304,12 @@ function hexPoints(cx, cy, scale) {
 }
 
 const START_POSITIONS = [
-  {q:0,r:0},{q:14,r:0},{q:28,r:0},
-  {q:28,r:23},{q:14,r:23},{q:0,r:23},
+  { q: 0,  r: 0  },
+  { q: 12, r: 0  },
+  { q: 24, r: 0  },
+  { q: 24, r: 20 },
+  { q: 12, r: 20 },
+  { q: 0,  r: 20 },
 ];
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
