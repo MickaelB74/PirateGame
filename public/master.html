@@ -204,6 +204,75 @@
     .legend { display: flex; flex-wrap: wrap; gap: 6px; }
     .legend-item { display: flex; align-items: center; gap: 4px; font-size: .75rem; color: #8a7a5e; }
     .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
+
+    /* Calibration panel */
+    #calibPanel { display: none; }
+    #calibPanel.open { display: block; }
+
+    .calib-toggle {
+      background: rgba(74,238,204,.1);
+      border: 1px solid rgba(74,238,204,.4);
+      color: #4aedcc;
+      font-family: 'Crimson Pro', serif;
+      font-size: .82rem;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .calib-toggle:hover { background: rgba(74,238,204,.2); }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 10px;
+    }
+    .slider-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .75rem;
+      color: var(--gold);
+      letter-spacing: .04em;
+    }
+    .slider-row label span {
+      color: #4aedcc;
+      font-family: monospace;
+      font-size: .8rem;
+    }
+    .slider-row input[type=range] {
+      width: 100%;
+      accent-color: #4aedcc;
+      cursor: pointer;
+      height: 4px;
+    }
+
+    .calib-copy {
+      width: 100%;
+      margin-top: 8px;
+      padding: 7px;
+      background: rgba(74,238,204,.15);
+      border: 1px solid rgba(74,238,204,.5);
+      color: #4aedcc;
+      font-family: 'Crimson Pro', serif;
+      font-size: .82rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .calib-copy:hover { background: rgba(74,238,204,.25); }
+
+    .calib-code {
+      background: rgba(0,0,0,.5);
+      border: 1px solid rgba(74,238,204,.2);
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: .7rem;
+      color: #4aedcc;
+      white-space: pre;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -212,6 +281,7 @@
   <h1>⚓ Maître de Jeu</h1>
   <span id="statusBadge" class="badge waiting">En attente</span>
   <div class="header-controls">
+    <button class="calib-toggle" onclick="toggleCalib()">⚙ Calibration</button>
     <button class="btn" id="btnStart" disabled onclick="startGame()">▶ Démarrer</button>
     <button class="btn btn-danger" onclick="resetGame()">↺ Reset</button>
   </div>
@@ -227,6 +297,38 @@
   </div>
 
   <div class="sidebar">
+    <div class="panel" id="calibPanel">
+      <h2>⚙ Calibration grille</h2>
+
+      <div class="slider-row">
+        <label>Rayon (HEX_R) <span id="vR">24.99</span>px</label>
+        <input type="range" id="sR" min="10" max="50" step="0.1" value="24.99" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Marge gauche (MARGIN_X) <span id="vMX">38</span>px</label>
+        <input type="range" id="sMX" min="0" max="100" step="0.5" value="38" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Marge haute (MARGIN_Y) <span id="vMY">38</span>px</label>
+        <input type="range" id="sMY" min="0" max="100" step="0.5" value="38" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Espacement col (COL_SP) <span id="vCS">43.29</span>px</label>
+        <input type="range" id="sCS" min="20" max="70" step="0.1" value="43.29" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Espacement rang (ROW_SP) <span id="vRS">37.49</span>px</label>
+        <input type="range" id="sRS" min="15" max="60" step="0.1" value="37.49" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Décalage rang impaire (offset) <span id="vOF">21.64</span>px</label>
+        <input type="range" id="sOF" min="0" max="50" step="0.1" value="21.64" oninput="updateCalib()">
+      </div>
+
+      <div class="calib-code" id="calibCode"></div>
+      <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
+    </div>
+
     <div class="panel">
       <h2>Connexion joueur</h2>
       <div class="url-box" id="playerUrl" onclick="copyUrl()">Chargement…</div>
@@ -258,13 +360,13 @@
 const COLS = 29, ROWS = 24;
 const IMG_W = 1288, IMG_H = 952;
 
-// Calibrated from Map.jpg (1288×952) — pointy-top hexagons, R=24.99
-// Odd rows shifted right by COL_SP/2
-const MARGIN_X = 38.0;
-const MARGIN_Y = 38.0;
-const COL_SP  = 43.286;  // horizontal center-to-center = sqrt(3)*R
-const ROW_SP  = 37.487;  // vertical center-to-center   = 1.5*R
-const HEX_R   = 24.991;  // center-to-corner radius
+// Live calibration values (updated by sliders)
+let MARGIN_X = 38.0;
+let MARGIN_Y = 38.0;
+let COL_SP   = 43.286;
+let ROW_SP   = 37.487;
+let HEX_R    = 24.991;
+let ROW_OFFSET = COL_SP / 2;  // odd-row right shift
 
 const START_POSITIONS = [
   { q:0,  r:0  }, { q:14, r:0  }, { q:28, r:0  },
@@ -274,13 +376,12 @@ const START_POSITIONS = [
 function hexCenter(q, r, scale) {
   const s = scale || 1;
   return {
-    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? COL_SP / 2 : 0)) * s,
+    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? ROW_OFFSET : 0)) * s,
     y: (MARGIN_Y + r * ROW_SP) * s,
   };
 }
 
 function hexPoints(cx, cy, scale) {
-  // Pointy-top: first corner at top (90°), then every 60°
   const s = scale || 1;
   const R = HEX_R * s;
   const pts = [];
@@ -418,6 +519,61 @@ function renderMap() {
 
   svg.innerHTML = `<defs><filter id="shadow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/></filter></defs>` + html;
 }
+
+// ─── Calibration ──────────────────────────────────────────────────────────────
+function toggleCalib() {
+  const panel = document.getElementById("calibPanel");
+  panel.classList.toggle("open");
+  if (panel.classList.contains("open")) updateCalibDisplay();
+}
+
+function updateCalib() {
+  HEX_R      = parseFloat(document.getElementById("sR").value);
+  MARGIN_X   = parseFloat(document.getElementById("sMX").value);
+  MARGIN_Y   = parseFloat(document.getElementById("sMY").value);
+  COL_SP     = parseFloat(document.getElementById("sCS").value);
+  ROW_SP     = parseFloat(document.getElementById("sRS").value);
+  ROW_OFFSET = parseFloat(document.getElementById("sOF").value);
+
+  document.getElementById("vR").textContent  = HEX_R.toFixed(2);
+  document.getElementById("vMX").textContent = MARGIN_X.toFixed(1);
+  document.getElementById("vMY").textContent = MARGIN_Y.toFixed(1);
+  document.getElementById("vCS").textContent = COL_SP.toFixed(2);
+  document.getElementById("vRS").textContent = ROW_SP.toFixed(2);
+  document.getElementById("vOF").textContent = ROW_OFFSET.toFixed(2);
+
+  updateCalibDisplay();
+  syncCanvasSize();
+  renderMap();
+}
+
+function updateCalibDisplay() {
+  document.getElementById("calibCode").textContent =
+`HEX_R    = ${HEX_R.toFixed(3)}
+MARGIN_X = ${MARGIN_X.toFixed(1)}
+MARGIN_Y = ${MARGIN_Y.toFixed(1)}
+COL_SP   = ${COL_SP.toFixed(3)}
+ROW_SP   = ${ROW_SP.toFixed(3)}
+OFFSET   = ${ROW_OFFSET.toFixed(3)}`;
+}
+
+function copyCalib() {
+  const txt =
+`const HEX_R    = ${HEX_R.toFixed(3)};
+const MARGIN_X = ${MARGIN_X.toFixed(1)};
+const MARGIN_Y = ${MARGIN_Y.toFixed(1)};
+const COL_SP   = ${COL_SP.toFixed(3)};
+const ROW_SP   = ${ROW_SP.toFixed(3)};
+const ROW_OFFSET = ${ROW_OFFSET.toFixed(3)};`;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector(".calib-copy");
+    btn.textContent = "✓ Copié !";
+    setTimeout(() => btn.textContent = "📋 Copier les constantes", 1500);
+  });
+}
+
+// Init calibration display
+updateCalibDisplay();
 
 // ─── Controls ─────────────────────────────────────────────────────────────────
 function startGame() { socket.emit("master:start"); }
