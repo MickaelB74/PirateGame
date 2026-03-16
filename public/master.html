@@ -3,325 +3,456 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maître de Jeu</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <title>Maître de Jeu — Plateau</title>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --ink:     #1a1209;
-      --parch:   #f5ead6;
-      --parch2:  #ede0c4;
-      --gold:    #b8860b;
-      --gold2:   #d4a017;
-      --red:     #8b1a1a;
-      --green:   #2d5a27;
-      --shadow:  rgba(26,18,9,.35);
+      --ink:   #1a1209;
+      --parch: #f5ead6;
+      --gold:  #b8860b;
+      --gold2: #d4a017;
+      --red:   #8b1a1a;
     }
 
     body {
-      background: var(--parch);
-      color: var(--ink);
+      background: #0d0a06;
+      color: var(--parch);
       font-family: 'Crimson Pro', Georgia, serif;
-      font-size: 16px;
       min-height: 100vh;
-      background-image:
-        radial-gradient(ellipse at 10% 10%, rgba(184,134,11,.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 90% 90%, rgba(139,26,26,.06) 0%, transparent 60%),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+      display: flex;
+      flex-direction: column;
     }
 
     header {
       background: var(--ink);
-      color: var(--gold2);
-      padding: 18px 32px;
+      border-bottom: 2px solid var(--gold);
+      padding: 12px 24px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      border-bottom: 3px solid var(--gold);
-      box-shadow: 0 4px 16px var(--shadow);
+      gap: 20px;
+      flex-shrink: 0;
+      z-index: 10;
     }
     header h1 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 1.3rem;
+      font-size: 1.1rem;
+      color: var(--gold2);
       letter-spacing: .04em;
     }
-    #statusBadge {
-      font-size: .8rem;
-      padding: 4px 14px;
+    .badge {
+      font-size: .72rem;
+      padding: 3px 12px;
       border-radius: 20px;
       border: 1px solid var(--gold);
-      letter-spacing: .1em;
       text-transform: uppercase;
+      letter-spacing: .1em;
     }
-    #statusBadge.waiting  { background: rgba(184,134,11,.15); color: var(--gold2); }
-    #statusBadge.playing  { background: rgba(45,90,39,.25);   color: #6abf61; border-color:#6abf61; }
-    #statusBadge.ended    { background: rgba(139,26,26,.2);   color: #e07070; border-color:#e07070; }
+    .badge.waiting { color: var(--gold2); border-color: var(--gold); }
+    .badge.picking { color: #4aedcc; border-color: #4aedcc; }
+    .badge.playing { color: #6abf61; border-color: #6abf61; }
 
-    main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 28px 20px;
-      display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 24px;
+    .header-controls { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+    .btn {
+      padding: 7px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold2);
+      font-family: 'Crimson Pro', serif;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn:hover:not(:disabled) { background: rgba(184,134,11,.15); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-danger { border-color: #e07070; color: #e07070; }
+    .btn-danger:hover { background: rgba(224,112,112,.12) !important; }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Map area */
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      overflow: auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      background: #0d0a06;
+    }
+
+    #mapContainer {
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    #mapImg {
+      display: block;
+      width: 100%;
+      max-width: 1288px;
+      height: auto;
+      user-select: none;
+    }
+
+    #hexCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    #hexOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+      background: rgba(26,18,9,.95);
+      border-left: 1px solid rgba(184,134,11,.25);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 14px;
     }
 
     .panel {
-      background: rgba(255,255,255,.45);
-      border: 1px solid rgba(184,134,11,.3);
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(184,134,11,.2);
       border-radius: 8px;
-      padding: 22px;
-      box-shadow: 0 2px 12px var(--shadow);
+      padding: 14px;
     }
     .panel h2 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: .95rem;
+      font-size: .75rem;
       color: var(--gold);
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(184,134,11,.25);
       text-transform: uppercase;
       letter-spacing: .06em;
+      margin-bottom: 10px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid rgba(184,134,11,.2);
     }
 
-    /* Players list */
-    #playerList { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-    #playerList li {
+    .player-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: rgba(245,234,214,.7);
-      border: 1px solid rgba(184,134,11,.2);
+      gap: 8px;
+      padding: 7px 8px;
       border-radius: 5px;
-      font-size: 1rem;
-      transition: background .2s;
+      font-size: .9rem;
+      margin-bottom: 5px;
+      background: rgba(255,255,255,.03);
     }
-    #playerList li .avatar {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: var(--ink);
-      color: var(--gold2);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .75rem;
+    .player-row.active { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.3); }
+    .player-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
       flex-shrink: 0;
     }
-    #playerList li.active-turn {
-      background: rgba(45,90,39,.12);
-      border-color: var(--green);
-    }
-    #playerList li .turn-tag {
+    .player-pos {
       margin-left: auto;
-      font-size: .7rem;
-      padding: 2px 8px;
-      background: var(--green);
+      font-size: .72rem;
+      color: #6a5a3a;
+      font-family: monospace;
+    }
+    .turn-tag {
+      font-size: .65rem;
+      padding: 2px 6px;
+      background: #2d5a27;
       color: #d4f5d0;
-      border-radius: 10px;
-      text-transform: uppercase;
-      letter-spacing: .08em;
+      border-radius: 8px;
     }
-    #emptyPlayers {
+
+    #logList { list-style: none; max-height: 260px; overflow-y: auto; }
+    #logList li {
+      font-size: .78rem;
       color: #8a7a5e;
-      font-style: italic;
-      font-size: .95rem;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 11px 22px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-family: 'Crimson Pro', serif;
-      font-size: 1rem;
-      font-weight: 400;
-      letter-spacing: .03em;
-      transition: all .18s;
-    }
-    .btn:active { transform: scale(.97); }
-    .btn-primary {
-      background: var(--ink);
-      color: var(--gold2);
-      border: 1px solid var(--gold);
-    }
-    .btn-primary:hover:not(:disabled) { background: #2e2010; }
-    .btn-danger {
-      background: var(--red);
-      color: #f8d8d8;
-    }
-    .btn-danger:hover:not(:disabled) { background: #a02020; }
-    .btn:disabled { opacity: .4; cursor: not-allowed; }
-
-    #controls { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-
-    /* Log */
-    #log {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      max-height: 340px;
-      overflow-y: auto;
-    }
-    #log li {
-      font-size: .88rem;
-      padding: 6px 10px;
-      background: rgba(245,234,214,.6);
-      border-left: 3px solid rgba(184,134,11,.3);
-      border-radius: 0 4px 4px 0;
-      color: #4a3b20;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
       line-height: 1.4;
     }
-    #log li:first-child { border-left-color: var(--gold); color: var(--ink); }
+    #logList li:first-child { color: var(--parch); }
 
-    /* Join URL */
     .url-box {
-      background: var(--ink);
+      background: rgba(0,0,0,.4);
       color: var(--gold2);
-      padding: 10px 14px;
-      border-radius: 5px;
+      padding: 8px 10px;
+      border-radius: 4px;
       font-family: monospace;
-      font-size: .85rem;
+      font-size: .78rem;
       word-break: break-all;
-      margin-bottom: 14px;
       cursor: pointer;
-      position: relative;
-    }
-    .url-box::after {
-      content: "📋 Copier";
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: .72rem;
-      opacity: .6;
+      border: 1px solid rgba(184,134,11,.3);
     }
 
-    .left-col { display: flex; flex-direction: column; gap: 20px; }
-
-    @media (max-width: 680px) {
-      main { grid-template-columns: 1fr; }
-    }
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 6px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: .75rem; color: #8a7a5e; }
+    .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>⚔ Maître de Jeu</h1>
-  <span id="statusBadge" class="waiting">En attente</span>
+  <h1>⚓ Maître de Jeu</h1>
+  <span id="statusBadge" class="badge waiting">En attente</span>
+  <div class="header-controls">
+    <button class="btn" id="btnStart" disabled onclick="startGame()">▶ Démarrer</button>
+    <button class="btn btn-danger" onclick="resetGame()">↺ Reset</button>
+  </div>
 </header>
 
-<main>
-  <div class="left-col">
-
-    <!-- Players -->
-    <div class="panel">
-      <h2>Joueurs connectés (<span id="playerCount">0</span>)</h2>
-      <ul id="playerList">
-        <li id="emptyPlayers" style="background:none;border:none;padding:0">
-          Aucun joueur connecté…
-        </li>
-      </ul>
+<div class="layout">
+  <div class="map-wrap" id="mapWrap">
+    <div id="mapContainer">
+      <img id="mapImg" src="/Map.jpg" alt="Carte" />
+      <canvas id="hexCanvas"></canvas>
+      <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
-
-    <!-- Controls -->
-    <div class="panel">
-      <h2>Contrôles</h2>
-      <div id="controls">
-        <button class="btn btn-primary" id="btnStart" disabled onclick="startGame()">
-          ▶ Démarrer la partie
-        </button>
-        <button class="btn btn-danger" id="btnReset" onclick="resetGame()">
-          ↺ Réinitialiser
-        </button>
-      </div>
-    </div>
-
   </div>
 
-  <!-- Right col -->
-  <div class="right-col" style="display:flex;flex-direction:column;gap:20px">
-
-    <!-- Connection -->
+  <div class="sidebar">
     <div class="panel">
       <h2>Connexion joueur</h2>
       <div class="url-box" id="playerUrl" onclick="copyUrl()">Chargement…</div>
-      <p style="font-size:.85rem;color:#6a5a3a;font-style:italic">
-        Les joueurs ouvrent ce lien sur leur téléphone.
-      </p>
     </div>
 
-    <!-- Log -->
     <div class="panel">
-      <h2>Journal</h2>
-      <ul id="log"><li>Connexion en cours…</li></ul>
+      <h2>Joueurs (<span id="playerCount">0</span>)</h2>
+      <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div></div>
     </div>
 
+    <div class="panel">
+      <h2>Légende</h2>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(74,238,204,.35);border:1px solid #4aedcc"></div> Case départ</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,200,50,.25);border:1px solid #ffc832"></div> Déplacement</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(106,191,97,.2);border:1px solid #6abf61"></div> Tour actif</div>
+      </div>
+    </div>
+
+    <div class="panel" style="flex:1">
+      <h2>Journal</h2>
+      <ul id="logList"><li>En attente…</li></ul>
+    </div>
   </div>
-</main>
+</div>
 
 <script>
-  const socket = io();
+// ─── Hex Grid Math ────────────────────────────────────────────────────────────
+const COLS = 18, ROWS = 13;
+const IMG_W = 1288, IMG_H = 952;
 
-  // Show player URL
-  const playerUrl = `${location.protocol}//${location.hostname}:${location.port}/player`;
-  document.getElementById("playerUrl").textContent = playerUrl;
+// Calibrated hex dimensions for the map
+// The map has an outer fog border; grid starts offset from edge
+const HEX_MARGIN_X = 28;   // px from image left to first hex center
+const HEX_MARGIN_Y = 36;   // px from image top to first hex center
 
-  function copyUrl() {
-    navigator.clipboard.writeText(playerUrl).then(() => {
-      const el = document.getElementById("playerUrl");
-      const orig = el.textContent;
-      el.textContent = "✓ Copié !";
-      setTimeout(() => el.textContent = orig, 1500);
-    });
+// Hex size: total width ~1232px / 18 cols  ≈ 68px per col
+// With pointy-top hex in even-r offset:
+const HEX_W = 71.5;   // col spacing
+const HEX_H = 73.0;   // row spacing
+const HEX_ROW_OFFSET = 35.75; // half HEX_W for even-r offset
+
+const START_POSITIONS = [
+  { q:0,  r:0  }, { q:9,  r:0  }, { q:17, r:0  },
+  { q:17, r:12 }, { q:9,  r:12 }, { q:0,  r:12 },
+];
+
+function hexCenter(q, r, scale) {
+  const s = scale || 1;
+  const x = (HEX_MARGIN_X + q * HEX_W + (r % 2 === 1 ? HEX_ROW_OFFSET : 0)) * s;
+  const y = (HEX_MARGIN_Y + r * HEX_H) * s;
+  return { x, y };
+}
+
+function hexPoints(cx, cy, scale) {
+  const s = scale || 1;
+  const rx = HEX_W * 0.5 * s;
+  const ry = HEX_H * 0.5 * s;
+  // Flat-top hex
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = (Math.PI / 3) * i;
+    pts.push([cx + rx * Math.cos(angle), cy + ry * Math.sin(angle)]);
+  }
+  return pts.map(p => p.join(",")).join(" ");
+}
+
+// ─── State & Socket ───────────────────────────────────────────────────────────
+const socket = io();
+let state = {};
+let imgScale = 1;
+
+const playerUrl = `${location.protocol}//${location.hostname}:${location.port}/player`;
+document.getElementById("playerUrl").textContent = playerUrl;
+
+function copyUrl() {
+  navigator.clipboard.writeText(playerUrl).then(() => {
+    const el = document.getElementById("playerUrl");
+    const orig = el.textContent;
+    el.textContent = "✓ Copié !";
+    setTimeout(() => el.textContent = orig, 1500);
+  });
+}
+
+socket.emit("master:join");
+
+socket.on("game:state", (s) => {
+  state = s;
+  renderUI();
+  renderMap();
+});
+
+// ─── UI Sidebar ───────────────────────────────────────────────────────────────
+function renderUI() {
+  // Badge
+  const badge = document.getElementById("statusBadge");
+  const labels = { waiting:"En attente", picking:"Choix départ", playing:"En cours", ended:"Terminée" };
+  badge.textContent = labels[state.status] || state.status;
+  badge.className = "badge " + state.status;
+
+  // Players
+  const players = Object.entries(state.players || {});
+  document.getElementById("playerCount").textContent = players.length;
+  const list = document.getElementById("playerList");
+  if (!players.length) {
+    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div>`;
+  } else {
+    list.innerHTML = players.map(([id, p]) => {
+      const isActive = state.currentTurn === id;
+      const pos = p.position ? `${p.position.q},${p.position.r}` : "–";
+      return `<div class="player-row ${isActive ? 'active' : ''}">
+        <div class="player-dot" style="background:${p.color}"></div>
+        <span>${p.name}</span>
+        ${isActive ? `<span class="turn-tag">Tour</span>` : ""}
+        <span class="player-pos">${pos}</span>
+      </div>`;
+    }).join("");
   }
 
-  socket.emit("master:join");
+  // Buttons
+  document.getElementById("btnStart").disabled =
+    players.length < 1 || state.status === "playing" || state.status === "picking";
 
-  socket.on("game:state", (state) => {
-    // Status badge
-    const badge = document.getElementById("statusBadge");
-    badge.textContent = { waiting: "En attente", playing: "En cours", ended: "Terminée" }[state.status];
-    badge.className = state.status;
+  // Log
+  const logList = document.getElementById("logList");
+  logList.innerHTML = (state.log?.length ? state.log : ["Aucun événement."])
+    .map(e => `<li>${e}</li>`).join("");
+}
 
-    // Players
-    const list = document.getElementById("playerList");
-    const players = Object.entries(state.players);
-    document.getElementById("playerCount").textContent = players.length;
+// ─── Map Rendering ────────────────────────────────────────────────────────────
+function getScale() {
+  const img = document.getElementById("mapImg");
+  return img.clientWidth / IMG_W;
+}
 
-    if (players.length === 0) {
-      list.innerHTML = `<li id="emptyPlayers" style="background:none;border:none;padding:0;font-style:italic;color:#8a7a5e">Aucun joueur connecté…</li>`;
-    } else {
-      list.innerHTML = players.map(([id, p]) => {
-        const isActive = state.currentTurn === id;
-        return `
-          <li class="${isActive ? "active-turn" : ""}">
-            <div class="avatar">${p.name[0].toUpperCase()}</div>
-            ${p.name}
-            ${isActive ? `<span class="turn-tag">Son tour</span>` : ""}
-          </li>`;
-      }).join("");
+function renderMap() {
+  const svg = document.getElementById("hexOverlay");
+  const scale = getScale();
+
+  let html = "";
+
+  // Draw all hex cells lightly
+  for (let r = 0; r < ROWS; r++) {
+    for (let q = 0; q < COLS; q++) {
+      const { x, y } = hexCenter(q, r, scale);
+      const pts = hexPoints(x, y, scale);
+      html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}"/>`;
     }
+  }
 
-    // Buttons
-    document.getElementById("btnStart").disabled =
-      players.length < 1 || state.status === "playing";
+  // Highlight start slots (during picking phase)
+  if (state.status === "picking" && state.pendingStartSlots) {
+    for (const { q, r } of state.pendingStartSlots) {
+      const { x, y } = hexCenter(q, r, scale);
+      const pts = hexPoints(x, y, scale);
+      html += `<polygon points="${pts}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}"/>`;
+    }
+  }
 
-    // Log
-    const log = document.getElementById("log");
-    log.innerHTML = (state.log.length ? state.log : ["Aucun événement."])
-      .map(e => `<li>${e}</li>`).join("");
-  });
+  // Highlight move options
+  if (state.moveOptions?.length) {
+    for (const { q, r } of state.moveOptions) {
+      const { x, y } = hexCenter(q, r, scale);
+      const pts = hexPoints(x, y, scale);
+      html += `<polygon points="${pts}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}"/>`;
+    }
+  }
 
-  function startGame() { socket.emit("master:start"); }
-  function resetGame() { if (confirm("Réinitialiser la partie ?")) socket.emit("master:reset"); }
+  // Draw player tokens
+  const players = Object.entries(state.players || {});
+  for (const [id, p] of players) {
+    if (!p.position) continue;
+    const { q, r } = p.position;
+    const { x, y } = hexCenter(q, r, scale);
+    const isActive = state.currentTurn === id;
+    const radius = 13 * scale;
+    // Glow ring for active player
+    if (isActive) {
+      html += `<circle cx="${x}" cy="${y}" r="${radius+4*scale}" fill="none" stroke="${p.color}" stroke-width="${2*scale}" opacity="0.5"/>`;
+    }
+    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${1.5*scale}"/>`;
+    // Initial letter
+    const fs = 10 * scale;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${fs}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
+  }
+
+  // Dice roll display: show value near current player
+  if (state.diceRoll && state.players[state.diceRoll.playerId]?.position) {
+    const p = state.players[state.diceRoll.playerId];
+    const { x, y } = hexCenter(p.position.q, p.position.r, scale);
+    const fs = 11 * scale;
+    html += `<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${fs*1.4}" filter="url(#shadow)">🎲${state.diceRoll.value}</text>`;
+  }
+
+  svg.innerHTML = `<defs><filter id="shadow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/></filter></defs>` + html;
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────────────
+function startGame() { socket.emit("master:start"); }
+function resetGame() { if (confirm("Réinitialiser la partie ?")) socket.emit("master:reset"); }
+
+// ─── Resize handling ──────────────────────────────────────────────────────────
+const mapImg = document.getElementById("mapImg");
+mapImg.addEventListener("load", () => {
+  syncCanvasSize();
+  renderMap();
+});
+window.addEventListener("resize", () => {
+  syncCanvasSize();
+  renderMap();
+});
+
+function syncCanvasSize() {
+  const img = document.getElementById("mapImg");
+  const svg = document.getElementById("hexOverlay");
+  svg.setAttribute("width", img.clientWidth);
+  svg.setAttribute("height", img.clientHeight);
+  svg.style.width = img.clientWidth + "px";
+  svg.style.height = img.clientHeight + "px";
+}
+
+// Init if image already loaded
+if (mapImg.complete) {
+  syncCanvasSize();
+  renderMap();
+}
 </script>
 </body>
 </html>
