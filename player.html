@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Joueur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:    #1a1209;
+      --parch:  #f5ead6;
+      --parch2: #ede0c4;
+      --gold:   #b8860b;
+      --gold2:  #d4a017;
+      --red:    #8b1a1a;
+      --green:  #2d5a27;
+      --shadow: rgba(26,18,9,.35);
+    }
+
+    body {
+      background: var(--ink);
+      color: var(--parch);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(ellipse at 50% 0%, rgba(184,134,11,.12) 0%, transparent 60%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #loginScreen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      padding: 32px 24px;
+      gap: 28px;
+      animation: fadeIn .4s ease;
+    }
+    #loginScreen .logo {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.5rem;
+      color: var(--gold2);
+      text-align: center;
+      line-height: 1.4;
+    }
+    #loginScreen .logo span { display: block; font-size: .7rem; color: #8a7a5e; letter-spacing: .12em; text-transform: uppercase; margin-top: 4px; }
+
+    .input-wrap { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 8px; }
+    .input-wrap label { font-size: .85rem; color: var(--gold); letter-spacing: .06em; text-transform: uppercase; }
+    .input-wrap input {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(184,134,11,.4);
+      border-radius: 6px;
+      padding: 13px 16px;
+      font-family: 'Crimson Pro', serif;
+      font-size: 1.1rem;
+      color: var(--parch);
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+    .input-wrap input::placeholder { color: #6a5a3a; }
+    .input-wrap input:focus { border-color: var(--gold2); }
+
+    /* ── GAME SCREEN ── */
+    #gameScreen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      animation: fadeIn .3s ease;
+    }
+
+    header {
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(184,134,11,.2);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header .player-name {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem;
+      color: var(--gold2);
+    }
+    #turnBadge {
+      font-size: .72rem;
+      padding: 3px 12px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      border: 1px solid transparent;
+    }
+    #turnBadge.my-turn    { background: rgba(45,90,39,.3); color: #6abf61; border-color: #6abf61; }
+    #turnBadge.other-turn { background: rgba(0,0,0,.2);   color: #8a7a5e; border-color: #4a3b20; }
+    #turnBadge.waiting    { background: rgba(0,0,0,.2);   color: #8a7a5e; border-color: #4a3b20; }
+
+    .content { padding: 20px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+
+    .card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(184,134,11,.2);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .card h2 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .8rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* Turn status big display */
+    #turnStatus {
+      text-align: center;
+      padding: 24px;
+      border-radius: 12px;
+      transition: all .3s;
+    }
+    #turnStatus.my-turn {
+      background: rgba(45,90,39,.2);
+      border: 1px solid rgba(45,90,39,.5);
+    }
+    #turnStatus.other-turn, #turnStatus.waiting {
+      background: rgba(0,0,0,.2);
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    #turnStatus .big-icon { font-size: 2.8rem; margin-bottom: 8px; }
+    #turnStatus .big-text {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem;
+      color: var(--gold2);
+      line-height: 1.4;
+    }
+    #turnStatus .sub-text { font-size: .9rem; color: #8a7a5e; margin-top: 4px; font-style: italic; }
+
+    /* Players */
+    #playersList { display: flex; flex-direction: column; gap: 7px; }
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: rgba(255,255,255,.04);
+      font-size: .95rem;
+    }
+    .player-row .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #4a3b20;
+      flex-shrink: 0;
+    }
+    .player-row.active-player .dot { background: #6abf61; }
+    .player-row.active-player { color: var(--parch); }
+    .player-row:not(.active-player) { color: #8a7a5e; }
+    .player-row .you-tag {
+      margin-left: auto;
+      font-size: .7rem;
+      color: var(--gold);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    /* Log */
+    #logList { list-style: none; display: flex; flex-direction: column; gap: 5px; max-height: 180px; overflow-y: auto; }
+    #logList li { font-size: .82rem; color: #8a7a5e; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.05); line-height: 1.4; }
+    #logList li:first-child { color: var(--parch2); }
+
+    /* Big action button */
+    .btn-end-turn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #2d5a27, #3d7a34);
+      border: 1px solid #4aaa40;
+      border-radius: 8px;
+      color: #d4f5d0;
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all .2s;
+      box-shadow: 0 4px 16px rgba(45,90,39,.3);
+      letter-spacing: .04em;
+    }
+    .btn-end-turn:hover:not(:disabled) { background: linear-gradient(135deg, #3a7033, #4a8a40); }
+    .btn-end-turn:active:not(:disabled) { transform: scale(.98); }
+    .btn-end-turn:disabled {
+      background: rgba(255,255,255,.05);
+      border-color: rgba(255,255,255,.1);
+      color: #4a3b20;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-join {
+      width: 100%; max-width: 320px;
+      padding: 14px;
+      background: var(--ink);
+      border: 1px solid var(--gold);
+      border-radius: 6px;
+      color: var(--gold2);
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: all .2s;
+      letter-spacing: .04em;
+    }
+    .btn-join:hover { background: #2e2010; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+    /* Connection indicator */
+    .conn-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .conn-dot.connected { background: #6abf61; }
+    .conn-dot.disconnected { background: #e07070; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen">
+  <div class="logo">
+    ⚔ Plateau en Ligne
+    <span>Interface joueur</span>
+  </div>
+
+  <div class="input-wrap">
+    <label for="nameInput">Votre nom</label>
+    <input id="nameInput" type="text" placeholder="Entrez votre nom…" maxlength="20" autocomplete="off" />
+  </div>
+
+  <button class="btn-join" onclick="joinGame()">Rejoindre la partie →</button>
+
+  <p id="connStatus" style="font-size:.8rem;color:#6a5a3a">
+    <span class="conn-dot disconnected" id="connDot"></span>
+    Connexion…
+  </p>
+</div>
+
+<!-- ── GAME ── -->
+<div id="gameScreen">
+  <header>
+    <span class="player-name" id="headerName">Joueur</span>
+    <span id="turnBadge" class="waiting">En attente</span>
+  </header>
+
+  <div class="content">
+
+    <!-- Turn status -->
+    <div id="turnStatus" class="other-turn">
+      <div class="big-icon" id="turnIcon">⏳</div>
+      <div class="big-text" id="turnText">En attente du début de partie</div>
+      <div class="sub-text" id="turnSub">Le maître de jeu démarre bientôt…</div>
+    </div>
+
+    <!-- End turn button -->
+    <button class="btn-end-turn" id="btnEndTurn" disabled onclick="endTurn()">
+      Terminer mon tour →
+    </button>
+
+    <!-- Other players -->
+    <div class="card">
+      <h2>Joueurs</h2>
+      <div id="playersList"></div>
+    </div>
+
+    <!-- Log -->
+    <div class="card">
+      <h2>Journal</h2>
+      <ul id="logList"><li>En attente d'événements…</li></ul>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const socket = io();
+  let myId = socket.id;
+  let joined = false;
+
+  socket.on("connect", () => {
+    myId = socket.id;
+    document.getElementById("connDot").className = "conn-dot connected";
+    document.getElementById("connStatus").innerHTML =
+      `<span class="conn-dot connected"></span>Connecté au serveur`;
+    if (joined) socket.emit("player:join", { name: document.getElementById("nameInput").value });
+  });
+
+  socket.on("disconnect", () => {
+    document.getElementById("connDot").className = "conn-dot disconnected";
+    document.getElementById("connStatus").innerHTML =
+      `<span class="conn-dot disconnected"></span>Déconnecté…`;
+  });
+
+  function joinGame() {
+    const name = document.getElementById("nameInput").value.trim();
+    if (!name) { document.getElementById("nameInput").focus(); return; }
+    joined = true;
+    socket.emit("player:join", { name });
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "flex";
+    document.getElementById("headerName").textContent = name;
+  }
+
+  document.getElementById("nameInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") joinGame();
+  });
+
+  socket.on("game:state", (state) => {
+    const isMyTurn = state.isMyTurn;
+    const status = state.status;
+
+    // Turn badge
+    const badge = document.getElementById("turnBadge");
+    if (status === "waiting") {
+      badge.textContent = "En attente"; badge.className = "waiting";
+    } else if (isMyTurn) {
+      badge.textContent = "Ton tour !"; badge.className = "my-turn";
+    } else {
+      badge.textContent = "Tour adverse"; badge.className = "other-turn";
+    }
+
+    // Big status
+    const turnStatus = document.getElementById("turnStatus");
+    const turnIcon   = document.getElementById("turnIcon");
+    const turnText   = document.getElementById("turnText");
+    const turnSub    = document.getElementById("turnSub");
+
+    if (status === "waiting") {
+      turnStatus.className = "other-turn";
+      turnIcon.textContent = "⏳";
+      turnText.textContent = "En attente du début de partie";
+      turnSub.textContent  = "Le maître de jeu démarre bientôt…";
+    } else if (isMyTurn) {
+      turnStatus.className = "my-turn";
+      turnIcon.textContent = "⚔";
+      turnText.textContent = "C'est ton tour !";
+      turnSub.textContent  = "Joue tes actions, puis termine ton tour.";
+    } else {
+      const currentName = state.currentTurn
+        ? (state.players[state.currentTurn]?.name ?? "Quelqu'un")
+        : "?";
+      turnStatus.className = "other-turn";
+      turnIcon.textContent = "👁";
+      turnText.textContent = `Tour de ${currentName}`;
+      turnSub.textContent  = "Patiente…";
+    }
+
+    // End turn button
+    document.getElementById("btnEndTurn").disabled = !isMyTurn;
+
+    // Players list
+    const list = document.getElementById("playersList");
+    const players = Object.entries(state.players);
+    if (players.length === 0) {
+      list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.9rem">Aucun autre joueur.</div>`;
+    } else {
+      list.innerHTML = players.map(([id, p]) => {
+        const isActive = state.currentTurn === id;
+        const isMe = id === socket.id;
+        return `
+          <div class="player-row ${isActive ? "active-player" : ""}">
+            <span class="dot"></span>
+            ${p.name}
+            ${isMe ? `<span class="you-tag">Vous</span>` : ""}
+          </div>`;
+      }).join("");
+    }
+
+    // Log
+    const logList = document.getElementById("logList");
+    logList.innerHTML = (state.log?.length ? state.log : ["Aucun événement."])
+      .map(e => `<li>${e}</li>`).join("");
+  });
+
+  function endTurn() { socket.emit("player:endTurn"); }
+</script>
+</body>
+</html>
