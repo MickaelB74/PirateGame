@@ -274,14 +274,14 @@
 
 <script>
 // ─── Hex Math (flat-top, odd-q offset DOWN) ───────────────────────────────────
-const COLS = 18, ROWS = 12;
+const COLS = 34, ROWS = 22;
 const IMG_W = 1288, IMG_H = 952;
 
 const MARGIN_X = 38.0;
 const MARGIN_Y = 38.0;
-const COL_STEP = 71.25;
-const ROW_H   = 79.6;
-const HEX_R   = 47.5;
+const COL_STEP = 36.73;
+const ROW_H   = 42.41;
+const HEX_R   = 24.48;
 
 function hexCenter(q, r, scale) {
   const s = scale || 1;
@@ -303,8 +303,8 @@ function hexPoints(cx, cy, scale) {
 }
 
 const START_POSITIONS = [
-  {q:0,r:0},{q:9,r:0},{q:17,r:0},
-  {q:17,r:11},{q:9,r:11},{q:0,r:11},
+  {q:0,r:0},{q:17,r:0},{q:33,r:0},
+  {q:33,r:21},{q:17,r:21},{q:0,r:21},
 ];
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
@@ -502,9 +502,9 @@ function renderMiniMap(state, isPickPhase) {
   for (const [id, p] of Object.entries(state.players)) {
     if (!p.position) continue;
     const { x, y } = hexCenter(p.position.q, p.position.r, scale);
-    const radius = 11 * scale;
-    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${1.5*scale}"/>`;
-    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${9*scale}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
+    const radius = 7 * scale;
+    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}"/>`;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${6*scale}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
   }
 
   svg.innerHTML = html;

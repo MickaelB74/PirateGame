@@ -255,20 +255,19 @@
 
 <script>
 // ─── Hex Grid Math (flat-top, odd-q offset DOWN) ─────────────────────────────
-const COLS = 18, ROWS = 12;
+const COLS = 34, ROWS = 22;
 const IMG_W = 1288, IMG_H = 952;
 
-// Calibrated from Map.jpg (1288x952)
-// Grid: 18 cols x 12 rows, flat-top hexagons, odd columns shifted down by ROW_H/2
+// Calibrated from Map.jpg — flat-top hexagons, odd columns shifted down by ROW_H/2
 const MARGIN_X = 38.0;
 const MARGIN_Y = 38.0;
-const COL_STEP = 71.25;   // horizontal distance between column centers
-const ROW_H   = 79.6;    // vertical distance between row centers (within a column)
-const HEX_R   = 47.5;    // center-to-corner radius
+const COL_STEP = 36.73;   // horizontal distance between column centers
+const ROW_H   = 42.41;   // vertical distance between row centers
+const HEX_R   = 24.48;   // center-to-corner radius
 
 const START_POSITIONS = [
-  { q:0,  r:0  }, { q:9,  r:0  }, { q:17, r:0  },
-  { q:17, r:11 }, { q:9,  r:11 }, { q:0,  r:11 },
+  { q:0,  r:0  }, { q:17, r:0  }, { q:33, r:0  },
+  { q:33, r:21 }, { q:17, r:21 }, { q:0,  r:21 },
 ];
 
 function hexCenter(q, r, scale) {
@@ -398,14 +397,12 @@ function renderMap() {
     const { q, r } = p.position;
     const { x, y } = hexCenter(q, r, scale);
     const isActive = state.currentTurn === id;
-    const radius = 13 * scale;
-    // Glow ring for active player
+    const radius = 9 * scale;
     if (isActive) {
-      html += `<circle cx="${x}" cy="${y}" r="${radius+4*scale}" fill="none" stroke="${p.color}" stroke-width="${2*scale}" opacity="0.5"/>`;
+      html += `<circle cx="${x}" cy="${y}" r="${radius+3*scale}" fill="none" stroke="${p.color}" stroke-width="${1.5*scale}" opacity="0.6"/>`;
     }
-    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${1.5*scale}"/>`;
-    // Initial letter
-    const fs = 10 * scale;
+    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}"/>`;
+    const fs = 7 * scale;
     html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${fs}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
   }
 
