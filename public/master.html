@@ -4,305 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Maître de Jeu — Plateau</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --ink:     #0d0905;
-      --deep:    #08050200;
-      --ocean:   #0a1a2e;
-      --ocean2:  #0d2340;
-      --parch:   #f0e4c8;
-      --parch2:  #d4c09a;
-      --gold:    #b8860b;
-      --gold2:   #d4a017;
-      --gold3:   #f0c040;
-      --teal:    #4aedcc;
-      --red:     #8b1a1a;
-      --border:  rgba(184,134,11,.22);
+      --ink:    #0d0905;
+      --parch:  #f0e4c8;
+      --parch2: #c8b890;
+      --gold:   #b8860b;
+      --gold2:  #d4a017;
+      --gold3:  #f0c040;
+      --teal:   #4aedcc;
+      --border: rgba(184,134,11,.22);
     }
+    html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--parch); font-family: 'Crimson Pro', Georgia, serif; }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      background: var(--ink);
-      color: var(--parch);
-      font-family: 'Crimson Pro', Georgia, serif;
-    }
-
-    /* ══ HEADER ══════════════════════════════════════════════════════════════ */
+    /* ══ HEADER ══════════════════════════════════════════════════════════════════ */
     header {
-      background: rgba(8,5,1,.98);
-      border-bottom: 2px solid var(--gold);
-      padding: 8px 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-shrink: 0;
-      z-index: 20;
-      height: 48px;
+      height: 46px; background: rgba(6,4,1,.98); border-bottom: 2px solid var(--gold);
+      padding: 0 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; z-index: 20;
     }
-    header h1 {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1rem;
-      color: var(--gold2);
-      letter-spacing: .04em;
-    }
-    .badge {
-      font-size: .65rem;
-      padding: 2px 10px;
-      border-radius: 20px;
-      border: 1px solid var(--gold);
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      font-family: 'Cinzel', serif;
-    }
+    header h1 { font-family: 'Cinzel Decorative', serif; font-size: 1rem; color: var(--gold2); letter-spacing: .04em; }
+    .badge { font-size: .65rem; padding: 2px 10px; border-radius: 20px; border: 1px solid var(--gold); text-transform: uppercase; letter-spacing: .1em; font-family: 'Cinzel', serif; }
     .badge.waiting { color: var(--gold2); border-color: var(--gold); }
-    .badge.picking  { color: #4aedcc;    border-color: #4aedcc; }
-    .badge.playing  { color: #6abf61;    border-color: #6abf61; }
-
+    .badge.picking  { color: #4aedcc;  border-color: #4aedcc; }
+    .badge.playing  { color: #6abf61;  border-color: #6abf61; }
     .header-controls { margin-left: auto; display: flex; gap: 8px; align-items: center; }
     .btn {
-      padding: 5px 14px; border-radius: 4px; border: 1px solid var(--gold);
-      background: transparent; color: var(--gold2); font-family: 'Crimson Pro', serif;
-      font-size: .85rem; cursor: pointer; transition: background .15s;
+      padding: 5px 14px; border-radius: 4px; border: 1px solid var(--gold); background: transparent;
+      color: var(--gold2); font-family: 'Crimson Pro', serif; font-size: .9rem; cursor: pointer;
+      transition: background .15s; text-decoration: none; display: inline-block;
     }
     .btn:hover:not(:disabled) { background: rgba(184,134,11,.15); }
     .btn:disabled { opacity: .35; cursor: not-allowed; }
     .btn-danger { border-color: #e07070; color: #e07070; }
     .btn-danger:hover { background: rgba(224,112,112,.12) !important; }
 
-    /* ══ MAIN LAYOUT ═══════════════════════════════════════════════════════════ */
-    .board-layout {
+    /* ══ PLATEAU LAYOUT ══════════════════════════════════════════════════════════ */
+    /* 3 colonnes × 3 rangées — bords occupent toute la hauteur centrale */
+    .board {
       display: grid;
-      grid-template-columns: 180px 1fr 180px;
-      grid-template-rows: 60px 1fr 80px;
-      height: calc(100vh - 48px);
-      gap: 0;
+      grid-template-columns: 190px 1fr 190px;
+      grid-template-rows: 72px 1fr 88px;
+      height: calc(100vh - 46px);
     }
 
-    /* ══ ZONES BORDURE ══════════════════════════════════════════════════════════ */
-    .zone {
-      background: rgba(8,5,1,.92);
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .zone-title {
-      font-family: 'Cinzel', serif;
-      font-size: .55rem;
-      text-transform: uppercase;
-      letter-spacing: .15em;
-      color: var(--gold);
-      padding: 4px 8px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(184,134,11,.06);
-      flex-shrink: 0;
-    }
-
-    /* Haut — cartes énigme */
+    /* ── Bande HAUT (Énigmes) ── */
     .zone-top {
-      grid-column: 1 / 4;
-      grid-row: 1;
-      flex-direction: row;
-      align-items: center;
-      padding: 0 12px;
-      gap: 10px;
+      grid-column: 1 / 4; grid-row: 1;
+      background: rgba(4,2,0,.9); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; overflow: hidden;
     }
-    .zone-top .zone-title { border-bottom: none; border-right: 1px solid var(--border); padding-right: 12px; margin-right: 4px; }
 
-    .card-slots-row { display: flex; gap: 6px; align-items: center; flex: 1; overflow-x: auto; }
+    /* ── Bande BAS (Avancement) ── */
+    .zone-bot {
+      grid-column: 1 / 4; grid-row: 3;
+      background: rgba(4,2,0,.9); border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; overflow: hidden;
+    }
+
+    .zone-label {
+      font-family: 'Cinzel', serif; font-size: .72rem; color: var(--gold); text-transform: uppercase;
+      letter-spacing: .12em; white-space: nowrap;
+      border-right: 1px solid var(--border); padding-right: 12px; margin-right: 2px; flex-shrink: 0;
+    }
+    .card-slots { display: flex; gap: 7px; align-items: center; justify-content: center; flex: 1; }
     .card-slot {
-      width: 36px; height: 52px; border: 1px solid rgba(184,134,11,.3);
-      border-radius: 4px; background: rgba(184,134,11,.05);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .55rem; color: rgba(184,134,11,.4); flex-shrink: 0;
-      font-family: 'Cinzel', serif; text-align: center; letter-spacing: .05em;
+      width: 44px; height: 58px; border: 1px solid rgba(74,238,204,.3); border-radius: 5px;
+      background: rgba(74,238,204,.04); display: flex; flex-direction: column; align-items: center;
+      justify-content: center; font-size: .58rem; color: rgba(74,238,204,.55); font-family: 'Cinzel', serif;
+      text-align: center; letter-spacing: .04em; gap: 2px; flex-shrink: 0;
     }
-    .card-slot.enigme { border-color: rgba(74,238,204,.3); color: rgba(74,238,204,.4); background: rgba(74,238,204,.03); }
-    .card-slot.avance { border-color: rgba(212,160,23,.4); background: rgba(212,160,23,.06); }
+    .card-slot.av { border-color: rgba(212,160,23,.35); color: rgba(212,160,23,.55); background: rgba(212,160,23,.04); }
+    .slot-icon { font-size: .95rem; }
+    .slot-txt  { font-size: .52rem; line-height: 1.2; }
 
-    /* Gauche — îles détail */
+    /* ── GAUCHE (Îles 1-5) ── */
     .zone-left {
-      grid-column: 1;
-      grid-row: 2;
+      grid-column: 1; grid-row: 2;
+      background: rgba(5,3,1,.95); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
     }
-    /* Droite — îles détail */
+    /* ── DROITE (Îles 6-10) ── */
     .zone-right {
-      grid-column: 3;
-      grid-row: 2;
+      grid-column: 3; grid-row: 2;
+      background: rgba(5,3,1,.95); border-left: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
     }
+    .side-title {
+      font-family: 'Cinzel', serif; font-size: .68rem; color: var(--gold); text-transform: uppercase;
+      letter-spacing: .1em; padding: 7px 10px; border-bottom: 1px solid var(--border);
+      background: rgba(184,134,11,.06); flex-shrink: 0;
+    }
+    /* Les 5 cartes îles occupent toute la hauteur restante */
+    .island-grid { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .island-card {
+      flex: 1; border-bottom: 1px solid rgba(184,134,11,.1); padding: 0 10px;
+      display: flex; flex-direction: column; justify-content: center; gap: 3px; min-height: 0;
+    }
+    .island-card:last-child { border-bottom: none; }
+    .island-card:hover { background: rgba(184,134,11,.07); }
+    .island-name {
+      font-family: 'Cinzel', serif; font-size: .74rem; color: var(--gold2);
+      display: flex; align-items: center; gap: 5px; line-height: 1.2;
+    }
+    .island-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .island-coord { font-size: .68rem; color: var(--parch2); font-style: italic; }
 
-    .island-entry {
-      padding: 5px 8px;
-      border-bottom: 1px solid rgba(184,134,11,.1);
-      font-size: .72rem;
-      cursor: pointer;
-      transition: background .1s;
-    }
-    .island-entry:hover { background: rgba(184,134,11,.08); }
-    .island-entry .iname {
-      font-family: 'Cinzel', serif;
-      font-size: .65rem;
-      color: var(--gold2);
-      display: block;
-      margin-bottom: 2px;
-    }
-    .island-entry .icoord {
-      color: var(--parch2);
-      font-size: .62rem;
-      font-style: italic;
-    }
-    .island-marker { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    /* ── CARTE CENTRALE ── */
+    .map-area { grid-column: 2; grid-row: 2; position: relative; overflow: hidden; background: #020d18; }
+    #worldCanvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+    #hexOverlay  { position: absolute; inset: 0; pointer-events: all; }
 
-    /* Bas — avancement */
-    .zone-bottom {
-      grid-column: 1 / 4;
-      grid-row: 3;
-      flex-direction: row;
-      align-items: center;
-      padding: 0 12px;
-      gap: 10px;
+    /* ══ SIDEBAR FLOTTANTE ═══════════════════════════════════════════════════════ */
+    .sidebar {
+      position: fixed; right: 196px; top: 54px; width: 212px;
+      background: rgba(6,4,1,.96); border: 1px solid var(--border); border-radius: 7px;
+      display: flex; flex-direction: column; gap: 8px; padding: 10px; z-index: 15;
+      max-height: calc(100vh - 160px); overflow-y: auto;
     }
-    .zone-bottom .zone-title { border-bottom: none; border-right: 1px solid var(--border); padding-right: 12px; margin-right: 4px; }
-
-    /* ══ CENTRE — CARTE ═════════════════════════════════════════════════════════ */
-    .map-area {
-      grid-column: 2;
-      grid-row: 2;
-      position: relative;
-      overflow: hidden;
-      background: #020d18;
-    }
-
-    #worldCanvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    #hexOverlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: all;
-    }
-
-    /* ══ SIDEBAR DROITE ═══════════════════════════════════════════════════════== */
-    .sidebar-float {
-      position: fixed;
-      right: 186px;
-      top: 60px;
-      width: 200px;
-      background: rgba(8,5,1,.94);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 15;
-      max-height: calc(100vh - 200px);
-      overflow-y: auto;
-    }
-    .panel {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(184,134,11,.18);
-      border-radius: 6px;
-      padding: 10px;
-    }
+    .panel { background: rgba(255,255,255,.04); border: 1px solid rgba(184,134,11,.16); border-radius: 6px; padding: 10px; }
     .panel h2 {
-      font-family: 'Cinzel', serif;
-      font-size: .62rem;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 7px;
-      padding-bottom: 5px;
-      border-bottom: 1px solid rgba(184,134,11,.18);
+      font-family: 'Cinzel', serif; font-size: .7rem; color: var(--gold); text-transform: uppercase;
+      letter-spacing: .08em; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(184,134,11,.16);
     }
-    .player-row {
-      display: flex; align-items: center; gap: 6px; padding: 5px 6px;
-      border-radius: 4px; font-size: .78rem; margin-bottom: 3px;
-      background: rgba(255,255,255,.03);
+    .url-box {
+      font-size: .68rem; color: var(--parch2); word-break: break-all; cursor: pointer;
+      padding: 5px 7px; background: rgba(255,255,255,.04); border-radius: 4px; border: 1px solid var(--border);
     }
-    .player-row.active { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.25); }
-    .player-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    .player-pos { margin-left: auto; font-size: .62rem; color: #6a5a3a; font-family: monospace; }
-    .turn-tag { font-size: .6rem; color: #6abf61; font-family: 'Cinzel', serif; }
+    .url-box:hover { background: rgba(255,255,255,.08); }
 
-    #logList { list-style: none; font-size: .72rem; color: var(--parch2); max-height: 120px; overflow-y: auto; }
-    #logList li { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+    .p-row { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 4px; font-size: .84rem; margin-bottom: 3px; background: rgba(255,255,255,.03); }
+    .p-row.active { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.25); }
+    .p-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .p-pos { margin-left: auto; font-size: .65rem; color: #6a5a3a; font-family: monospace; }
+    .p-turn { font-size: .6rem; color: #6abf61; font-family: 'Cinzel', serif; }
 
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: .72rem; margin-bottom: 4px; }
-    .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .leg-row { display: flex; align-items: center; gap: 7px; font-size: .8rem; margin-bottom: 5px; }
+    .leg-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ══ PANNEAU CONTRÔLE MJ ═══════════════════════════════════════════════════ */
-    .ctrl-turn-box {
-      background: rgba(184,134,11,.07); border: 1px solid rgba(184,134,11,.25);
-      border-radius: 5px; padding: 7px 8px; margin-bottom: 7px; text-align: center;
-    }
-    .ctrl-turn-name  { font-family: 'Cinzel', serif; font-size: .78rem; color: var(--gold3); display: block; margin-bottom: 2px; }
-    .ctrl-turn-phase { font-size: .62rem; color: var(--parch2); font-style: italic; }
-    .dice-display    { font-size: 1.9rem; text-align: center; margin: 3px 0; filter: drop-shadow(0 0 5px rgba(255,200,50,.4)); }
-    .dice-value-label { font-size: .65rem; color: var(--parch2); text-align: center; margin-bottom: 6px; }
-    .btn-sm {
-      display: block; width: 100%; padding: 5px 8px; border-radius: 4px;
-      border: 1px solid var(--gold); background: transparent; color: var(--gold2);
-      font-family: 'Crimson Pro', serif; font-size: .78rem; cursor: pointer;
-      margin-bottom: 4px; transition: background .15s; text-align: left;
-    }
-    .btn-sm:hover:not(:disabled) { background: rgba(184,134,11,.18); }
-    .btn-sm:disabled { opacity: .3; cursor: not-allowed; }
-    .btn-sm.red   { border-color: #c05050; color: #e07070; }
-    .btn-sm.red:hover:not(:disabled)   { background: rgba(200,80,80,.15); }
-    .btn-sm.green { border-color: #50a050; color: #80c880; }
-    .btn-sm.green:hover:not(:disabled) { background: rgba(80,160,80,.15); }
-    .btn-sm.teal  { border-color: var(--teal); color: var(--teal); }
-    .btn-sm.teal:hover:not(:disabled)  { background: rgba(74,238,204,.1); }
+    #logList { list-style: none; font-size: .76rem; color: var(--parch2); max-height: 110px; overflow-y: auto; }
+    #logList li { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.04); line-height: 1.4; }
 
-    .ctrl-player {
-      display: flex; align-items: center; gap: 5px; padding: 4px 5px;
-      border-radius: 4px; margin-bottom: 3px; font-size: .75rem;
-      background: rgba(255,255,255,.03);
-    }
-    .ctrl-player.active-turn { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.25); }
-    .ctrl-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .ctrl-pos  { margin-left: auto; font-size: .6rem; color: #6a5a3a; font-family: monospace; }
-    .ctrl-tag  { font-size: .55rem; color: #6abf61; font-family: 'Cinzel', serif; padding: 1px 4px; border: 1px solid rgba(106,191,97,.4); border-radius: 3px; }
-
-    /* ══ TOOLTIP ════════════════════════════════════════════════════════════════ */
+    /* ══ TOOLTIP ══ */
     #tooltip {
-      position: fixed;
-      background: rgba(8,5,1,.95);
-      border: 1px solid var(--gold);
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: .8rem;
-      color: var(--parch);
-      pointer-events: none;
-      z-index: 100;
-      display: none;
-      min-width: 140px;
-      max-width: 200px;
+      position: fixed; background: rgba(6,4,1,.96); border: 1px solid var(--gold); border-radius: 6px;
+      padding: 8px 12px; font-size: .84rem; color: var(--parch); pointer-events: none; z-index: 200;
+      display: none; min-width: 150px; max-width: 220px;
     }
-    #tooltip .tt-title { font-family: 'Cinzel', serif; font-size: .75rem; color: var(--gold2); margin-bottom: 3px; }
-    #tooltip .tt-coord { font-size: .65rem; color: var(--parch2); font-family: monospace; }
+    .tt-name  { font-family: 'Cinzel', serif; font-size: .8rem; color: var(--gold2); margin-bottom: 2px; }
+    .tt-type  { font-size: .7rem; color: var(--parch2); }
+    .tt-coord { font-size: .65rem; color: rgba(184,134,11,.6); font-family: monospace; margin-top: 3px; }
 
-    /* Toggle sidebar */
-    .sidebar-toggle {
-      position: fixed; right: 392px; top: 68px;
-      background: rgba(8,5,1,.9); border: 1px solid var(--border);
-      color: var(--gold2); font-size: .7rem; padding: 4px 8px;
-      border-radius: 4px; cursor: pointer; z-index: 20;
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar { width: 3px; }
     ::-webkit-scrollbar-thumb { background: rgba(184,134,11,.3); border-radius: 2px; }
   </style>
 </head>
@@ -315,87 +170,64 @@
   <div class="header-controls">
     <button class="btn" id="btnStart" disabled onclick="startGame()">▶ Démarrer</button>
     <button class="btn btn-danger" onclick="resetGame()">↺ Reset</button>
-    <a href="/admin" class="btn" style="text-decoration:none">⚙ Admin</a>
+    <a href="/admin" class="btn">⚙ Admin</a>
   </div>
 </header>
 
 <!-- ══ PLATEAU ══ -->
-<div class="board-layout">
+<div class="board">
 
-  <!-- HAUT : Cartes Énigme -->
-  <div class="zone zone-top">
-    <span class="zone-title">🔍 Cartes Énigme</span>
-    <div class="card-slots-row" id="enigmeSlots">
-      <!-- Generé dynamiquement -->
-    </div>
+  <!-- HAUT : Énigmes -->
+  <div class="zone-top">
+    <span class="zone-label">🔍 Cartes Énigme</span>
+    <div class="card-slots" id="enigmeSlots"></div>
   </div>
 
-  <!-- GAUCHE : Îles 1–5 -->
-  <div class="zone zone-left">
-    <div class="zone-title">🏝 Îles · Détail</div>
-    <div style="overflow-y:auto;flex:1" id="islandListLeft"></div>
+  <!-- GAUCHE : Îles 1-5 -->
+  <div class="zone-left">
+    <div class="side-title">🏝 Îles · Détail</div>
+    <div class="island-grid" id="islandLeft"></div>
   </div>
 
-  <!-- CENTRE : Carte du monde -->
+  <!-- CARTE DU MONDE -->
   <div class="map-area" id="mapArea">
     <canvas id="worldCanvas"></canvas>
     <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
   </div>
 
-  <!-- DROITE : Îles 6–10 -->
-  <div class="zone zone-right">
-    <div class="zone-title">🏝 Îles · Détail</div>
-    <div style="overflow-y:auto;flex:1" id="islandListRight"></div>
+  <!-- DROITE : Îles 6-10 -->
+  <div class="zone-right">
+    <div class="side-title">🏝 Îles · Détail</div>
+    <div class="island-grid" id="islandRight"></div>
   </div>
 
-  <!-- BAS : Cartes Avancement -->
-  <div class="zone zone-bottom">
-    <span class="zone-title">📈 Avancement de Partie</span>
-    <div class="card-slots-row" id="advanceSlots">
-      <!-- Generé dynamiquement -->
-    </div>
+  <!-- BAS : Avancement -->
+  <div class="zone-bot">
+    <span class="zone-label">📈 Avancement de Partie</span>
+    <div class="card-slots" id="advanceSlots"></div>
   </div>
 
 </div>
 
-<!-- ══ SIDEBAR FLOTTANTE MJ ══ -->
-<div class="sidebar-float" id="sidebarFloat">
-
+<!-- ══ SIDEBAR ══ -->
+<div class="sidebar">
   <div class="panel">
-    <h2>🔗 Connexion Joueur</h2>
-    <div style="font-size:.62rem;color:var(--parch2);word-break:break-all;cursor:pointer;padding:4px;background:rgba(255,255,255,.04);border-radius:3px;border:1px solid var(--border)" id="playerUrl" onclick="copyUrl()" title="Cliquer pour copier">Chargement…</div>
+    <h2>🔗 Lien Joueur</h2>
+    <div class="url-box" id="playerUrl" onclick="copyUrl()">…</div>
   </div>
-
-  <div class="panel" id="ctrlPanel">
-    <h2>🎮 Contrôle MJ</h2>
-    <div class="ctrl-turn-box" id="ctrlTurnBox">
-      <span class="ctrl-turn-name" id="ctrlTurnName">—</span>
-      <span class="ctrl-turn-phase" id="ctrlTurnPhase">En attente de démarrage</span>
-    </div>
-    <div id="ctrlDiceSection" style="display:none">
-      <div class="dice-display" id="ctrlDiceFace">?</div>
-      <div class="dice-value-label" id="ctrlDiceLabel">Pas encore lancé</div>
-    </div>
-    <button class="btn-sm teal" id="btnMJRoll"   onclick="mjRollDice()"  disabled>🎲 Lancer le dé (MJ)</button>
-    <button class="btn-sm green" id="btnMJEndTurn" onclick="mjEndTurn()" disabled>✅ Fin de tour</button>
-    <button class="btn-sm red"  onclick="resetGame()">↺ Reset la partie</button>
-  </div>
-
   <div class="panel">
     <h2>Joueurs (<span id="playerCount">0</span>)</h2>
-    <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.75rem">Aucun joueur…</div></div>
+    <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.8rem">Aucun joueur…</div></div>
   </div>
-
   <div class="panel">
     <h2>Légende</h2>
-    <div class="legend-item"><div class="legend-dot" style="background:#e63946;border:2px solid #ff6b6b"></div> Cœur de la tempête</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#6a2a00;border:2px solid #8b4513"></div> Repaire pirate</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#0a3a1a;border:2px solid #2eb872"></div> Port de commerce</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#3a3000;border:2px solid #c8a800"></div> Île inexplorée</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#0a0a2a;border:2px solid #5577aa"></div> Épave</div>
-    <div class="legend-item" style="margin-top:2px"><div style="width:22px;height:2px;background:rgba(255,165,0,.7);margin-right:6px;flex-shrink:0"></div> Route commerciale</div>
+    <div class="leg-row"><div class="leg-dot" style="background:#e63946;border:2px solid #ff5555"></div>Cœur de la Tempête</div>
+    <div class="leg-row"><div class="leg-dot" style="background:#6a2a00;border:2px solid #a05010"></div>Repaire pirate</div>
+    <div class="leg-row"><div class="leg-dot" style="background:#0a3a1a;border:2px solid #2eb872"></div>Port de commerce</div>
+    <div class="leg-row"><div class="leg-dot" style="background:#3a3000;border:2px solid #c8a800"></div>Île inexplorée</div>
+    <div class="leg-row"><div class="leg-dot" style="background:#0a102a;border:2px solid #5577aa"></div>Épave</div>
+    <div class="leg-row"><div style="width:22px;height:2px;background:rgba(255,165,0,.7);margin-right:1px;flex-shrink:0"></div>Route commerciale</div>
   </div>
-
   <div class="panel" style="flex:1;min-height:0">
     <h2>📜 Journal</h2>
     <ul id="logList"><li>En attente…</li></ul>
@@ -404,613 +236,311 @@
 
 <!-- TOOLTIP -->
 <div id="tooltip">
-  <div class="tt-title" id="tt-title"></div>
+  <div class="tt-name"  id="tt-name"></div>
+  <div class="tt-type"  id="tt-type"></div>
   <div class="tt-coord" id="tt-coord"></div>
-  <div id="tt-desc" style="font-size:.7rem;color:#a09070;margin-top:3px"></div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════════════════
-// CONSTANTES GRILLE
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+// GRILLE HEX (odd-r offset, pointy-top)
+// ════════════════════════════════════════════════════════════════
 const COLS = 25, ROWS = 21;
+let HEX_R=0, MARGIN_X=0, MARGIN_Y=0, COL_SP=0, ROW_SP=0, ROW_OFFSET=0;
 
-// Paramètres de la grille hexagonale (odd-r offset, pointy-top)
-// Ces valeurs correspondent à la grille calibrée sur l'ancienne Map.jpg
-// Maintenant utilisées pour construire une grille pleine écran.
-let HEX_R     = 0; // calculé dynamiquement
-let MARGIN_X  = 0;
-let MARGIN_Y  = 0;
-let COL_SP    = 0;
-let ROW_SP    = 0;
-let ROW_OFFSET= 0;
+function computeGrid() {
+  const a = document.getElementById('mapArea');
+  const W = a.clientWidth, H = a.clientHeight;
+  const rW = (W*.96) / (COLS*Math.sqrt(3)+.5);
+  const rH = (H*.96) / (ROWS*1.5+.5);
+  HEX_R = Math.min(rW, rH);
+  COL_SP = HEX_R * Math.sqrt(3);
+  ROW_SP = HEX_R * 1.5;
+  ROW_OFFSET = COL_SP / 2;
+  MARGIN_X = (W - (COLS*COL_SP + ROW_OFFSET)) / 2 + COL_SP*.5;
+  MARGIN_Y = (H - (ROWS*ROW_SP + HEX_R*.5)) / 2 + HEX_R;
+}
 
-// ════════════════════════════════════════════════════════════════════════════
-// ÉLÉMENTS DU MONDE (positions fixes sur la grille 25×21)
-// ════════════════════════════════════════════════════════════════════════════
+function hexCenter(q,r) {
+  return { x: MARGIN_X + q*COL_SP + (r%2===1 ? ROW_OFFSET : 0), y: MARGIN_Y + r*ROW_SP };
+}
+function hexPts(cx,cy) {
+  const p=[];
+  for(let i=0;i<6;i++){const a=Math.PI/2+(Math.PI/3)*i; p.push(`${cx+HEX_R*Math.cos(a)},${cy-HEX_R*Math.sin(a)}`);}
+  return p.join(' ');
+}
 
+// ════════════════════════════════════════════════════════════════
+// MONDE
+// ════════════════════════════════════════════════════════════════
 const WORLD = {
-
-  // Cœur de la tempête — centre exact
-  storm: { q: 12, r: 10, label: "Cœur de la Tempête" },
-
-  // 4 Repaires de pirates (coins légèrement reculés)
+  storm:   { q:12, r:10, label:'Cœur de la Tempête' },
   pirates: [
-    { q: 2,  r: 2,  label: "Repaire du Crâne Noir" },
-    { q: 22, r: 2,  label: "Antre des Marées Rouges" },
-    { q: 3,  r: 18, label: "Crique du Vautour" },
-    { q: 21, r: 18, label: "Fort des Damnés" },
+    { q:2,  r:2,  label:'Repaire du Crâne Noir' },
+    { q:22, r:2,  label:'Antre des Marées Rouges' },
+    { q:3,  r:18, label:'Crique du Vautour' },
+    { q:21, r:18, label:'Fort des Damnés' },
   ],
-
-  // 5 Ports de commerce (distribués sur les bords)
   ports: [
-    { q: 6,  r: 1,  label: "Port de Solaria" },
-    { q: 18, r: 1,  label: "Port des Vents d'Est" },
-    { q: 0,  r: 10, label: "Port de l'Ancre Brisée" },
-    { q: 24, r: 10, label: "Port de la Mer Grise" },
-    { q: 12, r: 19, label: "Port des Dernières Eaux" },
+    { q:6,  r:1,  label:"Port de Solaria" },
+    { q:18, r:1,  label:"Port des Vents d'Est" },
+    { q:0,  r:10, label:"Port de l'Ancre Brisée" },
+    { q:24, r:10, label:"Port de la Mer Grise" },
+    { q:12, r:19, label:"Port des Dernières Eaux" },
   ],
-
-  // 5 Routes commerciales (paires de points reliés)
   routes: [
-    [ {q:6,r:1},   {q:18,r:1}  ],   // Nord : Solaria ↔ Vents d'Est
-    [ {q:0,r:10},  {q:6,r:1}   ],   // Ouest ↔ Nord-ouest
-    [ {q:24,r:10}, {q:18,r:1}  ],   // Est ↔ Nord-est
-    [ {q:0,r:10},  {q:12,r:19} ],   // Ouest ↔ Sud
-    [ {q:24,r:10}, {q:12,r:19} ],   // Est ↔ Sud
+    [{q:6,r:1},{q:18,r:1}],
+    [{q:0,r:10},{q:6,r:1}],
+    [{q:24,r:10},{q:18,r:1}],
+    [{q:0,r:10},{q:12,r:19}],
+    [{q:24,r:10},{q:12,r:19}],
   ],
-
-  // 6 Épaves (dispersées)
   wrecks: [
-    { q: 4,  r: 5,  label: "Épave du Santa Fortuna" },
-    { q: 19, r: 4,  label: "Épave de l'Émeraude Noire" },
-    { q: 8,  r: 13, label: "Épave du Vent du Nord" },
-    { q: 16, r: 14, label: "Épave de la Belle Aurore" },
-    { q: 1,  r: 16, label: "Épave du Roi des Mers" },
-    { q: 22, r: 15, label: "Épave du Capitaine Gris" },
+    { q:4,  r:5,  label:'Épave du Santa Fortuna' },
+    { q:19, r:4,  label:"Épave de l'Émeraude Noire" },
+    { q:8,  r:13, label:'Épave du Vent du Nord' },
+    { q:16, r:14, label:'Épave de la Belle Aurore' },
+    { q:1,  r:16, label:'Épave du Roi des Mers' },
+    { q:22, r:15, label:'Épave du Capitaine Gris' },
   ],
-
-  // 10 Îles inexplorées (placement libre, bien réparties)
   islands: [
-    { q: 5,  r: 8,  label: "Île de la Brume" },
-    { q: 9,  r: 3,  label: "Île du Serpent" },
-    { q: 15, r: 6,  label: "Île des Coraux" },
-    { q: 20, r: 8,  label: "Île Fantôme" },
-    { q: 7,  r: 16, label: "Île du Cendrier" },
-    { q: 14, r: 16, label: "Île des Naufragés" },
-    { q: 3,  r: 12, label: "Île de la Torche" },
-    { q: 21, r: 13, label: "Île du Crépuscule" },
-    { q: 11, r: 7,  label: "Île des Étoiles" },
-    { q: 17, r: 11, label: "Île des Épices" },
+    { q:5,  r:8,  label:'Île de la Brume' },
+    { q:9,  r:3,  label:'Île du Serpent' },
+    { q:15, r:6,  label:'Île des Coraux' },
+    { q:20, r:8,  label:'Île Fantôme' },
+    { q:7,  r:16, label:'Île du Cendrier' },
+    { q:14, r:16, label:"Île des Naufragés" },
+    { q:3,  r:12, label:'Île de la Torche' },
+    { q:21, r:13, label:'Île du Crépuscule' },
+    { q:11, r:7,  label:"Île des Étoiles" },
+    { q:17, r:11, label:"Île des Épices" },
   ],
 };
 
-// ════════════════════════════════════════════════════════════════════════════
-// CALCUL GRILLE DYNAMIQUE
-// ════════════════════════════════════════════════════════════════════════════
+const EL = {};
+EL[`${WORLD.storm.q},${WORLD.storm.r}`] = {type:'storm', label:WORLD.storm.label};
+WORLD.pirates.forEach(p=>{EL[`${p.q},${p.r}`]={type:'pirate',label:p.label};});
+WORLD.ports.forEach(p=>{EL[`${p.q},${p.r}`]={type:'port',label:p.label};});
+WORLD.wrecks.forEach(w=>{EL[`${w.q},${w.r}`]={type:'wreck',label:w.label};});
+WORLD.islands.forEach(i=>{EL[`${i.q},${i.r}`]={type:'island',label:i.label};});
+const TYPE_LBL = {storm:'🌀 Zone de tempête', pirate:'☠ Repaire de pirates', port:'⚓ Port de commerce', wreck:'⛵ Épave', island:'🏝 Île inexplorée'};
 
-function computeGridParams() {
+// ════════════════════════════════════════════════════════════════
+// CANVAS — fond océan
+// ════════════════════════════════════════════════════════════════
+function drawOcean() {
   const area = document.getElementById('mapArea');
-  const W = area.clientWidth;
-  const H = area.clientHeight;
-
-  // Fit la grille dans la zone disponible
-  // hex pointy-top: largeur colonne = R * sqrt(3), hauteur rangée = R * 1.5
-  // On veut COLS colonnes + demi-décalage, ROWS rangées
-  const rFromW = (W * 0.95) / (COLS * Math.sqrt(3) + 0.5);
-  const rFromH = (H * 0.95) / (ROWS * 1.5 + 0.5);
-  HEX_R    = Math.min(rFromW, rFromH);
-  COL_SP   = HEX_R * Math.sqrt(3);
-  ROW_SP   = HEX_R * 1.5;
-  ROW_OFFSET = COL_SP / 2;
-
-  MARGIN_X = (W - (COLS * COL_SP + ROW_OFFSET)) / 2 + COL_SP * 0.5;
-  MARGIN_Y = (H - (ROWS * ROW_SP + HEX_R * 0.5)) / 2 + HEX_R;
-}
-
-function hexCenter(q, r) {
-  return {
-    x: MARGIN_X + q * COL_SP + (r % 2 === 1 ? ROW_OFFSET : 0),
-    y: MARGIN_Y + r * ROW_SP,
-  };
-}
-
-function hexPoints(cx, cy) {
-  const pts = [];
-  for (let i = 0; i < 6; i++) {
-    const angle = Math.PI / 2 + (Math.PI / 3) * i;
-    pts.push(`${cx + HEX_R * Math.cos(angle)},${cy - HEX_R * Math.sin(angle)}`);
-  }
-  return pts.join(" ");
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// DESSIN CANVAS (fond océan)
-// ════════════════════════════════════════════════════════════════════════════
-
-function drawOceanCanvas() {
-  const area   = document.getElementById('mapArea');
-  const canvas = document.getElementById('worldCanvas');
-  const W = area.clientWidth;
-  const H = area.clientHeight;
-  canvas.width  = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-
-  // Fond dégradé océan
-  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
-  grad.addColorStop(0,   '#0d2848');
-  grad.addColorStop(0.4, '#0a1e3a');
-  grad.addColorStop(1,   '#030d1a');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, W, H);
-
-  // Texture de vague subtile
-  ctx.strokeStyle = 'rgba(30,80,140,0.12)';
-  ctx.lineWidth = 0.8;
-  for (let y = 0; y < H; y += 18) {
+  const c = document.getElementById('worldCanvas');
+  const W = c.width = area.clientWidth, H = c.height = area.clientHeight;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.7);
+  g.addColorStop(0,'#0e2a4e'); g.addColorStop(.45,'#091c38'); g.addColorStop(1,'#03080f');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(20,60,120,.1)'; ctx.lineWidth=.7;
+  for(let y=0;y<H;y+=16){
     ctx.beginPath();
-    for (let x = 0; x < W; x += 8) {
-      const wave = Math.sin((x + y * 0.3) * 0.05) * 3;
-      if (x === 0) ctx.moveTo(x, y + wave);
-      else ctx.lineTo(x, y + wave);
-    }
+    for(let x=0;x<W;x+=6){const wy=Math.sin((x+y*.3)*.055)*2.5; x===0?ctx.moveTo(x,y+wy):ctx.lineTo(x,y+wy);}
     ctx.stroke();
   }
-
-  // Particules lumineuses (phosphorescence)
-  for (let i = 0; i < 80; i++) {
-    const px = Math.random() * W;
-    const py = Math.random() * H;
-    const r  = Math.random() * 1.2 + 0.3;
-    const alpha = Math.random() * 0.25 + 0.05;
-    ctx.beginPath();
-    ctx.arc(px, py, r, 0, Math.PI*2);
-    ctx.fillStyle = `rgba(74,200,220,${alpha})`;
-    ctx.fill();
+  for(let i=0;i<90;i++){
+    const px=Math.random()*W, py=Math.random()*H, r=Math.random()*1.1+.2;
+    ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(80,220,240,${Math.random()*.18+.03})`; ctx.fill();
   }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// DESSIN SVG (grille + éléments)
-// ════════════════════════════════════════════════════════════════════════════
-
-// Retourne la "couche" d'un hex (pour colorier légèrement différemment)
-function hexDistToStorm(q, r) {
-  const sq = WORLD.storm.q, sr = WORLD.storm.r;
-  return Math.round((Math.abs(q-sq) + Math.abs(q-sq+r-sr) + Math.abs(r-sr)) / 2);
-}
-
+// ════════════════════════════════════════════════════════════════
+// SVG — grille + éléments du monde + tokens
+// ════════════════════════════════════════════════════════════════
 function renderMap() {
   const svg = document.getElementById('hexOverlay');
   const area = document.getElementById('mapArea');
-  svg.setAttribute('width',  area.clientWidth);
-  svg.setAttribute('height', area.clientHeight);
-  svg.setAttribute('viewBox', `0 0 ${area.clientWidth} ${area.clientHeight}`);
+  const W=area.clientWidth, H=area.clientHeight;
+  svg.setAttribute('width',W); svg.setAttribute('height',H); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
 
-  // Index des éléments par position pour lookup rapide
-  const elementAt = {};
-  function setEl(q, r, type, obj) { elementAt[`${q},${r}`] = { type, ...obj }; }
-
-  setEl(WORLD.storm.q, WORLD.storm.r, 'storm', WORLD.storm);
-  WORLD.pirates.forEach(p  => setEl(p.q, p.r, 'pirate',  p));
-  WORLD.ports.forEach(p    => setEl(p.q, p.r, 'port',    p));
-  WORLD.wrecks.forEach(w   => setEl(w.q, w.r, 'wreck',   w));
-  WORLD.islands.forEach(i  => setEl(i.q, i.r, 'island',  i));
-
-  let html = '';
-
-  // ── Defs (gradients, filtres) ──
-  html += `<defs>
-    <radialGradient id="stormGrad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#ff2020" stop-opacity=".9"/>
-      <stop offset="60%"  stop-color="#cc0000" stop-opacity=".6"/>
+  let html = `<defs>
+    <radialGradient id="sg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#ff2020" stop-opacity=".85"/>
+      <stop offset="55%"  stop-color="#cc0000" stop-opacity=".4"/>
       <stop offset="100%" stop-color="#800000" stop-opacity="0"/>
     </radialGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2.5" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="glowStrong">
-      <feGaussianBlur stdDeviation="4" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
+    <filter id="gl"><feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="gls"><feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   </defs>`;
 
-  // ── Routes commerciales (dessous tout) ──
-  const routeColors = ['rgba(255,180,30,.5)','rgba(255,160,20,.45)','rgba(255,200,40,.4)','rgba(255,150,20,.45)','rgba(255,190,30,.4)'];
-  WORLD.routes.forEach((route, ri) => {
-    const a = hexCenter(route[0].q, route[0].r);
-    const b = hexCenter(route[1].q, route[1].r);
-    // Ligne pointillée avec léger courbé
-    const mx = (a.x + b.x) / 2 + (Math.random() - 0.5) * 40;
-    const my = (a.y + b.y) / 2 + (Math.random() - 0.5) * 40;
-    html += `<path d="M${a.x},${a.y} Q${mx},${my} ${b.x},${b.y}"
-      fill="none" stroke="${routeColors[ri % routeColors.length]}" stroke-width="1.8"
-      stroke-dasharray="6,4" stroke-linecap="round" opacity=".75"/>`;
+  // Routes commerciales
+  const RC = ['rgba(255,175,30,.55)','rgba(255,155,20,.5)','rgba(255,195,35,.45)','rgba(255,145,20,.5)','rgba(255,185,30,.45)'];
+  WORLD.routes.forEach((rt,i)=>{
+    const a=hexCenter(rt[0].q,rt[0].r), b=hexCenter(rt[1].q,rt[1].r);
+    const mx=(a.x+b.x)/2+Math.sin(i*1.7)*30, my=(a.y+b.y)/2+Math.cos(i*1.3)*25;
+    html+=`<path d="M${a.x},${a.y} Q${mx},${my} ${b.x},${b.y}" fill="none" stroke="${RC[i]}" stroke-width="1.8" stroke-dasharray="6,4" stroke-linecap="round" pointer-events="none"/>`;
   });
 
-  // ── Hexagones ──
-  for (let r = 0; r < ROWS; r++) {
-    for (let q = 0; q < COLS; q++) {
-      const { x, y } = hexCenter(q, r);
-      const pts = hexPoints(x, y);
-      const key = `${q},${r}`;
-      const el  = elementAt[key];
-
-      let fill   = 'transparent';
-      let stroke = 'rgba(30,90,160,0.12)';
-      let sw     = 0.6;
-
-      if (el) {
-        if (el.type === 'storm')  { fill = 'rgba(150,0,0,.15)';  stroke = 'rgba(200,30,30,.5)'; sw = 1.5; }
-        if (el.type === 'pirate') { fill = 'rgba(80,20,0,.25)';  stroke = 'rgba(139,69,19,.6)'; sw = 1.2; }
-        if (el.type === 'port')   { fill = 'rgba(0,60,20,.25)';  stroke = 'rgba(46,184,114,.6)'; sw = 1.2; }
-        if (el.type === 'wreck')  { fill = 'rgba(20,30,60,.25)'; stroke = 'rgba(85,119,170,.5)'; sw = 1; }
-        if (el.type === 'island') { fill = 'rgba(40,30,0,.2)';   stroke = 'rgba(200,168,0,.5)'; sw = 1.2; }
+  // Hexagones
+  for(let r=0;r<ROWS;r++){
+    for(let q=0;q<COLS;q++){
+      const {x,y}=hexCenter(q,r); const pts=hexPts(x,y);
+      const el=EL[`${q},${r}`];
+      let fill='transparent', stroke='rgba(20,70,140,.12)', sw=.5;
+      if(el){
+        if(el.type==='storm')  {fill='rgba(140,0,0,.12)'; stroke='rgba(200,20,20,.45)'; sw=1.4;}
+        if(el.type==='pirate') {fill='rgba(80,20,0,.22)'; stroke='rgba(160,80,20,.55)'; sw=1.1;}
+        if(el.type==='port')   {fill='rgba(0,55,20,.22)'; stroke='rgba(46,190,114,.55)'; sw=1.1;}
+        if(el.type==='wreck')  {fill='rgba(10,20,55,.22)'; stroke='rgba(80,110,180,.45)'; sw=.9;}
+        if(el.type==='island') {fill='rgba(40,30,0,.18)'; stroke='rgba(200,168,0,.5)'; sw=1.1;}
       }
-
-      html += `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"
-        data-q="${q}" data-r="${r}" class="hex-cell" style="cursor:pointer"/>`;
+      html+=`<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" data-q="${q}" data-r="${r}" class="hx"/>`;
     }
   }
 
-  // ── Effet tempête (halo radiatif) ──
-  const sc = hexCenter(WORLD.storm.q, WORLD.storm.r);
-  html += `<circle cx="${sc.x}" cy="${sc.y}" r="${HEX_R * 3.5}"
-    fill="url(#stormGrad)" opacity=".35" pointer-events="none"/>`;
-  html += `<circle cx="${sc.x}" cy="${sc.y}" r="${HEX_R * 1.8}"
-    fill="url(#stormGrad)" opacity=".5" pointer-events="none"/>`;
+  // Halo tempête
+  const sc=hexCenter(WORLD.storm.q,WORLD.storm.r);
+  html+=`<circle cx="${sc.x}" cy="${sc.y}" r="${HEX_R*4}" fill="url(#sg)" opacity=".3" pointer-events="none"/>`;
+  html+=`<circle cx="${sc.x}" cy="${sc.y}" r="${HEX_R*2}" fill="url(#sg)" opacity=".45" pointer-events="none"/>`;
 
-  // ── Icônes des éléments ──
-  const iconSize = Math.max(HEX_R * 0.7, 8);
-
-  // Tempête
-  html += drawStormIcon(sc.x, sc.y, iconSize * 1.4);
-
-  // Pirates
-  WORLD.pirates.forEach(p => {
-    const c = hexCenter(p.q, p.r);
-    html += drawPirateIcon(c.x, c.y, iconSize);
+  // Icônes monde
+  const sz=Math.max(HEX_R*.75,8);
+  html+=`<text x="${sc.x}" y="${sc.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*2.2}" pointer-events="none" filter="url(#gls)">🌀</text>`;
+  WORLD.pirates.forEach(p=>{const c=hexCenter(p.q,p.r); html+=`<text x="${c.x}" y="${c.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*1.4}" fill="#c84000" pointer-events="none" filter="url(#gl)" opacity=".9">☠</text>`;});
+  WORLD.ports.forEach(p=>{const c=hexCenter(p.q,p.r); html+=`<text x="${c.x}" y="${c.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*1.25}" fill="#2eb872" pointer-events="none" filter="url(#gl)" opacity=".9">⚓</text>`;});
+  WORLD.wrecks.forEach(w=>{const c=hexCenter(w.q,w.r);
+    html+=`<text x="${c.x}" y="${c.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*1.1}" fill="#5577aa" pointer-events="none" opacity=".85">⛵</text>`;
+    html+=`<line x1="${c.x-sz*.4}" y1="${c.y+sz*.35}" x2="${c.x+sz*.45}" y2="${c.y+sz*.15}" stroke="rgba(85,119,170,.7)" stroke-width="1.4" pointer-events="none"/>`;
+  });
+  WORLD.islands.forEach(i=>{const c=hexCenter(i.q,i.r);
+    html+=`<ellipse cx="${c.x}" cy="${c.y+sz*.15}" rx="${sz*.55}" ry="${sz*.3}" fill="rgba(100,70,20,.75)" stroke="rgba(200,168,0,.6)" stroke-width=".9" pointer-events="none"/>`;
+    html+=`<polygon points="${c.x},${c.y-sz*.5} ${c.x-sz*.28},${c.y+sz*.12} ${c.x+sz*.28},${c.y+sz*.12}" fill="rgba(25,110,25,.85)" stroke="rgba(60,180,60,.5)" stroke-width=".8" pointer-events="none"/>`;
   });
 
-  // Ports
-  WORLD.ports.forEach(p => {
-    const c = hexCenter(p.q, p.r);
-    html += drawPortIcon(c.x, c.y, iconSize);
-  });
-
-  // Épaves
-  WORLD.wrecks.forEach(w => {
-    const c = hexCenter(w.q, w.r);
-    html += drawWreckIcon(c.x, c.y, iconSize * 0.85);
-  });
-
-  // Îles
-  WORLD.islands.forEach(i => {
-    const c = hexCenter(i.q, i.r);
-    html += drawIslandIcon(c.x, c.y, iconSize);
-  });
-
-  // ── Tokens joueurs (depuis state) ──
-  const players = Object.entries(state.players || {});
-  for (const [id, p] of players) {
-    if (!p.position) continue;
-    const { x, y } = hexCenter(p.position.q, p.position.r);
-    const R = HEX_R * 0.42;
-    const isActive = state.currentTurn === id;
-    html += `<circle cx="${x}" cy="${y}" r="${R}" fill="${p.color}"
-      stroke="${isActive ? '#fff' : 'rgba(255,255,255,.5)'}"
-      stroke-width="${isActive ? 2 : 1}" filter="${isActive ? 'url(#glow)' : ''}"/>`;
-    const initiale = p.name.charAt(0).toUpperCase();
-    html += `<text x="${x}" y="${y+1}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${R * 1.1}" font-family="Cinzel, serif" fill="white" font-weight="600"
-      pointer-events="none">${initiale}</text>`;
+  // Cases de départ (phase picking)
+  if(state.status==='picking' && state.pendingStartSlots){
+    state.pendingStartSlots.forEach(({q,r})=>{
+      const {x,y}=hexCenter(q,r);
+      html+=`<polygon points="${hexPts(x,y)}" fill="rgba(74,238,204,.22)" stroke="#4aedcc" stroke-width="1.8" pointer-events="none"/>`;
+    });
   }
 
-  // ── Options de déplacement ──
-  if (state.moveOptions?.length) {
-    for (const { q, r } of state.moveOptions) {
-      const { x, y } = hexCenter(q, r);
-      const pts = hexPoints(x, y);
-      html += `<polygon points="${pts}" fill="rgba(255,200,50,0.2)" stroke="#ffc832" stroke-width="${1.5}" pointer-events="none"/>`;
-    }
+  // Options de déplacement
+  if(state.moveOptions?.length){
+    state.moveOptions.forEach(({q,r})=>{
+      const {x,y}=hexCenter(q,r);
+      html+=`<polygon points="${hexPts(x,y)}" fill="rgba(255,200,50,.2)" stroke="#ffc832" stroke-width="1.8" pointer-events="none"/>`;
+    });
   }
 
-  // ── Cases départ ──
-  if (state.status === 'picking' && state.pendingStartSlots) {
-    for (const { q, r } of state.pendingStartSlots) {
-      const { x, y } = hexCenter(q, r);
-      const pts = hexPoints(x, y);
-      html += `<polygon points="${pts}" fill="rgba(74,238,204,0.2)" stroke="#4aedcc" stroke-width="1.5" pointer-events="none"/>`;
-    }
-  }
+  // Tokens joueurs
+  Object.entries(state.players||{}).forEach(([id,p])=>{
+    if(!p.position) return;
+    const {x,y}=hexCenter(p.position.q,p.position.r);
+    const R=HEX_R*.42, act=state.currentTurn===id;
+    html+=`<circle cx="${x}" cy="${y}" r="${R}" fill="${p.color}" stroke="${act?'#fff':'rgba(255,255,255,.5)'}" stroke-width="${act?2:1.2}" ${act?'filter="url(#gl)"':''}/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${R*1.1}" font-family="Cinzel,serif" fill="white" font-weight="600" pointer-events="none">${p.name[0].toUpperCase()}</text>`;
+  });
 
   svg.innerHTML = html;
-
-  // Events hover
-  svg.querySelectorAll('.hex-cell').forEach(cell => {
-    cell.addEventListener('mousemove', onHexHover);
-    cell.addEventListener('mouseleave', onHexLeave);
-    cell.addEventListener('click', onHexClick);
+  svg.querySelectorAll('.hx').forEach(h=>{
+    h.addEventListener('mousemove', onHover);
+    h.addEventListener('mouseleave', onLeave);
   });
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// ICÔNES SVG INLINE
-// ════════════════════════════════════════════════════════════════════════════
-
-function drawStormIcon(cx, cy, sz) {
-  const s = sz * 0.7;
-  // Spirale tempête stylisée
-  return `<g filter="url(#glowStrong)" pointer-events="none">
-    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${sz * 1.6}" fill="#ff4444" opacity=".9">🌀</text>
-  </g>`;
-}
-
-function drawPirateIcon(cx, cy, sz) {
-  return `<g filter="url(#glow)" pointer-events="none">
-    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${sz * 1.4}" opacity=".9">☠</text>
-    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${sz * 1.4}" fill="#c84000" opacity=".7">☠</text>
-  </g>`;
-}
-
-function drawPortIcon(cx, cy, sz) {
-  return `<g filter="url(#glow)" pointer-events="none">
-    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${sz * 1.3}" opacity=".85">⚓</text>
-    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${sz * 1.3}" fill="#2eb872" opacity=".7">⚓</text>
-  </g>`;
-}
-
-function drawWreckIcon(cx, cy, sz) {
-  // Petit navire brisé SVG
-  const s = sz * 0.9;
-  return `<g transform="translate(${cx-s/2},${cy-s/2})" pointer-events="none" opacity=".8">
-    <text x="${s/2}" y="${s/2+2}" text-anchor="middle" dominant-baseline="middle"
-      font-size="${s * 1.2}" fill="#5577aa">⛵</text>
-    <line x1="${s*.2}" y1="${s*.7}" x2="${s*.8}" y2="${s*.4}" stroke="rgba(85,119,170,.8)" stroke-width="1.5"/>
-  </g>`;
-}
-
-function drawIslandIcon(cx, cy, sz) {
-  const s = sz;
-  // Île stylisée : cercle brun + triangle vert
-  return `<g pointer-events="none" filter="url(#glow)">
-    <circle cx="${cx}" cy="${cy+s*0.1}" r="${s*0.55}" fill="rgba(100,70,20,.7)" stroke="rgba(200,168,0,.6)" stroke-width="1"/>
-    <polygon points="${cx},${cy-s*0.5} ${cx-s*0.3},${cy+s*0.15} ${cx+s*0.3},${cy+s*0.15}"
-      fill="rgba(30,120,30,.8)" stroke="rgba(60,180,60,.5)" stroke-width=".8"/>
-  </g>`;
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// INTERACTIONS
-// ════════════════════════════════════════════════════════════════════════════
-
-const ELEMENT_MAP = {};
-(function buildMap() {
-  const add = (type, arr) => arr.forEach(e => { ELEMENT_MAP[`${e.q},${e.r}`] = { type, label: e.label }; });
-  ELEMENT_MAP[`${WORLD.storm.q},${WORLD.storm.r}`] = { type:'storm', label: WORLD.storm.label };
-  add('pirate',  WORLD.pirates);
-  add('port',    WORLD.ports);
-  add('wreck',   WORLD.wrecks);
-  add('island',  WORLD.islands);
-})();
-
-const TYPE_LABELS = {
-  storm:  '🌀 Météo',
-  pirate: '☠ Repaire pirate',
-  port:   '⚓ Port de commerce',
-  wreck:  '⛵ Épave',
-  island: '🏝 Île inexplorée',
-};
-
-function onHexHover(e) {
-  const q = +e.target.dataset.q, r = +e.target.dataset.r;
-  const tt = document.getElementById('tooltip');
-  const el = ELEMENT_MAP[`${q},${r}`];
+// Tooltip
+function onHover(e) {
+  const q=+e.target.dataset.q, r=+e.target.dataset.r;
+  const el=EL[`${q},${r}`];
+  document.getElementById('tt-name').textContent  = el ? el.label : 'Océan';
+  document.getElementById('tt-type').textContent  = el ? (TYPE_LBL[el.type]||'') : '';
   document.getElementById('tt-coord').textContent = `Q${q} · R${r}`;
-  if (el) {
-    document.getElementById('tt-title').textContent = el.label;
-    document.getElementById('tt-desc').textContent  = TYPE_LABELS[el.type] || '';
-  } else {
-    document.getElementById('tt-title').textContent = `Case océan`;
-    document.getElementById('tt-desc').textContent  = '';
-  }
-  tt.style.display = 'block';
-  tt.style.left = (e.clientX + 14) + 'px';
-  tt.style.top  = (e.clientY - 10) + 'px';
+  const tt=document.getElementById('tooltip');
+  tt.style.display='block'; tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-10)+'px';
 }
-function onHexLeave() {
-  document.getElementById('tooltip').style.display = 'none';
-}
-function onHexClick(e) {
-  const q = +e.target.dataset.q, r = +e.target.dataset.r;
-  // Si picking ou moveOptions — émettre l'action
-  if (state.status === 'picking' && state.pendingStartSlots?.some(s => s.q===q && s.r===r)) {
-    socket.emit('player:pickStart', { q, r });
-  } else if (state.moveOptions?.some(m => m.q===q && m.r===r)) {
-    socket.emit('player:move', { q, r });
-  }
+function onLeave() { document.getElementById('tooltip').style.display='none'; }
+
+// ════════════════════════════════════════════════════════════════
+// PANNEAUX ÎLES (occupent toute la hauteur)
+// ════════════════════════════════════════════════════════════════
+const ICOLS=['#c8a800','#b89000','#d4b020','#e0c040','#a08000','#c0a010','#d0b828','#b8980a','#cca818','#e8c838'];
+function renderIslands() {
+  const mk=(isl,i)=>`<div class="island-card">
+    <div class="island-name"><span class="island-dot" style="background:${ICOLS[i]}"></span>${isl.label}</div>
+    <div class="island-coord">Q${isl.q} · R${isl.r}</div>
+  </div>`;
+  document.getElementById('islandLeft').innerHTML  = WORLD.islands.slice(0,5).map((x,i)=>mk(x,i)).join('');
+  document.getElementById('islandRight').innerHTML = WORLD.islands.slice(5,10).map((x,i)=>mk(x,i+5)).join('');
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// LISTES ÎLES (panneaux gauche/droite)
-// ════════════════════════════════════════════════════════════════════════════
-
-const ISLAND_COLORS = ['#c8a800','#b89000','#d4b020','#e0c040','#a08000',
-                       '#c0a010','#d0b828','#b8980a','#cca818','#e8c838'];
-
-function renderIslandLists() {
-  const all = WORLD.islands;
-  const left  = all.slice(0, 5);
-  const right = all.slice(5, 10);
-
-  const makeEntry = (isl, idx) => `
-    <div class="island-entry">
-      <span class="iname">
-        <span class="island-marker" style="background:${ISLAND_COLORS[idx]}"></span>
-        ${isl.label}
-      </span>
-      <span class="icoord">Q${isl.q} · R${isl.r}</span>
-    </div>`;
-
-  document.getElementById('islandListLeft').innerHTML  = left.map((i,idx) => makeEntry(i, idx)).join('');
-  document.getElementById('islandListRight').innerHTML = right.map((i,idx) => makeEntry(i, idx+5)).join('');
+// ════════════════════════════════════════════════════════════════
+// SLOTS CARTES
+// ════════════════════════════════════════════════════════════════
+function renderSlots() {
+  document.getElementById('enigmeSlots').innerHTML = Array.from({length:8},(_,i)=>
+    `<div class="card-slot"><span class="slot-icon">🔍</span><span class="slot-txt">Énigme ${i+1}</span></div>`
+  ).join('');
+  const av=['Départ','T.1','T.2','T.3','T.4','T.5','T.6','T.7','T.8','Fin'];
+  document.getElementById('advanceSlots').innerHTML = av.map(l=>
+    `<div class="card-slot av"><span class="slot-icon">📈</span><span class="slot-txt">${l}</span></div>`
+  ).join('');
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// SLOTS CARTES (haut/bas)
-// ════════════════════════════════════════════════════════════════════════════
-
-function renderCardSlots() {
-  // Haut : 8 emplacements énigme
-  let enigmeHtml = '';
-  for (let i = 0; i < 8; i++) {
-    enigmeHtml += `<div class="card-slot enigme">🔍<br>Énigme<br>${i+1}</div>`;
-  }
-  document.getElementById('enigmeSlots').innerHTML = enigmeHtml;
-
-  // Bas : 10 emplacements avancement
-  let advHtml = '';
-  const labels = ['Départ','Tour 1','Tour 2','Tour 3','Tour 4','Tour 5','Tour 6','Tour 7','Tour 8','Fin'];
-  for (let i = 0; i < 10; i++) {
-    advHtml += `<div class="card-slot avance">${labels[i]}</div>`;
-  }
-  document.getElementById('advanceSlots').innerHTML = advHtml;
-}
-
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // SOCKET & STATE
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 const socket = io();
 let state = {};
 
 const playerUrl = `${location.protocol}//${location.hostname}:${location.port}/player`;
-document.getElementById("playerUrl").textContent = playerUrl;
+document.getElementById('playerUrl').textContent = playerUrl;
 function copyUrl() {
-  navigator.clipboard.writeText(playerUrl).then(() => {
-    const el = document.getElementById("playerUrl");
-    const orig = el.textContent;
-    el.textContent = "✓ Copié !";
-    setTimeout(() => el.textContent = orig, 1500);
+  navigator.clipboard.writeText(playerUrl).then(()=>{
+    const el=document.getElementById('playerUrl');
+    const orig=el.textContent; el.textContent='✓ Copié !';
+    setTimeout(()=>el.textContent=orig,1500);
   });
 }
 
-socket.emit("master:join");
-socket.on("game:state", (s) => {
-  state = s;
-  renderUI();
-  renderMap();
-});
-
-const DICE_FACES = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+socket.emit('master:join');
+socket.on('game:state', s=>{ state=s; renderUI(); renderMap(); });
 
 function renderUI() {
-  const badge  = document.getElementById("statusBadge");
-  const labels = { waiting:"En attente", picking:"Choix départ", playing:"En cours", ended:"Terminée" };
-  badge.textContent = labels[state.status] || state.status;
-  badge.className   = "badge " + state.status;
+  const lbl={waiting:'En attente',picking:'Choix départ',playing:'En cours',ended:'Terminée'};
+  const badge=document.getElementById('statusBadge');
+  badge.textContent=lbl[state.status]||state.status;
+  badge.className='badge '+(state.status||'waiting');
 
-  const players = Object.entries(state.players || {});
-  const st = state.status;
+  const players=Object.entries(state.players||{});
+  document.getElementById('playerCount').textContent=players.length;
+  document.getElementById('btnStart').disabled=players.length<1||state.status==='playing'||state.status==='picking';
 
-  // ── Bouton démarrer ──
-  document.getElementById("btnStart").disabled =
-    players.length < 1 || st === "playing" || st === "picking";
-
-  // ── Panneau contrôle MJ ──
-  const curId    = state.currentTurn;
-  const curPlayer = curId ? state.players?.[curId] : null;
-  const diceRoll  = state.diceRoll;
-  const hasMoved  = curPlayer?.hasMoved;
-
-  // Nom et phase
-  document.getElementById("ctrlTurnName").textContent =
-    curPlayer ? `⛵ ${curPlayer.name}` : "—";
-
-  let phaseText = "En attente de démarrage";
-  if (st === "picking")  phaseText = "Phase de placement";
-  else if (st === "playing") {
-    if (!diceRoll) phaseText = "Doit lancer le dé";
-    else if (!hasMoved) phaseText = `Dé: ${diceRoll.value} — Doit se déplacer`;
-    else phaseText = "Peut terminer son tour";
-  }
-  document.getElementById("ctrlTurnPhase").textContent = phaseText;
-
-  // Dé
-  const diceSection = document.getElementById("ctrlDiceSection");
-  if (st === "playing" && curPlayer) {
-    diceSection.style.display = "block";
-    if (diceRoll) {
-      document.getElementById("ctrlDiceFace").textContent = DICE_FACES[diceRoll.value-1] || diceRoll.value;
-      document.getElementById("ctrlDiceLabel").textContent = `Résultat : ${diceRoll.value} case(s)`;
-    } else {
-      document.getElementById("ctrlDiceFace").textContent = "?";
-      document.getElementById("ctrlDiceLabel").textContent = "Pas encore lancé";
-    }
+  const list=document.getElementById('playerList');
+  if(!players.length){
+    list.innerHTML=`<div style="color:#6a5a3a;font-style:italic;font-size:.8rem">Aucun joueur…</div>`;
   } else {
-    diceSection.style.display = "none";
-  }
-
-  // Boutons MJ
-  document.getElementById("btnMJRoll").disabled    = !(st === "playing" && curPlayer && !diceRoll);
-  document.getElementById("btnMJEndTurn").disabled = !(st === "playing" && curPlayer);
-
-  // ── Liste joueurs ──
-  document.getElementById("playerCount").textContent = players.length;
-  const list = document.getElementById("playerList");
-  if (!players.length) {
-    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.75rem">Aucun joueur…</div>`;
-  } else {
-    list.innerHTML = players.map(([id, p]) => {
-      const isActive = state.currentTurn === id;
-      const pos = p.position ? `${p.position.q},${p.position.r}` : "–";
-      return `<div class="ctrl-player ${isActive ? 'active-turn' : ''}">
-        <div class="ctrl-dot" style="background:${p.color}"></div>
-        <span style="font-size:.75rem">${p.name}</span>
-        ${isActive ? `<span class="ctrl-tag">Tour</span>` : ""}
-        <span class="ctrl-pos">${pos}</span>
+    list.innerHTML=players.map(([id,p])=>{
+      const act=state.currentTurn===id;
+      const pos=p.position?`${p.position.q},${p.position.r}`:'–';
+      return `<div class="p-row ${act?'active':''}">
+        <div class="p-dot" style="background:${p.color}"></div>
+        <span>${p.name}</span>
+        ${act?`<span class="p-turn">Tour</span>`:''}
+        <span class="p-pos">${pos}</span>
       </div>`;
-    }).join("");
+    }).join('');
   }
-
-  // ── Journal ──
-  document.getElementById("logList").innerHTML =
-    (state.log?.length ? state.log : ["Aucun événement."])
-      .map(e => `<li>${e}</li>`).join("");
+  document.getElementById('logList').innerHTML=
+    (state.log?.length?state.log:['Aucun événement.']).map(e=>`<li>${e}</li>`).join('');
 }
 
-// ── Actions MJ ──
-function startGame()   { socket.emit("master:start"); }
-function resetGame()   { socket.emit("master:reset"); }
-function mjRollDice()  { socket.emit("master:rollDiceForPlayer"); }
-function mjEndTurn()   { socket.emit("master:forceEndTurn"); }
+function startGame() { socket.emit('master:start'); }
+function resetGame()  { socket.emit('master:reset'); }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
 // INIT & RESIZE
-// ════════════════════════════════════════════════════════════════════════════
-
-function fullRender() {
-  computeGridParams();
-  drawOceanCanvas();
-  renderMap();
-}
-
-window.addEventListener('load', () => {
-  renderCardSlots();
-  renderIslandLists();
-  fullRender();
-});
-
-window.addEventListener('resize', () => {
-  fullRender();
-});
-
+// ════════════════════════════════════════════════════════════════
+function fullRender() { computeGrid(); drawOcean(); renderMap(); }
+window.addEventListener('load', ()=>{ renderSlots(); renderIslands(); fullRender(); });
+window.addEventListener('resize', fullRender);
 </script>
 </body>
 </html>
