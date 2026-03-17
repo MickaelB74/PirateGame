@@ -605,6 +605,122 @@
       white-space: nowrap;
     }
 
+    /* ── Empty card slot ── */
+    .card-slot-empty {
+      flex-shrink: 0;
+      width: 80px;
+      height: 116px;
+      border-radius: 8px;
+      border: 1px dashed rgba(184,134,11,.18);
+      background: rgba(255,255,255,.015);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2e2210;
+      font-size: 1.1rem;
+    }
+
+    /* ── HOLD & EQUIPMENT CARD ── */
+    .hold-card {
+      background: rgba(14,9,3,.88);
+      border: 1px solid rgba(184,134,11,.28);
+      border-radius: 12px;
+      padding: 12px 14px 14px;
+      position: relative;
+    }
+    .hold-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 110%, rgba(184,134,11,.04) 0%, transparent 65%);
+      pointer-events: none;
+      border-radius: 12px;
+    }
+
+    .hold-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .hold-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .68rem;
+      color: var(--gold);
+      letter-spacing: .05em;
+    }
+    .hold-count {
+      font-size: .6rem;
+      color: #5a4a2a;
+      font-family: monospace;
+    }
+
+    /* 5-col cargo grid */
+    .cargo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+    }
+
+    /* 6-col (3×2) equip grid */
+    .equip-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 5px;
+    }
+
+    .hold-slot {
+      aspect-ratio: 1;
+      border-radius: 6px;
+      border: 1px dashed rgba(184,134,11,.18);
+      background: rgba(255,255,255,.02);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .65rem;
+      color: #2a1e0a;
+      transition: border-color .2s, background .2s;
+      position: relative;
+      overflow: hidden;
+      min-height: 42px;
+    }
+
+    /* Equip slots slightly taller */
+    .hold-slot.equip {
+      min-height: 48px;
+      border-color: rgba(74,114,184,.18);
+    }
+
+    .hold-slot.empty::after {
+      content: '';
+      display: block;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      border: 1px dashed rgba(184,134,11,.15);
+    }
+
+    .hold-slot.equip.empty::after {
+      border-color: rgba(74,114,184,.18);
+    }
+
+    /* Filled slot (future use) */
+    .hold-slot.filled {
+      border-style: solid;
+      border-color: rgba(184,134,11,.4);
+      background: rgba(184,134,11,.08);
+      cursor: pointer;
+    }
+    .hold-slot.filled:hover {
+      border-color: rgba(184,134,11,.7);
+      background: rgba(184,134,11,.14);
+    }
+
+    .hold-divider {
+      height: 1px;
+      background: rgba(184,134,11,.1);
+      margin: 12px 0 0;
+    }
+
   </style>
 </head>
 <body>
@@ -683,17 +799,17 @@
         </div>
       </div>
       <div class="res-item">
-        <span class="res-icon">💎</span>
-        <div class="res-right">
-          <span class="res-value" id="resGems">0</span>
-          <span class="res-label">Gemmes</span>
-        </div>
-      </div>
-      <div class="res-item">
         <span class="res-icon">⚓</span>
         <div class="res-right">
           <span class="res-value" id="resReputation">0</span>
           <span class="res-label">Réputation</span>
+        </div>
+      </div>
+      <div class="res-item">
+        <span class="res-icon">🔭</span>
+        <div class="res-right">
+          <span class="res-value" id="resResearch">0</span>
+          <span class="res-label">Recherche</span>
         </div>
       </div>
     </div>
@@ -773,50 +889,59 @@
       </div>
     </div>
 
-    <!-- ── CARD DECK ── -->
+    <!-- ── CARD HAND ── -->
     <div class="deck-card" id="deckSection">
       <div class="deck-header">
         <span class="deck-title">🃏 Main</span>
-        <span class="deck-count" id="deckCountLabel">5 / 5 cartes</span>
+        <span class="deck-count" id="deckCountLabel">0 / 5 cartes</span>
       </div>
       <div class="cards-row" id="cardsRow">
-
-        <div class="play-card action" onclick="playCard('broadside')">
-          <span class="card-type-tag">Action</span>
-          <span class="card-icon">💥</span>
-          <span class="card-name">Bordée de Canons</span>
-          <span class="card-cost">2</span>
-        </div>
-
-        <div class="play-card event" onclick="playCard('wind')">
-          <span class="card-type-tag">Événement</span>
-          <span class="card-icon">🌊</span>
-          <span class="card-name">Vent Favorable</span>
-          <span class="card-cost">0</span>
-        </div>
-
-        <div class="play-card treasure" onclick="playCard('chest')">
-          <span class="card-type-tag">Trésor</span>
-          <span class="card-icon">💰</span>
-          <span class="card-name">Coffre Englouti</span>
-          <span class="card-cost">1</span>
-        </div>
-
-        <div class="play-card crew-card" onclick="playCard('recruit')">
-          <span class="card-type-tag">Équipage</span>
-          <span class="card-icon">🦜</span>
-          <span class="card-name">Recrue Corsaire</span>
-          <span class="card-cost">1</span>
-        </div>
-
-        <div class="play-card curse" onclick="playCard('kraken')">
-          <span class="card-type-tag">Malédiction</span>
-          <span class="card-icon">💀</span>
-          <span class="card-name">Œil du Kraken</span>
-          <span class="card-cost">3</span>
-        </div>
-
+        <!-- Slots vides — les cartes seront ajoutées dynamiquement -->
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
       </div>
+    </div>
+
+    <!-- ── HOLD & EQUIPMENT ── -->
+    <div class="hold-card" id="holdSection">
+
+      <!-- CALE CARGAISON -->
+      <div class="hold-header">
+        <span class="hold-title">📦 Cale · Cargaison</span>
+        <span class="hold-count" id="cargoCountLabel">0 / 10</span>
+      </div>
+      <div class="hold-grid cargo-grid" id="cargoGrid">
+        <div class="hold-slot empty" data-index="0"></div>
+        <div class="hold-slot empty" data-index="1"></div>
+        <div class="hold-slot empty" data-index="2"></div>
+        <div class="hold-slot empty" data-index="3"></div>
+        <div class="hold-slot empty" data-index="4"></div>
+        <div class="hold-slot empty" data-index="5"></div>
+        <div class="hold-slot empty" data-index="6"></div>
+        <div class="hold-slot empty" data-index="7"></div>
+        <div class="hold-slot empty" data-index="8"></div>
+        <div class="hold-slot empty" data-index="9"></div>
+      </div>
+
+      <div class="hold-divider"></div>
+
+      <!-- ÉQUIPEMENT -->
+      <div class="hold-header" style="margin-top:10px">
+        <span class="hold-title">⚔ Équipement</span>
+        <span class="hold-count" id="equipCountLabel">0 / 6</span>
+      </div>
+      <div class="hold-grid equip-grid" id="equipGrid">
+        <div class="hold-slot equip empty" data-index="0"></div>
+        <div class="hold-slot equip empty" data-index="1"></div>
+        <div class="hold-slot equip empty" data-index="2"></div>
+        <div class="hold-slot equip empty" data-index="3"></div>
+        <div class="hold-slot equip empty" data-index="4"></div>
+        <div class="hold-slot equip empty" data-index="5"></div>
+      </div>
+
     </div>
 
     <!-- Players list (collapsed) -->
@@ -1244,8 +1369,8 @@ function renderShipDashboard(stats) {
 
 function renderResources(res) {
   document.getElementById("resDoublons").textContent   = res?.doublons   ?? 0;
-  document.getElementById("resGems").textContent       = res?.gems       ?? 0;
   document.getElementById("resReputation").textContent = res?.reputation ?? 0;
+  document.getElementById("resResearch").textContent   = res?.research   ?? 0;
 }
 
 function playCard(cardId) {
