@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Configuration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:   #0f0b05;
+      --parch: #f0e4c8;
+      --gold:  #b8860b;
+      --gold2: #d4a017;
+      --teal:  #4aedcc;
+      --red:   #c04040;
+      --border: rgba(184,134,11,.2);
+    }
+
+    body {
+      background: var(--ink);
+      color: var(--parch);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: rgba(10,7,2,.95);
+      border-bottom: 2px solid var(--gold);
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1rem;
+      color: var(--gold2);
+    }
+    .back-btn {
+      margin-left: auto;
+      padding: 6px 16px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: #8a7a5e;
+      font-family: 'Crimson Pro', serif;
+      font-size: .85rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .back-btn:hover { border-color: var(--gold); color: var(--gold2); }
+
+    /* ── LAYOUT ── */
+    .page {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: calc(100vh - 54px);
+    }
+
+    /* ── SIDEBAR NAV ── */
+    .sidenav {
+      background: rgba(8,5,1,.8);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .nav-section {
+      font-size: .58rem;
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      color: #4a3b20;
+      padding: 10px 18px 4px;
+      font-family: 'Cinzel Decorative', serif;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 18px;
+      font-size: .88rem;
+      color: #6a5a3a;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.03); color: var(--parch); }
+    .nav-item.active {
+      background: rgba(184,134,11,.08);
+      color: var(--gold2);
+      border-left-color: var(--gold2);
+    }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    /* ── MAIN CONTENT ── */
+    main {
+      padding: 28px 32px;
+      overflow-y: auto;
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .panel-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .95rem;
+      color: var(--gold2);
+      margin-bottom: 6px;
+    }
+    .panel-desc {
+      font-size: .85rem;
+      color: #6a5a3a;
+      font-style: italic;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* ── CARDS TABLE ── */
+    .cards-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: #6a5a3a;
+      font-family: 'Crimson Pro', serif;
+      font-size: .8rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn:hover { border-color: var(--gold); color: var(--parch); }
+    .filter-btn.active { background: rgba(184,134,11,.15); border-color: var(--gold2); color: var(--gold2); }
+
+    /* type color chips */
+    .filter-btn[data-type="action"]    { --tc: #d46820; }
+    .filter-btn[data-type="event"]     { --tc: #3dc9ae; }
+    .filter-btn[data-type="treasure"]  { --tc: #d4a017; }
+    .filter-btn[data-type="equipment"] { --tc: #7090d0; }
+    .filter-btn[data-type="crew"]      { --tc: #5aad52; }
+    .filter-btn[data-type="curse"]     { --tc: #b060e8; }
+    .filter-btn.active { border-color: var(--tc, var(--gold2)); color: var(--tc, var(--gold2)); background: rgba(0,0,0,.2); }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+
+    .card-row {
+      background: rgba(20,13,5,.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color .2s, opacity .2s;
+      position: relative;
+    }
+    .card-row.disabled { opacity: .45; }
+    .card-row.disabled .card-row-name { text-decoration: line-through; color: #4a3b20; }
+
+    /* Type accent left border */
+    .card-row[data-type="action"]    { border-left: 3px solid rgba(212,104,32,.6); }
+    .card-row[data-type="event"]     { border-left: 3px solid rgba(61,201,174,.5); }
+    .card-row[data-type="treasure"]  { border-left: 3px solid rgba(212,160,23,.6); }
+    .card-row[data-type="equipment"] { border-left: 3px solid rgba(112,144,208,.5); }
+    .card-row[data-type="crew"]      { border-left: 3px solid rgba(90,173,82,.5); }
+    .card-row[data-type="curse"]     { border-left: 3px solid rgba(176,96,232,.5); }
+
+    .card-row-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-row-icon { font-size: 1.5rem; line-height: 1; flex-shrink: 0; }
+    .card-row-info { flex: 1; }
+    .card-row-name {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .75rem;
+      color: var(--parch);
+      margin-bottom: 2px;
+    }
+    .card-row-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .meta-chip {
+      font-size: .6rem;
+      padding: 1px 7px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-family: 'Cinzel Decorative', serif;
+    }
+    .chip-type-action    { color: #d46820; border-color: rgba(212,104,32,.4); background: rgba(212,104,32,.08); }
+    .chip-type-event     { color: #3dc9ae; border-color: rgba(61,201,174,.4); background: rgba(61,201,174,.07); }
+    .chip-type-treasure  { color: #d4a017; border-color: rgba(212,160,23,.4); background: rgba(212,160,23,.08); }
+    .chip-type-equipment { color: #7090d0; border-color: rgba(112,144,208,.4); background: rgba(112,144,208,.08); }
+    .chip-type-crew      { color: #5aad52; border-color: rgba(90,173,82,.4);  background: rgba(90,173,82,.07); }
+    .chip-type-curse     { color: #b060e8; border-color: rgba(176,96,232,.4); background: rgba(176,96,232,.08); }
+    .chip-cost  { color: var(--gold);  border-color: var(--border); background: rgba(184,134,11,.08); }
+    .chip-count { color: #8a7a5e; border-color: rgba(255,255,255,.08); }
+    .chip-timing { color: #6a5a3a; border-color: rgba(255,255,255,.06); font-size: .55rem; }
+
+    .card-row-desc {
+      font-size: .8rem;
+      color: #7a6a4a;
+      font-style: italic;
+      line-height: 1.4;
+      padding-left: 2px;
+    }
+
+    .card-row-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+
+    /* Toggle switch */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: .75rem;
+      color: #6a5a3a;
+      cursor: pointer;
+    }
+    .toggle {
+      position: relative;
+      width: 34px; height: 18px;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      transition: background .2s;
+      cursor: pointer;
+    }
+    .toggle-slider::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      left: 2px; top: 2px;
+      border-radius: 50%;
+      background: #4a3b20;
+      transition: transform .2s, background .2s;
+    }
+    .toggle input:checked + .toggle-slider { background: rgba(74,237,204,.25); border-color: var(--teal); }
+    .toggle input:checked + .toggle-slider::after { transform: translateX(16px); background: var(--teal); }
+
+    .count-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: auto;
+    }
+    .count-control label { font-size: .72rem; color: #6a5a3a; }
+    .count-control input[type=number] {
+      width: 46px; padding: 3px 6px;
+      background: rgba(0,0,0,.4);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--gold2);
+      font-family: monospace;
+      font-size: .82rem;
+      text-align: center;
+    }
+    .count-control input:focus { outline: none; border-color: var(--gold2); }
+
+    /* ── RULES PANEL ── */
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .rule-group {
+      background: rgba(20,13,5,.9);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .rule-group h3 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .7rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .rule-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 12px;
+    }
+    .rule-field:last-child { margin-bottom: 0; }
+    .rule-field label {
+      font-size: .72rem;
+      color: #8a7a5e;
+      letter-spacing: .04em;
+    }
+    .rule-field input[type=number],
+    .rule-field input[type=text] {
+      padding: 7px 10px;
+      background: rgba(0,0,0,.4);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--parch);
+      font-family: 'Crimson Pro', serif;
+      font-size: .9rem;
+      transition: border-color .2s;
+    }
+    .rule-field input:focus { outline: none; border-color: var(--gold); }
+    .rule-field .field-note {
+      font-size: .65rem;
+      color: #4a3b20;
+      font-style: italic;
+    }
+
+    /* ── SAVE BAR ── */
+    .save-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 12px 32px;
+      background: rgba(8,5,1,.95);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      z-index: 40;
+      transform: translateY(100%);
+      transition: transform .25s ease;
+    }
+    .save-bar.visible { transform: translateY(0); }
+    .save-status { font-size: .82rem; color: #6a5a3a; font-style: italic; flex: 1; }
+    .save-status.dirty { color: #d4a017; }
+    .save-status.saved { color: #5aad52; }
+
+    .btn-save {
+      padding: 8px 24px;
+      border-radius: 6px;
+      border: 1px solid var(--gold);
+      background: rgba(184,134,11,.15);
+      color: var(--gold2);
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .8rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-save:hover { background: rgba(184,134,11,.28); }
+    .btn-discard {
+      padding: 8px 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: transparent;
+      color: #6a5a3a;
+      font-family: 'Crimson Pro', serif;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+    .btn-discard:hover { color: var(--parch); }
+
+    /* ── STATS PANEL (overview) ── */
+    .stats-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .stat-chip {
+      background: rgba(20,13,5,.9);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 110px;
+    }
+    .stat-chip .sc-val {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.3rem;
+      color: var(--gold2);
+    }
+    .stat-chip .sc-lbl {
+      font-size: .65rem;
+      color: #5a4a2a;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .page { grid-template-columns: 1fr; }
+      .sidenav { flex-direction: row; overflow-x: auto; padding: 8px 0; border-right: none; border-bottom: 1px solid var(--border); }
+      .nav-section { display: none; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚙ Configuration — Labo de Jeu</h1>
+  <a href="/master" class="back-btn">← Retour au plateau</a>
+</header>
+
+<div class="page">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidenav">
+    <div class="nav-section">Cartes</div>
+    <div class="nav-item active" data-tab="overview" onclick="switchTab('overview')">
+      <span class="nav-icon">📊</span> Vue d'ensemble
+    </div>
+    <div class="nav-item" data-tab="cards" onclick="switchTab('cards')">
+      <span class="nav-icon">🃏</span> Registre des cartes
+    </div>
+    <div class="nav-section">Règles</div>
+    <div class="nav-item" data-tab="rules-ship" onclick="switchTab('rules-ship')">
+      <span class="nav-icon">⛵</span> Navire
+    </div>
+    <div class="nav-item" data-tab="rules-game" onclick="switchTab('rules-game')">
+      <span class="nav-icon">🎲</span> Partie
+    </div>
+    <div class="nav-item" data-tab="rules-resources" onclick="switchTab('rules-resources')">
+      <span class="nav-icon">🪙</span> Ressources
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- ── OVERVIEW ── -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="panel-title">📊 Vue d'ensemble</div>
+      <div class="panel-desc">Résumé du deck actuel et des paramètres de jeu.</div>
+
+      <div class="stats-row" id="overviewStats">
+        <!-- rempli par JS -->
+      </div>
+
+      <div class="panel-title" style="font-size:.8rem;margin-bottom:12px">Répartition par type</div>
+      <div id="typeBreakdown" style="display:flex;flex-direction:column;gap:6px;max-width:400px">
+        <!-- rempli par JS -->
+      </div>
+    </div>
+
+    <!-- ── CARDS REGISTRY ── -->
+    <div class="tab-panel" id="tab-cards">
+      <div class="panel-title">🃏 Registre des cartes</div>
+      <div class="panel-desc">Activez/désactivez les cartes et ajustez leur nombre dans le deck.</div>
+
+      <div class="cards-toolbar">
+        <button class="filter-btn active" data-type="all" onclick="filterCards('all', this)">Toutes</button>
+        <button class="filter-btn" data-type="action"    onclick="filterCards('action', this)">Action</button>
+        <button class="filter-btn" data-type="event"     onclick="filterCards('event', this)">Événement</button>
+        <button class="filter-btn" data-type="treasure"  onclick="filterCards('treasure', this)">Trésor</button>
+        <button class="filter-btn" data-type="equipment" onclick="filterCards('equipment', this)">Équipement</button>
+        <button class="filter-btn" data-type="crew"      onclick="filterCards('crew', this)">Équipage</button>
+        <button class="filter-btn" data-type="curse"     onclick="filterCards('curse', this)">Malédiction</button>
+      </div>
+
+      <div class="cards-grid" id="cardsGrid">
+        <!-- rempli par JS -->
+      </div>
+    </div>
+
+    <!-- ── RULES SHIP ── -->
+    <div class="tab-panel" id="tab-rules-ship">
+      <div class="panel-title">⛵ Règles — Navire</div>
+      <div class="panel-desc">Paramètres des statistiques du navire et de la cale.</div>
+      <div class="rules-grid">
+
+        <div class="rule-group">
+          <h3>🛡 Coque</h3>
+          <div class="rule-field">
+            <label>PV bonus niv. 1</label>
+            <input type="number" id="hull_bonus_1" value="0" min="0" max="20" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>PV bonus niv. 2</label>
+            <input type="number" id="hull_bonus_2" value="2" min="0" max="20" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>PV bonus niv. 3</label>
+            <input type="number" id="hull_bonus_3" value="5" min="0" max="20" oninput="markDirty()">
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <h3>⛵ Voiles</h3>
+          <div class="rule-field">
+            <label>Déplacement niv. 1</label>
+            <input type="number" id="sails_bonus_1" value="1" min="1" max="10" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Déplacement niv. 2</label>
+            <input type="number" id="sails_bonus_2" value="2" min="1" max="10" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Déplacement niv. 3</label>
+            <input type="number" id="sails_bonus_3" value="3" min="1" max="10" oninput="markDirty()">
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <h3>💣 Canons</h3>
+          <div class="rule-field">
+            <label>Portée niv. 1</label>
+            <input type="number" id="cannons_bonus_1" value="1" min="1" max="10" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Portée niv. 2</label>
+            <input type="number" id="cannons_bonus_2" value="2" min="1" max="10" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Portée niv. 3</label>
+            <input type="number" id="cannons_bonus_3" value="3" min="1" max="10" oninput="markDirty()">
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <h3>☠ Équipage</h3>
+          <div class="rule-field">
+            <label>Matelots niv. 1</label>
+            <input type="number" id="crew_bonus_1" value="5" min="1" max="50" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Matelots niv. 2</label>
+            <input type="number" id="crew_bonus_2" value="10" min="1" max="50" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Matelots niv. 3</label>
+            <input type="number" id="crew_bonus_3" value="15" min="1" max="50" oninput="markDirty()">
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <h3>📦 Cale</h3>
+          <div class="rule-field">
+            <label>Slots cargaison</label>
+            <input type="number" id="cargo_slots" value="10" min="1" max="20" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Slots équipement</label>
+            <input type="number" id="equip_slots" value="6" min="1" max="12" oninput="markDirty()">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── RULES GAME ── -->
+    <div class="tab-panel" id="tab-rules-game">
+      <div class="panel-title">🎲 Règles — Partie</div>
+      <div class="panel-desc">Paramètres globaux de la partie.</div>
+      <div class="rules-grid">
+
+        <div class="rule-group">
+          <h3>👥 Joueurs</h3>
+          <div class="rule-field">
+            <label>Joueurs minimum</label>
+            <input type="number" id="players_min" value="1" min="1" max="6" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Joueurs maximum</label>
+            <input type="number" id="players_max" value="6" min="1" max="6" oninput="markDirty()">
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <h3>🎲 Dé</h3>
+          <div class="rule-field">
+            <label>Nombre de faces</label>
+            <input type="number" id="dice_faces" value="6" min="4" max="12" oninput="markDirty()">
+            <span class="field-note">Recommandé : 6</span>
+          </div>
+        </div>
+
+        <div class="rule-group">
+          <h3>🃏 Main</h3>
+          <div class="rule-field">
+            <label>Cartes max en main</label>
+            <input type="number" id="hand_max" value="5" min="1" max="10" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>Cartes piochées/tour</label>
+            <input type="number" id="hand_draw" value="1" min="0" max="5" oninput="markDirty()">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── RULES RESOURCES ── -->
+    <div class="tab-panel" id="tab-rules-resources">
+      <div class="panel-title">🪙 Règles — Ressources</div>
+      <div class="panel-desc">Ressources initiales de chaque joueur en début de partie.</div>
+      <div class="rules-grid">
+
+        <div class="rule-group">
+          <h3>Départ</h3>
+          <div class="rule-field">
+            <label>🪙 Doublons de départ</label>
+            <input type="number" id="start_doublons" value="0" min="0" max="50" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>⚓ Réputation de départ</label>
+            <input type="number" id="start_reputation" value="0" min="0" max="20" oninput="markDirty()">
+          </div>
+          <div class="rule-field">
+            <label>🔭 Recherche de départ</label>
+            <input type="number" id="start_research" value="0" min="0" max="20" oninput="markDirty()">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── SAVE BAR ── -->
+<div class="save-bar" id="saveBar">
+  <span class="save-status dirty" id="saveStatus">⚠ Modifications non sauvegardées</span>
+  <button class="btn-discard" onclick="discardChanges()">Annuler</button>
+  <button class="btn-save" onclick="saveConfig()">💾 Sauvegarder</button>
+</div>
+
+<script>
+// ── Config locale (miroir de CARD_REGISTRY et RULES) ─────────────────────────
+// En prod ces données viendraient du serveur via socket.
+// Pour l'instant elles sont hardcodées ici en attendant l'intégration.
+
+const CARD_TYPES_LABELS = {
+  action:    "Action",
+  event:     "Événement",
+  treasure:  "Trésor",
+  equipment: "Équipement",
+  crew:      "Équipage",
+  curse:     "Malédiction",
+};
+
+const TIMING_LABELS = {
+  my_turn:     "Mon tour",
+  any_turn:    "N'importe quand",
+  after_move:  "Après déplacement",
+  before_move: "Avant déplacement",
+  on_combat:   "En combat",
+  passive:     "Passif",
+};
+
+// Registre miroir (même structure que game/cards.js, sans les fonctions)
+const cards = [
+  { id:"broadside",       name:"Bordée de Canons",    type:"action",    icon:"💥", cost:2, count:2, timing:"my_turn",     description:"Inflige 1 dégât à tous les navires adjacents.", enabled:true },
+  { id:"abordage",        name:"À l'Abordage !",      type:"action",    icon:"⚔",  cost:3, count:2, timing:"my_turn",     description:"Vole jusqu'à 2 doublons à un joueur adjacent.", enabled:true },
+  { id:"manoeuvre",       name:"Manœuvre Audacieuse", type:"action",    icon:"🌀", cost:1, count:3, timing:"before_move", description:"Ajoute +2 cases à ton déplacement ce tour.",    enabled:true },
+  { id:"vent_favorable",  name:"Vent Favorable",       type:"event",     icon:"🌊", cost:0, count:3, timing:"before_move", description:"Relance le dé et garde le meilleur résultat.",  enabled:true },
+  { id:"tempete",         name:"Tempête Soudaine",     type:"event",     icon:"⛈",  cost:0, count:2, timing:"any_turn",    description:"Tous les joueurs relancent leur dé.",           enabled:true },
+  { id:"coffre_englouti", name:"Coffre Englouti",      type:"treasure",  icon:"💰", cost:1, count:4, timing:"my_turn",     description:"Gagne 3 doublons immédiatement.",               enabled:true },
+  { id:"epave",           name:"Épave Découverte",     type:"treasure",  icon:"🪝", cost:0, count:3, timing:"after_move",  description:"Ajoute 1 cargaison aléatoire à ta cale.",       enabled:true },
+  { id:"cartes_anciennes",name:"Cartes Anciennes",     type:"treasure",  icon:"🗺",  cost:2, count:2, timing:"my_turn",     description:"Gagne 2 points de recherche.",                  enabled:true },
+  { id:"canon_long",      name:"Canon Long",           type:"equipment", icon:"🔫", cost:3, count:2, timing:"passive",     description:"+1 portée de canon en permanence.",             enabled:true },
+  { id:"voile_renforcee", name:"Voile Renforcée",      type:"equipment", icon:"⛵", cost:2, count:2, timing:"passive",     description:"+1 déplacement par tour.",                      enabled:true },
+  { id:"recrue_corsaire", name:"Recrue Corsaire",       type:"crew",      icon:"🦜", cost:1, count:3, timing:"my_turn",     description:"Gagne +1 réputation et pioche 1 carte.",       enabled:true },
+  { id:"maitre_canonnier",name:"Maître Canonnier",     type:"crew",      icon:"💂", cost:2, count:2, timing:"on_combat",   description:"+1 dégât par tir durant ce combat.",           enabled:true },
+  { id:"oeil_kraken",     name:"Œil du Kraken",        type:"curse",     icon:"💀", cost:3, count:2, timing:"my_turn",     description:"La cible passe son prochain tour.",             enabled:true },
+  { id:"sirenes",         name:"Chant des Sirènes",    type:"curse",     icon:"🧜", cost:2, count:2, timing:"any_turn",    description:"Réduit de 2 le déplacement de la cible.",      enabled:true },
+];
+
+let dirty = false;
+let activeFilter = "all";
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll(".tab-panel").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  document.querySelector(`[data-tab="${tab}"]`).classList.add("active");
+}
+
+// ── Card filter ───────────────────────────────────────────────────────────────
+function filterCards(type, btn) {
+  activeFilter = type;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderCardsGrid();
+}
+
+// ── Render cards grid ─────────────────────────────────────────────────────────
+function renderCardsGrid() {
+  const grid = document.getElementById("cardsGrid");
+  const filtered = activeFilter === "all" ? cards : cards.filter(c => c.type === activeFilter);
+  grid.innerHTML = filtered.map(card => `
+    <div class="card-row ${card.enabled ? '' : 'disabled'}" data-type="${card.type}" id="card-row-${card.id}">
+      <div class="card-row-top">
+        <span class="card-row-icon">${card.icon}</span>
+        <div class="card-row-info">
+          <div class="card-row-name">${card.name}</div>
+          <div class="card-row-meta">
+            <span class="meta-chip chip-type-${card.type}">${CARD_TYPES_LABELS[card.type]}</span>
+            <span class="meta-chip chip-cost">🪙 ${card.cost}</span>
+            <span class="meta-chip chip-count">×${card.count}</span>
+            <span class="meta-chip chip-timing">${TIMING_LABELS[card.timing] || card.timing}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-row-desc">${card.description}</div>
+      <div class="card-row-controls">
+        <label class="toggle-wrap">
+          <span class="toggle">
+            <input type="checkbox" ${card.enabled ? "checked" : ""} onchange="toggleCard('${card.id}', this.checked)">
+            <span class="toggle-slider"></span>
+          </span>
+          ${card.enabled ? "Activée" : "Désactivée"}
+        </label>
+        <div class="count-control">
+          <label>×</label>
+          <input type="number" value="${card.count}" min="0" max="10" step="1"
+            onchange="setCardCount('${card.id}', parseInt(this.value))"
+            title="Exemplaires dans le deck">
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function toggleCard(id, enabled) {
+  const card = cards.find(c => c.id === id);
+  if (!card) return;
+  card.enabled = enabled;
+  const row = document.getElementById("card-row-" + id);
+  if (row) {
+    row.classList.toggle("disabled", !enabled);
+    const lbl = row.querySelector(".toggle-wrap span:last-child");
+    if (lbl) lbl.textContent = enabled ? "Activée" : "Désactivée";
+  }
+  markDirty();
+  refreshOverview();
+}
+
+function setCardCount(id, count) {
+  const card = cards.find(c => c.id === id);
+  if (!card) return;
+  card.count = Math.max(0, Math.min(10, count || 0));
+  markDirty();
+  refreshOverview();
+}
+
+// ── Overview ──────────────────────────────────────────────────────────────────
+function refreshOverview() {
+  const enabled  = cards.filter(c => c.enabled);
+  const total    = enabled.reduce((s, c) => s + c.count, 0);
+  const disabled = cards.filter(c => !c.enabled).length;
+
+  document.getElementById("overviewStats").innerHTML = `
+    <div class="stat-chip"><span class="sc-val">${cards.length}</span><span class="sc-lbl">Cartes définies</span></div>
+    <div class="stat-chip"><span class="sc-val">${enabled.length}</span><span class="sc-lbl">Cartes actives</span></div>
+    <div class="stat-chip"><span class="sc-val">${total}</span><span class="sc-lbl">Cartes dans le deck</span></div>
+    <div class="stat-chip"><span class="sc-val">${disabled}</span><span class="sc-lbl">Désactivées</span></div>
+  `;
+
+  const types = Object.keys(CARD_TYPES_LABELS);
+  const breakdown = types.map(type => {
+    const typeCards = enabled.filter(c => c.type === type);
+    const count = typeCards.reduce((s, c) => s + c.count, 0);
+    if (!count) return "";
+    const pct = Math.round((count / Math.max(total,1)) * 100);
+    return `
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:.75rem;width:90px;color:#8a7a5e">${CARD_TYPES_LABELS[type]}</span>
+        <div style="flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:var(--bar-color);border-radius:4px;transition:width .4s"
+               class="bar-${type}"></div>
+        </div>
+        <span style="font-size:.72rem;color:#6a5a3a;font-family:monospace;min-width:28px;text-align:right">${count}</span>
+      </div>`;
+  }).join("");
+
+  document.getElementById("typeBreakdown").innerHTML = breakdown;
+
+  // Apply bar colors via inline style (can't use CSS vars for dynamic values)
+  const barColors = { action:"#d46820", event:"#3dc9ae", treasure:"#d4a017", equipment:"#7090d0", crew:"#5aad52", curse:"#b060e8" };
+  document.querySelectorAll("[class^='bar-']").forEach(el => {
+    const type = el.className.replace("bar-","");
+    el.style.background = barColors[type] || "#b8860b";
+  });
+}
+
+// ── Dirty / Save ──────────────────────────────────────────────────────────────
+function markDirty() {
+  dirty = true;
+  document.getElementById("saveBar").classList.add("visible");
+  document.getElementById("saveStatus").textContent = "⚠ Modifications non sauvegardées";
+  document.getElementById("saveStatus").className = "save-status dirty";
+}
+
+function discardChanges() {
+  // Reload page to reset (for now — will connect to server state later)
+  if (confirm("Annuler toutes les modifications ?")) location.reload();
+}
+
+function saveConfig() {
+  // TODO: émettre via socket vers le serveur
+  // socket.emit("admin:saveConfig", { cards, rules: collectRules() });
+  dirty = false;
+  document.getElementById("saveStatus").textContent = "✓ Configuration sauvegardée";
+  document.getElementById("saveStatus").className = "save-status saved";
+  setTimeout(() => {
+    document.getElementById("saveBar").classList.remove("visible");
+  }, 2000);
+}
+
+function collectRules() {
+  return {
+    ship: {
+      statBonuses: {
+        hull:    [parseInt(hull_bonus_1.value), parseInt(hull_bonus_2.value), parseInt(hull_bonus_3.value)],
+        sails:   [parseInt(sails_bonus_1.value), parseInt(sails_bonus_2.value), parseInt(sails_bonus_3.value)],
+        cannons: [parseInt(cannons_bonus_1.value), parseInt(cannons_bonus_2.value), parseInt(cannons_bonus_3.value)],
+        crew:    [parseInt(crew_bonus_1.value), parseInt(crew_bonus_2.value), parseInt(crew_bonus_3.value)],
+      },
+      cargo:     { maxSlots: parseInt(cargo_slots.value) },
+      equipment: { maxSlots: parseInt(equip_slots.value) },
+    },
+    players: {
+      min: parseInt(players_min.value),
+      max: parseInt(players_max.value),
+    },
+    dice:  { faces: parseInt(dice_faces.value) },
+    hand:  { maxCards: parseInt(hand_max.value), drawPerTurn: parseInt(hand_draw.value) },
+    resources: {
+      startDoublons:   parseInt(start_doublons.value),
+      startReputation: parseInt(start_reputation.value),
+      startResearch:   parseInt(start_research.value),
+    },
+  };
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderCardsGrid();
+refreshOverview();
+</script>
+</body>
+</html>
