@@ -4,543 +4,610 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Maître de Jeu — Plateau</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --ink:    #0d0905;
-      --parch:  #f0e4c8;
-      --parch2: #c8b890;
-      --gold:   #b8860b;
-      --gold2:  #d4a017;
-      --gold3:  #f0c040;
-      --teal:   #4aedcc;
-      --border: rgba(184,134,11,.22);
+      --ink:   #1a1209;
+      --parch: #f5ead6;
+      --gold:  #b8860b;
+      --gold2: #d4a017;
+      --red:   #8b1a1a;
     }
-    html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--parch); font-family: 'Crimson Pro', Georgia, serif; }
 
-    /* ══ HEADER ══════════════════════════════════════════════════════════════════ */
-    header {
-      height: 46px; background: rgba(6,4,1,.98); border-bottom: 2px solid var(--gold);
-      padding: 0 20px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; z-index: 20;
+    body {
+      background: #0d0a06;
+      color: var(--parch);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    header h1 { font-family: 'Cinzel Decorative', serif; font-size: 1rem; color: var(--gold2); letter-spacing: .04em; }
-    .badge { font-size: .65rem; padding: 2px 10px; border-radius: 20px; border: 1px solid var(--gold); text-transform: uppercase; letter-spacing: .1em; font-family: 'Cinzel', serif; }
+
+    header {
+      background: var(--ink);
+      border-bottom: 2px solid var(--gold);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    header h1 {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 1.1rem;
+      color: var(--gold2);
+      letter-spacing: .04em;
+    }
+    .badge {
+      font-size: .72rem;
+      padding: 3px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
     .badge.waiting { color: var(--gold2); border-color: var(--gold); }
-    .badge.picking  { color: #4aedcc;  border-color: #4aedcc; }
-    .badge.playing  { color: #6abf61;  border-color: #6abf61; }
-    .header-controls { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .badge.picking { color: #4aedcc; border-color: #4aedcc; }
+    .badge.playing { color: #6abf61; border-color: #6abf61; }
+
+    .header-controls { margin-left: auto; display: flex; gap: 10px; align-items: center; }
     .btn {
-      padding: 5px 14px; border-radius: 4px; border: 1px solid var(--gold); background: transparent;
-      color: var(--gold2); font-family: 'Crimson Pro', serif; font-size: .9rem; cursor: pointer;
-      transition: background .15s; text-decoration: none; display: inline-block;
+      padding: 7px 16px;
+      border-radius: 4px;
+      border: 1px solid var(--gold);
+      background: transparent;
+      color: var(--gold2);
+      font-family: 'Crimson Pro', serif;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: background .15s;
     }
     .btn:hover:not(:disabled) { background: rgba(184,134,11,.15); }
     .btn:disabled { opacity: .35; cursor: not-allowed; }
     .btn-danger { border-color: #e07070; color: #e07070; }
     .btn-danger:hover { background: rgba(224,112,112,.12) !important; }
 
-    /* ══ PLATEAU LAYOUT ══════════════════════════════════════════════════════════ */
-    /* 3 colonnes × 3 rangées — bords occupent toute la hauteur centrale */
-    .board {
-      display: grid;
-      grid-template-columns: 190px 1fr 190px;
-      grid-template-rows: 72px 1fr 88px;
-      height: calc(100vh - 46px);
+    /* Layout */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
     }
 
-    /* ── Bande HAUT (Énigmes) ── */
-    .zone-top {
-      grid-column: 1 / 4; grid-row: 1;
-      background: rgba(4,2,0,.9); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; overflow: hidden;
+    /* Map area */
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      overflow: auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-start;
+      background: #0d0a06;
     }
 
-    /* ── Bande BAS (Avancement) ── */
-    .zone-bot {
-      grid-column: 1 / 4; grid-row: 3;
-      background: rgba(4,2,0,.9); border-top: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 14px; overflow: hidden;
+    #mapContainer {
+      position: relative;
+      display: inline-block;
+      flex-shrink: 0;
     }
 
-    .zone-label {
-      font-family: 'Cinzel', serif; font-size: .72rem; color: var(--gold); text-transform: uppercase;
-      letter-spacing: .12em; white-space: nowrap;
-      border-right: 1px solid var(--border); padding-right: 12px; margin-right: 2px; flex-shrink: 0;
+    #mapImg {
+      display: block;
+      width: 100%;
+      max-width: 1288px;
+      height: auto;
+      user-select: none;
     }
-    .card-slots { display: flex; gap: 7px; align-items: center; justify-content: center; flex: 1; }
-    .card-slot {
-      width: 44px; height: 58px; border: 1px solid rgba(74,238,204,.3); border-radius: 5px;
-      background: rgba(74,238,204,.04); display: flex; flex-direction: column; align-items: center;
-      justify-content: center; font-size: .58rem; color: rgba(74,238,204,.55); font-family: 'Cinzel', serif;
-      text-align: center; letter-spacing: .04em; gap: 2px; flex-shrink: 0;
-    }
-    .card-slot.av { border-color: rgba(212,160,23,.35); color: rgba(212,160,23,.55); background: rgba(212,160,23,.04); }
-    .slot-icon { font-size: .95rem; }
-    .slot-txt  { font-size: .52rem; line-height: 1.2; }
 
-    /* ── GAUCHE (Îles 1-5) ── */
-    .zone-left {
-      grid-column: 1; grid-row: 2;
-      background: rgba(5,3,1,.95); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow: hidden;
+    #hexCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
     }
-    /* ── DROITE (Îles 6-10) ── */
-    .zone-right {
-      grid-column: 3; grid-row: 2;
-      background: rgba(5,3,1,.95); border-left: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    .side-title {
-      font-family: 'Cinzel', serif; font-size: .68rem; color: var(--gold); text-transform: uppercase;
-      letter-spacing: .1em; padding: 7px 10px; border-bottom: 1px solid var(--border);
-      background: rgba(184,134,11,.06); flex-shrink: 0;
-    }
-    /* Les 5 cartes îles occupent toute la hauteur restante */
-    .island-grid { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-    .island-card {
-      flex: 1; border-bottom: 1px solid rgba(184,134,11,.1); padding: 0 10px;
-      display: flex; flex-direction: column; justify-content: center; gap: 3px; min-height: 0;
-    }
-    .island-card:last-child { border-bottom: none; }
-    .island-card:hover { background: rgba(184,134,11,.07); }
-    .island-name {
-      font-family: 'Cinzel', serif; font-size: .74rem; color: var(--gold2);
-      display: flex; align-items: center; gap: 5px; line-height: 1.2;
-    }
-    .island-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .island-coord { font-size: .68rem; color: var(--parch2); font-style: italic; }
 
-    /* ── CARTE CENTRALE ── */
-    .map-area { grid-column: 2; grid-row: 2; position: relative; overflow: hidden; background: #020d18; }
-    #worldCanvas { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
-    #hexOverlay  { position: absolute; inset: 0; pointer-events: all; }
+    #hexOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
 
-    /* ══ SIDEBAR FLOTTANTE ═══════════════════════════════════════════════════════ */
+    /* Sidebar */
     .sidebar {
-      position: fixed; right: 196px; top: 54px; width: 212px;
-      background: rgba(6,4,1,.96); border: 1px solid var(--border); border-radius: 7px;
-      display: flex; flex-direction: column; gap: 8px; padding: 10px; z-index: 15;
-      max-height: calc(100vh - 160px); overflow-y: auto;
+      width: 280px;
+      flex-shrink: 0;
+      background: rgba(26,18,9,.95);
+      border-left: 1px solid rgba(184,134,11,.25);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 14px;
     }
-    .panel { background: rgba(255,255,255,.04); border: 1px solid rgba(184,134,11,.16); border-radius: 6px; padding: 10px; }
+
+    .panel {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(184,134,11,.2);
+      border-radius: 8px;
+      padding: 14px;
+    }
     .panel h2 {
-      font-family: 'Cinzel', serif; font-size: .7rem; color: var(--gold); text-transform: uppercase;
-      letter-spacing: .08em; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(184,134,11,.16);
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .75rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid rgba(184,134,11,.2);
     }
+
+    .player-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 5px;
+      font-size: .9rem;
+      margin-bottom: 5px;
+      background: rgba(255,255,255,.03);
+    }
+    .player-row.active { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.3); }
+    .player-dot {
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .player-pos {
+      margin-left: auto;
+      font-size: .72rem;
+      color: #6a5a3a;
+      font-family: monospace;
+    }
+    .turn-tag {
+      font-size: .65rem;
+      padding: 2px 6px;
+      background: #2d5a27;
+      color: #d4f5d0;
+      border-radius: 8px;
+    }
+
+    #logList { list-style: none; max-height: 260px; overflow-y: auto; }
+    #logList li {
+      font-size: .78rem;
+      color: #8a7a5e;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      line-height: 1.4;
+    }
+    #logList li:first-child { color: var(--parch); }
+
     .url-box {
-      font-size: .68rem; color: var(--parch2); word-break: break-all; cursor: pointer;
-      padding: 5px 7px; background: rgba(255,255,255,.04); border-radius: 4px; border: 1px solid var(--border);
+      background: rgba(0,0,0,.4);
+      color: var(--gold2);
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: .78rem;
+      word-break: break-all;
+      cursor: pointer;
+      border: 1px solid rgba(184,134,11,.3);
     }
-    .url-box:hover { background: rgba(255,255,255,.08); }
 
-    .p-row { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 4px; font-size: .84rem; margin-bottom: 3px; background: rgba(255,255,255,.03); }
-    .p-row.active { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.25); }
-    .p-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    .p-pos { margin-left: auto; font-size: .65rem; color: #6a5a3a; font-family: monospace; }
-    .p-turn { font-size: .6rem; color: #6abf61; font-family: 'Cinzel', serif; }
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 6px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: .75rem; color: #8a7a5e; }
+    .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
 
-    .leg-row { display: flex; align-items: center; gap: 7px; font-size: .8rem; margin-bottom: 5px; }
-    .leg-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    /* Calibration panel */
+    #calibPanel { display: none; }
+    #calibPanel.open { display: block; }
 
-    #logList { list-style: none; font-size: .76rem; color: var(--parch2); max-height: 110px; overflow-y: auto; }
-    #logList li { padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,.04); line-height: 1.4; }
-
-    /* ══ TOOLTIP ══ */
-    #tooltip {
-      position: fixed; background: rgba(6,4,1,.96); border: 1px solid var(--gold); border-radius: 6px;
-      padding: 8px 12px; font-size: .84rem; color: var(--parch); pointer-events: none; z-index: 200;
-      display: none; min-width: 150px; max-width: 220px;
+    .calib-toggle {
+      background: rgba(74,238,204,.1);
+      border: 1px solid rgba(74,238,204,.4);
+      color: #4aedcc;
+      font-family: 'Crimson Pro', serif;
+      font-size: .82rem;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .15s;
     }
-    .tt-name  { font-family: 'Cinzel', serif; font-size: .8rem; color: var(--gold2); margin-bottom: 2px; }
-    .tt-type  { font-size: .7rem; color: var(--parch2); }
-    .tt-coord { font-size: .65rem; color: rgba(184,134,11,.6); font-family: monospace; margin-top: 3px; }
+    .calib-toggle:hover { background: rgba(74,238,204,.2); }
 
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-thumb { background: rgba(184,134,11,.3); border-radius: 2px; }
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 10px;
+    }
+    .slider-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .75rem;
+      color: var(--gold);
+      letter-spacing: .04em;
+    }
+    .slider-row label span {
+      color: #4aedcc;
+      font-family: monospace;
+      font-size: .8rem;
+    }
+    .slider-row input[type=range] {
+      width: 100%;
+      accent-color: #4aedcc;
+      cursor: pointer;
+      height: 4px;
+    }
+
+    .calib-copy {
+      width: 100%;
+      margin-top: 8px;
+      padding: 7px;
+      background: rgba(74,238,204,.15);
+      border: 1px solid rgba(74,238,204,.5);
+      color: #4aedcc;
+      font-family: 'Crimson Pro', serif;
+      font-size: .82rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .calib-copy:hover { background: rgba(74,238,204,.25); }
+
+    .calib-code {
+      background: rgba(0,0,0,.5);
+      border: 1px solid rgba(74,238,204,.2);
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: .7rem;
+      color: #4aedcc;
+      white-space: pre;
+      margin-top: 8px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
 <header>
   <h1>⚓ Maître de Jeu</h1>
   <span id="statusBadge" class="badge waiting">En attente</span>
   <div class="header-controls">
+    <button class="calib-toggle" onclick="toggleCalib()">⚙ Calibration</button>
     <button class="btn" id="btnStart" disabled onclick="startGame()">▶ Démarrer</button>
     <button class="btn btn-danger" onclick="resetGame()">↺ Reset</button>
-    <a href="/admin" class="btn">⚙ Admin</a>
   </div>
 </header>
 
-<!-- ══ PLATEAU ══ -->
-<div class="board">
-
-  <!-- HAUT : Énigmes -->
-  <div class="zone-top">
-    <span class="zone-label">🔍 Cartes Énigme</span>
-    <div class="card-slots" id="enigmeSlots"></div>
+<div class="layout">
+  <div class="map-wrap" id="mapWrap">
+    <div id="mapContainer">
+      <img id="mapImg" src="/Map.jpg" alt="Carte" />
+      <canvas id="hexCanvas"></canvas>
+      <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
   </div>
 
-  <!-- GAUCHE : Îles 1-5 -->
-  <div class="zone-left">
-    <div class="side-title">🏝 Îles · Détail</div>
-    <div class="island-grid" id="islandLeft"></div>
-  </div>
+  <div class="sidebar">
+    <div class="panel" id="calibPanel">
+      <h2>⚙ Calibration grille</h2>
 
-  <!-- CARTE DU MONDE -->
-  <div class="map-area" id="mapArea">
-    <canvas id="worldCanvas"></canvas>
-    <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
-  </div>
+      <div class="slider-row">
+        <label>Rayon (HEX_R) <span id="vR">21.70</span>px</label>
+        <input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Marge gauche (MARGIN_X) <span id="vMX">38</span>px</label>
+        <input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Marge haute (MARGIN_Y) <span id="vMY">38</span>px</label>
+        <input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label>
+        <input type="range" id="sCS" min="20" max="70" step="0.1" value="48.6" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
+        <input type="range" id="sRS" min="15" max="60" step="0.1" value="41.6" oninput="updateCalib()">
+      </div>
+      <div class="slider-row">
+        <label>Décalage rang impaire (offset) <span id="vOF">24.40</span>px</label>
+        <input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()">
+      </div>
 
-  <!-- DROITE : Îles 6-10 -->
-  <div class="zone-right">
-    <div class="side-title">🏝 Îles · Détail</div>
-    <div class="island-grid" id="islandRight"></div>
-  </div>
+      <div class="calib-code" id="calibCode"></div>
+      <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
+    </div>
 
-  <!-- BAS : Avancement -->
-  <div class="zone-bot">
-    <span class="zone-label">📈 Avancement de Partie</span>
-    <div class="card-slots" id="advanceSlots"></div>
-  </div>
+    <div class="panel">
+      <h2>Connexion joueur</h2>
+      <div class="url-box" id="playerUrl" onclick="copyUrl()">Chargement…</div>
+    </div>
 
-</div>
+    <div class="panel">
+      <h2>Joueurs (<span id="playerCount">0</span>)</h2>
+      <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div></div>
+    </div>
 
-<!-- ══ SIDEBAR ══ -->
-<div class="sidebar">
-  <div class="panel">
-    <h2>🔗 Lien Joueur</h2>
-    <div class="url-box" id="playerUrl" onclick="copyUrl()">…</div>
-  </div>
-  <div class="panel">
-    <h2>Joueurs (<span id="playerCount">0</span>)</h2>
-    <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.8rem">Aucun joueur…</div></div>
-  </div>
-  <div class="panel">
-    <h2>Légende</h2>
-    <div class="leg-row"><div class="leg-dot" style="background:#e63946;border:2px solid #ff5555"></div>Cœur de la Tempête</div>
-    <div class="leg-row"><div class="leg-dot" style="background:#6a2a00;border:2px solid #a05010"></div>Repaire pirate</div>
-    <div class="leg-row"><div class="leg-dot" style="background:#0a3a1a;border:2px solid #2eb872"></div>Port de commerce</div>
-    <div class="leg-row"><div class="leg-dot" style="background:#3a3000;border:2px solid #c8a800"></div>Île inexplorée</div>
-    <div class="leg-row"><div class="leg-dot" style="background:#0a102a;border:2px solid #5577aa"></div>Épave</div>
-    <div class="leg-row"><div style="width:22px;height:2px;background:rgba(255,165,0,.7);margin-right:1px;flex-shrink:0"></div>Route commerciale</div>
-  </div>
-  <div class="panel" style="flex:1;min-height:0">
-    <h2>📜 Journal</h2>
-    <ul id="logList"><li>En attente…</li></ul>
-  </div>
-</div>
+    <div class="panel">
+      <h2>Légende</h2>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(74,238,204,.35);border:1px solid #4aedcc"></div> Case départ</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,200,50,.25);border:1px solid #ffc832"></div> Déplacement</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:rgba(106,191,97,.2);border:1px solid #6abf61"></div> Tour actif</div>
+      </div>
+    </div>
 
-<!-- TOOLTIP -->
-<div id="tooltip">
-  <div class="tt-name"  id="tt-name"></div>
-  <div class="tt-type"  id="tt-type"></div>
-  <div class="tt-coord" id="tt-coord"></div>
+    <div class="panel" style="flex:1">
+      <h2>Journal</h2>
+      <ul id="logList"><li>En attente…</li></ul>
+    </div>
+  </div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════════════
-// GRILLE HEX (odd-r offset, pointy-top)
-// ════════════════════════════════════════════════════════════════
+// ─── Hex Grid Math (POINTY-TOP, odd-r offset RIGHT) ──────────────────────────
 const COLS = 25, ROWS = 21;
-let HEX_R=0, MARGIN_X=0, MARGIN_Y=0, COL_SP=0, ROW_SP=0, ROW_OFFSET=0;
+const IMG_W = 1288, IMG_H = 952;
 
-function computeGrid() {
-  const a = document.getElementById('mapArea');
-  const W = a.clientWidth, H = a.clientHeight;
-  const rW = (W*.96) / (COLS*Math.sqrt(3)+.5);
-  const rH = (H*.96) / (ROWS*1.5+.5);
-  HEX_R = Math.min(rW, rH);
-  COL_SP = HEX_R * Math.sqrt(3);
-  ROW_SP = HEX_R * 1.5;
-  ROW_OFFSET = COL_SP / 2;
-  MARGIN_X = (W - (COLS*COL_SP + ROW_OFFSET)) / 2 + COL_SP*.5;
-  MARGIN_Y = (H - (ROWS*ROW_SP + HEX_R*.5)) / 2 + HEX_R;
+// Live calibration values (updated by sliders)
+let MARGIN_X = 48.0;
+let MARGIN_Y = 44.0;
+let COL_SP   = 48.600;
+let ROW_SP   = 41.600;
+let HEX_R    = 21.700;
+let ROW_OFFSET = 24.400;
+
+const START_POSITIONS = [
+  { q: 0,  r: 0  },
+  { q: 12, r: 0  },
+  { q: 24, r: 0  },
+  { q: 24, r: 20 },
+  { q: 12, r: 20 },
+  { q: 0,  r: 20 },
+];
+
+function hexCenter(q, r, scale) {
+  const s = scale || 1;
+  return {
+    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? ROW_OFFSET : 0)) * s,
+    y: (MARGIN_Y + r * ROW_SP) * s,
+  };
 }
 
-function hexCenter(q,r) {
-  return { x: MARGIN_X + q*COL_SP + (r%2===1 ? ROW_OFFSET : 0), y: MARGIN_Y + r*ROW_SP };
-}
-function hexPts(cx,cy) {
-  const p=[];
-  for(let i=0;i<6;i++){const a=Math.PI/2+(Math.PI/3)*i; p.push(`${cx+HEX_R*Math.cos(a)},${cy-HEX_R*Math.sin(a)}`);}
-  return p.join(' ');
-}
-
-// ════════════════════════════════════════════════════════════════
-// MONDE
-// ════════════════════════════════════════════════════════════════
-const WORLD = {
-  storm:   { q:12, r:10, label:'Cœur de la Tempête' },
-  pirates: [
-    { q:2,  r:2,  label:'Repaire du Crâne Noir' },
-    { q:22, r:2,  label:'Antre des Marées Rouges' },
-    { q:3,  r:18, label:'Crique du Vautour' },
-    { q:21, r:18, label:'Fort des Damnés' },
-  ],
-  ports: [
-    { q:6,  r:1,  label:"Port de Solaria" },
-    { q:18, r:1,  label:"Port des Vents d'Est" },
-    { q:0,  r:10, label:"Port de l'Ancre Brisée" },
-    { q:24, r:10, label:"Port de la Mer Grise" },
-    { q:12, r:19, label:"Port des Dernières Eaux" },
-  ],
-  routes: [
-    [{q:6,r:1},{q:18,r:1}],
-    [{q:0,r:10},{q:6,r:1}],
-    [{q:24,r:10},{q:18,r:1}],
-    [{q:0,r:10},{q:12,r:19}],
-    [{q:24,r:10},{q:12,r:19}],
-  ],
-  wrecks: [
-    { q:4,  r:5,  label:'Épave du Santa Fortuna' },
-    { q:19, r:4,  label:"Épave de l'Émeraude Noire" },
-    { q:8,  r:13, label:'Épave du Vent du Nord' },
-    { q:16, r:14, label:'Épave de la Belle Aurore' },
-    { q:1,  r:16, label:'Épave du Roi des Mers' },
-    { q:22, r:15, label:'Épave du Capitaine Gris' },
-  ],
-  islands: [
-    { q:5,  r:8,  label:'Île de la Brume' },
-    { q:9,  r:3,  label:'Île du Serpent' },
-    { q:15, r:6,  label:'Île des Coraux' },
-    { q:20, r:8,  label:'Île Fantôme' },
-    { q:7,  r:16, label:'Île du Cendrier' },
-    { q:14, r:16, label:"Île des Naufragés" },
-    { q:3,  r:12, label:'Île de la Torche' },
-    { q:21, r:13, label:'Île du Crépuscule' },
-    { q:11, r:7,  label:"Île des Étoiles" },
-    { q:17, r:11, label:"Île des Épices" },
-  ],
-};
-
-const EL = {};
-EL[`${WORLD.storm.q},${WORLD.storm.r}`] = {type:'storm', label:WORLD.storm.label};
-WORLD.pirates.forEach(p=>{EL[`${p.q},${p.r}`]={type:'pirate',label:p.label};});
-WORLD.ports.forEach(p=>{EL[`${p.q},${p.r}`]={type:'port',label:p.label};});
-WORLD.wrecks.forEach(w=>{EL[`${w.q},${w.r}`]={type:'wreck',label:w.label};});
-WORLD.islands.forEach(i=>{EL[`${i.q},${i.r}`]={type:'island',label:i.label};});
-const TYPE_LBL = {storm:'🌀 Zone de tempête', pirate:'☠ Repaire de pirates', port:'⚓ Port de commerce', wreck:'⛵ Épave', island:'🏝 Île inexplorée'};
-
-// ════════════════════════════════════════════════════════════════
-// CANVAS — fond océan
-// ════════════════════════════════════════════════════════════════
-function drawOcean() {
-  const area = document.getElementById('mapArea');
-  const c = document.getElementById('worldCanvas');
-  const W = c.width = area.clientWidth, H = c.height = area.clientHeight;
-  const ctx = c.getContext('2d');
-  const g = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.7);
-  g.addColorStop(0,'#0e2a4e'); g.addColorStop(.45,'#091c38'); g.addColorStop(1,'#03080f');
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.strokeStyle='rgba(20,60,120,.1)'; ctx.lineWidth=.7;
-  for(let y=0;y<H;y+=16){
-    ctx.beginPath();
-    for(let x=0;x<W;x+=6){const wy=Math.sin((x+y*.3)*.055)*2.5; x===0?ctx.moveTo(x,y+wy):ctx.lineTo(x,y+wy);}
-    ctx.stroke();
+function hexPoints(cx, cy, scale) {
+  const s = scale || 1;
+  const R = HEX_R * s;
+  const pts = [];
+  for (let i = 0; i < 6; i++) {
+    const angle = Math.PI / 2 + (Math.PI / 3) * i;
+    pts.push(`${cx + R * Math.cos(angle)},${cy - R * Math.sin(angle)}`);
   }
-  for(let i=0;i<90;i++){
-    const px=Math.random()*W, py=Math.random()*H, r=Math.random()*1.1+.2;
-    ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(80,220,240,${Math.random()*.18+.03})`; ctx.fill();
-  }
+  return pts.join(" ");
 }
 
-// ════════════════════════════════════════════════════════════════
-// SVG — grille + éléments du monde + tokens
-// ════════════════════════════════════════════════════════════════
-function renderMap() {
-  const svg = document.getElementById('hexOverlay');
-  const area = document.getElementById('mapArea');
-  const W=area.clientWidth, H=area.clientHeight;
-  svg.setAttribute('width',W); svg.setAttribute('height',H); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+// ─── State & Socket ───────────────────────────────────────────────────────────
+const socket = io();
+let state = {};
+let imgScale = 1;
 
-  let html = `<defs>
-    <radialGradient id="sg" cx="50%" cy="50%" r="50%">
-      <stop offset="0%"   stop-color="#ff2020" stop-opacity=".85"/>
-      <stop offset="55%"  stop-color="#cc0000" stop-opacity=".4"/>
-      <stop offset="100%" stop-color="#800000" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="gl"><feGaussianBlur stdDeviation="2.5" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="gls"><feGaussianBlur stdDeviation="5" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  </defs>`;
+const playerUrl = `${location.protocol}//${location.hostname}:${location.port}/player`;
+document.getElementById("playerUrl").textContent = playerUrl;
 
-  // Routes commerciales
-  const RC = ['rgba(255,175,30,.55)','rgba(255,155,20,.5)','rgba(255,195,35,.45)','rgba(255,145,20,.5)','rgba(255,185,30,.45)'];
-  WORLD.routes.forEach((rt,i)=>{
-    const a=hexCenter(rt[0].q,rt[0].r), b=hexCenter(rt[1].q,rt[1].r);
-    const mx=(a.x+b.x)/2+Math.sin(i*1.7)*30, my=(a.y+b.y)/2+Math.cos(i*1.3)*25;
-    html+=`<path d="M${a.x},${a.y} Q${mx},${my} ${b.x},${b.y}" fill="none" stroke="${RC[i]}" stroke-width="1.8" stroke-dasharray="6,4" stroke-linecap="round" pointer-events="none"/>`;
+function copyUrl() {
+  navigator.clipboard.writeText(playerUrl).then(() => {
+    const el = document.getElementById("playerUrl");
+    const orig = el.textContent;
+    el.textContent = "✓ Copié !";
+    setTimeout(() => el.textContent = orig, 1500);
   });
+}
 
-  // Hexagones
-  for(let r=0;r<ROWS;r++){
-    for(let q=0;q<COLS;q++){
-      const {x,y}=hexCenter(q,r); const pts=hexPts(x,y);
-      const el=EL[`${q},${r}`];
-      let fill='transparent', stroke='rgba(20,70,140,.12)', sw=.5;
-      if(el){
-        if(el.type==='storm')  {fill='rgba(140,0,0,.12)'; stroke='rgba(200,20,20,.45)'; sw=1.4;}
-        if(el.type==='pirate') {fill='rgba(80,20,0,.22)'; stroke='rgba(160,80,20,.55)'; sw=1.1;}
-        if(el.type==='port')   {fill='rgba(0,55,20,.22)'; stroke='rgba(46,190,114,.55)'; sw=1.1;}
-        if(el.type==='wreck')  {fill='rgba(10,20,55,.22)'; stroke='rgba(80,110,180,.45)'; sw=.9;}
-        if(el.type==='island') {fill='rgba(40,30,0,.18)'; stroke='rgba(200,168,0,.5)'; sw=1.1;}
-      }
-      html+=`<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" data-q="${q}" data-r="${r}" class="hx"/>`;
+socket.emit("master:join");
+
+socket.on("game:state", (s) => {
+  state = s;
+  renderUI();
+  renderMap();
+});
+
+// ─── UI Sidebar ───────────────────────────────────────────────────────────────
+function renderUI() {
+  // Badge
+  const badge = document.getElementById("statusBadge");
+  const labels = { waiting:"En attente", picking:"Choix départ", playing:"En cours", ended:"Terminée" };
+  badge.textContent = labels[state.status] || state.status;
+  badge.className = "badge " + state.status;
+
+  // Players
+  const players = Object.entries(state.players || {});
+  document.getElementById("playerCount").textContent = players.length;
+  const list = document.getElementById("playerList");
+  if (!players.length) {
+    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div>`;
+  } else {
+    list.innerHTML = players.map(([id, p]) => {
+      const isActive = state.currentTurn === id;
+      const pos = p.position ? `${p.position.q},${p.position.r}` : "–";
+      return `<div class="player-row ${isActive ? 'active' : ''}">
+        <div class="player-dot" style="background:${p.color}"></div>
+        <span>${p.name}</span>
+        ${isActive ? `<span class="turn-tag">Tour</span>` : ""}
+        <span class="player-pos">${pos}</span>
+      </div>`;
+    }).join("");
+  }
+
+  // Buttons
+  document.getElementById("btnStart").disabled =
+    players.length < 1 || state.status === "playing" || state.status === "picking";
+
+  // Log
+  const logList = document.getElementById("logList");
+  logList.innerHTML = (state.log?.length ? state.log : ["Aucun événement."])
+    .map(e => `<li>${e}</li>`).join("");
+}
+
+// ─── Map Rendering ────────────────────────────────────────────────────────────
+function getScale() {
+  const img = document.getElementById("mapImg");
+  return img.clientWidth / IMG_W;
+}
+
+function renderMap() {
+  const svg = document.getElementById("hexOverlay");
+  const scale = getScale();
+
+  let html = "";
+
+  // Draw all hex cells lightly
+  for (let r = 0; r < ROWS; r++) {
+    for (let q = 0; q < COLS; q++) {
+      const { x, y } = hexCenter(q, r, scale);
+      const pts = hexPoints(x, y, scale);
+      html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}"/>`;
     }
   }
 
-  // Halo tempête
-  const sc=hexCenter(WORLD.storm.q,WORLD.storm.r);
-  html+=`<circle cx="${sc.x}" cy="${sc.y}" r="${HEX_R*4}" fill="url(#sg)" opacity=".3" pointer-events="none"/>`;
-  html+=`<circle cx="${sc.x}" cy="${sc.y}" r="${HEX_R*2}" fill="url(#sg)" opacity=".45" pointer-events="none"/>`;
-
-  // Icônes monde
-  const sz=Math.max(HEX_R*.75,8);
-  html+=`<text x="${sc.x}" y="${sc.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*2.2}" pointer-events="none" filter="url(#gls)">🌀</text>`;
-  WORLD.pirates.forEach(p=>{const c=hexCenter(p.q,p.r); html+=`<text x="${c.x}" y="${c.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*1.4}" fill="#c84000" pointer-events="none" filter="url(#gl)" opacity=".9">☠</text>`;});
-  WORLD.ports.forEach(p=>{const c=hexCenter(p.q,p.r); html+=`<text x="${c.x}" y="${c.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*1.25}" fill="#2eb872" pointer-events="none" filter="url(#gl)" opacity=".9">⚓</text>`;});
-  WORLD.wrecks.forEach(w=>{const c=hexCenter(w.q,w.r);
-    html+=`<text x="${c.x}" y="${c.y}" text-anchor="middle" dominant-baseline="middle" font-size="${sz*1.1}" fill="#5577aa" pointer-events="none" opacity=".85">⛵</text>`;
-    html+=`<line x1="${c.x-sz*.4}" y1="${c.y+sz*.35}" x2="${c.x+sz*.45}" y2="${c.y+sz*.15}" stroke="rgba(85,119,170,.7)" stroke-width="1.4" pointer-events="none"/>`;
-  });
-  WORLD.islands.forEach(i=>{const c=hexCenter(i.q,i.r);
-    html+=`<ellipse cx="${c.x}" cy="${c.y+sz*.15}" rx="${sz*.55}" ry="${sz*.3}" fill="rgba(100,70,20,.75)" stroke="rgba(200,168,0,.6)" stroke-width=".9" pointer-events="none"/>`;
-    html+=`<polygon points="${c.x},${c.y-sz*.5} ${c.x-sz*.28},${c.y+sz*.12} ${c.x+sz*.28},${c.y+sz*.12}" fill="rgba(25,110,25,.85)" stroke="rgba(60,180,60,.5)" stroke-width=".8" pointer-events="none"/>`;
-  });
-
-  // Cases de départ (phase picking)
-  if(state.status==='picking' && state.pendingStartSlots){
-    state.pendingStartSlots.forEach(({q,r})=>{
-      const {x,y}=hexCenter(q,r);
-      html+=`<polygon points="${hexPts(x,y)}" fill="rgba(74,238,204,.22)" stroke="#4aedcc" stroke-width="1.8" pointer-events="none"/>`;
-    });
+  // Highlight start slots (during picking phase)
+  if (state.status === "picking" && state.pendingStartSlots) {
+    for (const { q, r } of state.pendingStartSlots) {
+      const { x, y } = hexCenter(q, r, scale);
+      const pts = hexPoints(x, y, scale);
+      html += `<polygon points="${pts}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}"/>`;
+    }
   }
 
-  // Options de déplacement
-  if(state.moveOptions?.length){
-    state.moveOptions.forEach(({q,r})=>{
-      const {x,y}=hexCenter(q,r);
-      html+=`<polygon points="${hexPts(x,y)}" fill="rgba(255,200,50,.2)" stroke="#ffc832" stroke-width="1.8" pointer-events="none"/>`;
-    });
+  // Highlight move options
+  if (state.moveOptions?.length) {
+    for (const { q, r } of state.moveOptions) {
+      const { x, y } = hexCenter(q, r, scale);
+      const pts = hexPoints(x, y, scale);
+      html += `<polygon points="${pts}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}"/>`;
+    }
   }
 
-  // Tokens joueurs
-  Object.entries(state.players||{}).forEach(([id,p])=>{
-    if(!p.position) return;
-    const {x,y}=hexCenter(p.position.q,p.position.r);
-    const R=HEX_R*.42, act=state.currentTurn===id;
-    html+=`<circle cx="${x}" cy="${y}" r="${R}" fill="${p.color}" stroke="${act?'#fff':'rgba(255,255,255,.5)'}" stroke-width="${act?2:1.2}" ${act?'filter="url(#gl)"':''}/>`;
-    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${R*1.1}" font-family="Cinzel,serif" fill="white" font-weight="600" pointer-events="none">${p.name[0].toUpperCase()}</text>`;
-  });
-
-  svg.innerHTML = html;
-  svg.querySelectorAll('.hx').forEach(h=>{
-    h.addEventListener('mousemove', onHover);
-    h.addEventListener('mouseleave', onLeave);
-  });
-}
-
-// Tooltip
-function onHover(e) {
-  const q=+e.target.dataset.q, r=+e.target.dataset.r;
-  const el=EL[`${q},${r}`];
-  document.getElementById('tt-name').textContent  = el ? el.label : 'Océan';
-  document.getElementById('tt-type').textContent  = el ? (TYPE_LBL[el.type]||'') : '';
-  document.getElementById('tt-coord').textContent = `Q${q} · R${r}`;
-  const tt=document.getElementById('tooltip');
-  tt.style.display='block'; tt.style.left=(e.clientX+14)+'px'; tt.style.top=(e.clientY-10)+'px';
-}
-function onLeave() { document.getElementById('tooltip').style.display='none'; }
-
-// ════════════════════════════════════════════════════════════════
-// PANNEAUX ÎLES (occupent toute la hauteur)
-// ════════════════════════════════════════════════════════════════
-const ICOLS=['#c8a800','#b89000','#d4b020','#e0c040','#a08000','#c0a010','#d0b828','#b8980a','#cca818','#e8c838'];
-function renderIslands() {
-  const mk=(isl,i)=>`<div class="island-card">
-    <div class="island-name"><span class="island-dot" style="background:${ICOLS[i]}"></span>${isl.label}</div>
-    <div class="island-coord">Q${isl.q} · R${isl.r}</div>
-  </div>`;
-  document.getElementById('islandLeft').innerHTML  = WORLD.islands.slice(0,5).map((x,i)=>mk(x,i)).join('');
-  document.getElementById('islandRight').innerHTML = WORLD.islands.slice(5,10).map((x,i)=>mk(x,i+5)).join('');
-}
-
-// ════════════════════════════════════════════════════════════════
-// SLOTS CARTES
-// ════════════════════════════════════════════════════════════════
-function renderSlots() {
-  document.getElementById('enigmeSlots').innerHTML = Array.from({length:8},(_,i)=>
-    `<div class="card-slot"><span class="slot-icon">🔍</span><span class="slot-txt">Énigme ${i+1}</span></div>`
-  ).join('');
-  const av=['Départ','T.1','T.2','T.3','T.4','T.5','T.6','T.7','T.8','Fin'];
-  document.getElementById('advanceSlots').innerHTML = av.map(l=>
-    `<div class="card-slot av"><span class="slot-icon">📈</span><span class="slot-txt">${l}</span></div>`
-  ).join('');
-}
-
-// ════════════════════════════════════════════════════════════════
-// SOCKET & STATE
-// ════════════════════════════════════════════════════════════════
-const socket = io();
-let state = {};
-
-const playerUrl = `${location.protocol}//${location.hostname}:${location.port}/player`;
-document.getElementById('playerUrl').textContent = playerUrl;
-function copyUrl() {
-  navigator.clipboard.writeText(playerUrl).then(()=>{
-    const el=document.getElementById('playerUrl');
-    const orig=el.textContent; el.textContent='✓ Copié !';
-    setTimeout(()=>el.textContent=orig,1500);
-  });
-}
-
-socket.emit('master:join');
-socket.on('game:state', s=>{ state=s; renderUI(); renderMap(); });
-
-function renderUI() {
-  const lbl={waiting:'En attente',picking:'Choix départ',playing:'En cours',ended:'Terminée'};
-  const badge=document.getElementById('statusBadge');
-  badge.textContent=lbl[state.status]||state.status;
-  badge.className='badge '+(state.status||'waiting');
-
-  const players=Object.entries(state.players||{});
-  document.getElementById('playerCount').textContent=players.length;
-  document.getElementById('btnStart').disabled=players.length<1||state.status==='playing'||state.status==='picking';
-
-  const list=document.getElementById('playerList');
-  if(!players.length){
-    list.innerHTML=`<div style="color:#6a5a3a;font-style:italic;font-size:.8rem">Aucun joueur…</div>`;
-  } else {
-    list.innerHTML=players.map(([id,p])=>{
-      const act=state.currentTurn===id;
-      const pos=p.position?`${p.position.q},${p.position.r}`:'–';
-      return `<div class="p-row ${act?'active':''}">
-        <div class="p-dot" style="background:${p.color}"></div>
-        <span>${p.name}</span>
-        ${act?`<span class="p-turn">Tour</span>`:''}
-        <span class="p-pos">${pos}</span>
-      </div>`;
-    }).join('');
+  // Draw player tokens
+  const players = Object.entries(state.players || {});
+  for (const [id, p] of players) {
+    if (!p.position) continue;
+    const { q, r } = p.position;
+    const { x, y } = hexCenter(q, r, scale);
+    const isActive = state.currentTurn === id;
+    const radius = 9 * scale;
+    if (isActive) {
+      html += `<circle cx="${x}" cy="${y}" r="${radius+3*scale}" fill="none" stroke="${p.color}" stroke-width="${1.5*scale}" opacity="0.6"/>`;
+    }
+    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}"/>`;
+    const fs = 7 * scale;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${fs}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
   }
-  document.getElementById('logList').innerHTML=
-    (state.log?.length?state.log:['Aucun événement.']).map(e=>`<li>${e}</li>`).join('');
+
+  // Dice roll display: show value near current player
+  if (state.diceRoll && state.players[state.diceRoll.playerId]?.position) {
+    const p = state.players[state.diceRoll.playerId];
+    const { x, y } = hexCenter(p.position.q, p.position.r, scale);
+    const fs = 11 * scale;
+    html += `<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${fs*1.4}" filter="url(#shadow)">🎲${state.diceRoll.value}</text>`;
+  }
+
+  svg.innerHTML = `<defs><filter id="shadow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/></filter></defs>` + html;
 }
 
-function startGame() { socket.emit('master:start'); }
-function resetGame()  { socket.emit('master:reset'); }
+// ─── Calibration ──────────────────────────────────────────────────────────────
+function toggleCalib() {
+  const panel = document.getElementById("calibPanel");
+  panel.classList.toggle("open");
+  if (panel.classList.contains("open")) updateCalibDisplay();
+}
 
-// ════════════════════════════════════════════════════════════════
-// INIT & RESIZE
-// ════════════════════════════════════════════════════════════════
-function fullRender() { computeGrid(); drawOcean(); renderMap(); }
-window.addEventListener('load', ()=>{ renderSlots(); renderIslands(); fullRender(); });
-window.addEventListener('resize', fullRender);
+function updateCalib() {
+  HEX_R      = parseFloat(document.getElementById("sR").value);
+  MARGIN_X   = parseFloat(document.getElementById("sMX").value);
+  MARGIN_Y   = parseFloat(document.getElementById("sMY").value);
+  COL_SP     = parseFloat(document.getElementById("sCS").value);
+  ROW_SP     = parseFloat(document.getElementById("sRS").value);
+  ROW_OFFSET = parseFloat(document.getElementById("sOF").value);
+
+  document.getElementById("vR").textContent  = HEX_R.toFixed(2);
+  document.getElementById("vMX").textContent = MARGIN_X.toFixed(1);
+  document.getElementById("vMY").textContent = MARGIN_Y.toFixed(1);
+  document.getElementById("vCS").textContent = COL_SP.toFixed(2);
+  document.getElementById("vRS").textContent = ROW_SP.toFixed(2);
+  document.getElementById("vOF").textContent = ROW_OFFSET.toFixed(2);
+
+  updateCalibDisplay();
+  syncCanvasSize();
+  renderMap();
+}
+
+function updateCalibDisplay() {
+  document.getElementById("calibCode").textContent =
+`HEX_R    = ${HEX_R.toFixed(3)}
+MARGIN_X = ${MARGIN_X.toFixed(1)}
+MARGIN_Y = ${MARGIN_Y.toFixed(1)}
+COL_SP   = ${COL_SP.toFixed(3)}
+ROW_SP   = ${ROW_SP.toFixed(3)}
+OFFSET   = ${ROW_OFFSET.toFixed(3)}`;
+}
+
+function copyCalib() {
+  const txt =
+`const HEX_R    = ${HEX_R.toFixed(3)};
+const MARGIN_X = ${MARGIN_X.toFixed(1)};
+const MARGIN_Y = ${MARGIN_Y.toFixed(1)};
+const COL_SP   = ${COL_SP.toFixed(3)};
+const ROW_SP   = ${ROW_SP.toFixed(3)};
+const ROW_OFFSET = ${ROW_OFFSET.toFixed(3)};`;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.querySelector(".calib-copy");
+    btn.textContent = "✓ Copié !";
+    setTimeout(() => btn.textContent = "📋 Copier les constantes", 1500);
+  });
+}
+
+// Init calibration display
+updateCalibDisplay();
+
+// ─── Controls ─────────────────────────────────────────────────────────────────
+function startGame() { socket.emit("master:start"); }
+function resetGame() { if (confirm("Réinitialiser la partie ?")) socket.emit("master:reset"); }
+
+// ─── Resize handling ──────────────────────────────────────────────────────────
+const mapImg = document.getElementById("mapImg");
+mapImg.addEventListener("load", () => {
+  syncCanvasSize();
+  renderMap();
+});
+window.addEventListener("resize", () => {
+  syncCanvasSize();
+  renderMap();
+});
+
+function syncCanvasSize() {
+  const img = document.getElementById("mapImg");
+  const svg = document.getElementById("hexOverlay");
+  svg.setAttribute("width", img.clientWidth);
+  svg.setAttribute("height", img.clientHeight);
+  svg.style.width = img.clientWidth + "px";
+  svg.style.height = img.clientHeight + "px";
+}
+
+// Init if image already loaded
+if (mapImg.complete) {
+  syncCanvasSize();
+  renderMap();
+}
 </script>
 </body>
 </html>
