@@ -239,7 +239,40 @@
 
     .legend-item { display: flex; align-items: center; gap: 6px; font-size: .72rem; margin-bottom: 4px; }
     .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .legend-hex { width: 12px; height: 12px; flex-shrink: 0; }
+
+    /* ══ PANNEAU CONTRÔLE MJ ═══════════════════════════════════════════════════ */
+    .ctrl-turn-box {
+      background: rgba(184,134,11,.07); border: 1px solid rgba(184,134,11,.25);
+      border-radius: 5px; padding: 7px 8px; margin-bottom: 7px; text-align: center;
+    }
+    .ctrl-turn-name  { font-family: 'Cinzel', serif; font-size: .78rem; color: var(--gold3); display: block; margin-bottom: 2px; }
+    .ctrl-turn-phase { font-size: .62rem; color: var(--parch2); font-style: italic; }
+    .dice-display    { font-size: 1.9rem; text-align: center; margin: 3px 0; filter: drop-shadow(0 0 5px rgba(255,200,50,.4)); }
+    .dice-value-label { font-size: .65rem; color: var(--parch2); text-align: center; margin-bottom: 6px; }
+    .btn-sm {
+      display: block; width: 100%; padding: 5px 8px; border-radius: 4px;
+      border: 1px solid var(--gold); background: transparent; color: var(--gold2);
+      font-family: 'Crimson Pro', serif; font-size: .78rem; cursor: pointer;
+      margin-bottom: 4px; transition: background .15s; text-align: left;
+    }
+    .btn-sm:hover:not(:disabled) { background: rgba(184,134,11,.18); }
+    .btn-sm:disabled { opacity: .3; cursor: not-allowed; }
+    .btn-sm.red   { border-color: #c05050; color: #e07070; }
+    .btn-sm.red:hover:not(:disabled)   { background: rgba(200,80,80,.15); }
+    .btn-sm.green { border-color: #50a050; color: #80c880; }
+    .btn-sm.green:hover:not(:disabled) { background: rgba(80,160,80,.15); }
+    .btn-sm.teal  { border-color: var(--teal); color: var(--teal); }
+    .btn-sm.teal:hover:not(:disabled)  { background: rgba(74,238,204,.1); }
+
+    .ctrl-player {
+      display: flex; align-items: center; gap: 5px; padding: 4px 5px;
+      border-radius: 4px; margin-bottom: 3px; font-size: .75rem;
+      background: rgba(255,255,255,.03);
+    }
+    .ctrl-player.active-turn { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.25); }
+    .ctrl-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .ctrl-pos  { margin-left: auto; font-size: .6rem; color: #6a5a3a; font-family: monospace; }
+    .ctrl-tag  { font-size: .55rem; color: #6abf61; font-family: 'Cinzel', serif; padding: 1px 4px; border: 1px solid rgba(106,191,97,.4); border-radius: 3px; }
 
     /* ══ TOOLTIP ════════════════════════════════════════════════════════════════ */
     #tooltip {
@@ -325,30 +358,46 @@
 
 </div>
 
-<!-- ══ SIDEBAR FLOTTANTE (joueurs + log) ══ -->
+<!-- ══ SIDEBAR FLOTTANTE MJ ══ -->
 <div class="sidebar-float" id="sidebarFloat">
+
   <div class="panel">
-    <h2>Connexion</h2>
-    <div style="font-size:.65rem;color:var(--parch2);word-break:break-all;cursor:pointer" id="playerUrl" onclick="copyUrl()">Chargement…</div>
+    <h2>🔗 Connexion Joueur</h2>
+    <div style="font-size:.62rem;color:var(--parch2);word-break:break-all;cursor:pointer;padding:4px;background:rgba(255,255,255,.04);border-radius:3px;border:1px solid var(--border)" id="playerUrl" onclick="copyUrl()" title="Cliquer pour copier">Chargement…</div>
+  </div>
+
+  <div class="panel" id="ctrlPanel">
+    <h2>🎮 Contrôle MJ</h2>
+    <div class="ctrl-turn-box" id="ctrlTurnBox">
+      <span class="ctrl-turn-name" id="ctrlTurnName">—</span>
+      <span class="ctrl-turn-phase" id="ctrlTurnPhase">En attente de démarrage</span>
+    </div>
+    <div id="ctrlDiceSection" style="display:none">
+      <div class="dice-display" id="ctrlDiceFace">?</div>
+      <div class="dice-value-label" id="ctrlDiceLabel">Pas encore lancé</div>
+    </div>
+    <button class="btn-sm teal" id="btnMJRoll"   onclick="mjRollDice()"  disabled>🎲 Lancer le dé (MJ)</button>
+    <button class="btn-sm green" id="btnMJEndTurn" onclick="mjEndTurn()" disabled>✅ Fin de tour</button>
+    <button class="btn-sm red"  onclick="resetGame()">↺ Reset la partie</button>
   </div>
 
   <div class="panel">
     <h2>Joueurs (<span id="playerCount">0</span>)</h2>
-    <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.78rem">Aucun joueur…</div></div>
+    <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.75rem">Aucun joueur…</div></div>
   </div>
 
   <div class="panel">
     <h2>Légende</h2>
     <div class="legend-item"><div class="legend-dot" style="background:#e63946;border:2px solid #ff6b6b"></div> Cœur de la tempête</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#2a1a0a;border:2px solid #8b4513"></div> Repaire pirate</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6a2a00;border:2px solid #8b4513"></div> Repaire pirate</div>
     <div class="legend-item"><div class="legend-dot" style="background:#0a3a1a;border:2px solid #2eb872"></div> Port de commerce</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#1a1a0a;border:2px solid #c8a800"></div> Île inexplorée</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3a3000;border:2px solid #c8a800"></div> Île inexplorée</div>
     <div class="legend-item"><div class="legend-dot" style="background:#0a0a2a;border:2px solid #5577aa"></div> Épave</div>
-    <div class="legend-item" style="margin-top:4px"><div style="width:24px;height:2px;background:rgba(255,165,0,.7);margin-right:2px"></div> Route commerciale</div>
+    <div class="legend-item" style="margin-top:2px"><div style="width:22px;height:2px;background:rgba(255,165,0,.7);margin-right:6px;flex-shrink:0"></div> Route commerciale</div>
   </div>
 
-  <div class="panel" style="flex:1">
-    <h2>Journal</h2>
+  <div class="panel" style="flex:1;min-height:0">
+    <h2>📜 Journal</h2>
     <ul id="logList"><li>En attente…</li></ul>
   </div>
 </div>
@@ -783,7 +832,7 @@ function onHexClick(e) {
   const q = +e.target.dataset.q, r = +e.target.dataset.r;
   // Si picking ou moveOptions — émettre l'action
   if (state.status === 'picking' && state.pendingStartSlots?.some(s => s.q===q && s.r===r)) {
-    socket.emit('player:chooseStart', { q, r });
+    socket.emit('player:pickStart', { q, r });
   } else if (state.moveOptions?.some(m => m.q===q && m.r===r)) {
     socket.emit('player:move', { q, r });
   }
@@ -859,6 +908,8 @@ socket.on("game:state", (s) => {
   renderMap();
 });
 
+const DICE_FACES = ["⚀","⚁","⚂","⚃","⚄","⚅"];
+
 function renderUI() {
   const badge  = document.getElementById("statusBadge");
   const labels = { waiting:"En attente", picking:"Choix départ", playing:"En cours", ended:"Terminée" };
@@ -866,32 +917,79 @@ function renderUI() {
   badge.className   = "badge " + state.status;
 
   const players = Object.entries(state.players || {});
+  const st = state.status;
+
+  // ── Bouton démarrer ──
+  document.getElementById("btnStart").disabled =
+    players.length < 1 || st === "playing" || st === "picking";
+
+  // ── Panneau contrôle MJ ──
+  const curId    = state.currentTurn;
+  const curPlayer = curId ? state.players?.[curId] : null;
+  const diceRoll  = state.diceRoll;
+  const hasMoved  = curPlayer?.hasMoved;
+
+  // Nom et phase
+  document.getElementById("ctrlTurnName").textContent =
+    curPlayer ? `⛵ ${curPlayer.name}` : "—";
+
+  let phaseText = "En attente de démarrage";
+  if (st === "picking")  phaseText = "Phase de placement";
+  else if (st === "playing") {
+    if (!diceRoll) phaseText = "Doit lancer le dé";
+    else if (!hasMoved) phaseText = `Dé: ${diceRoll.value} — Doit se déplacer`;
+    else phaseText = "Peut terminer son tour";
+  }
+  document.getElementById("ctrlTurnPhase").textContent = phaseText;
+
+  // Dé
+  const diceSection = document.getElementById("ctrlDiceSection");
+  if (st === "playing" && curPlayer) {
+    diceSection.style.display = "block";
+    if (diceRoll) {
+      document.getElementById("ctrlDiceFace").textContent = DICE_FACES[diceRoll.value-1] || diceRoll.value;
+      document.getElementById("ctrlDiceLabel").textContent = `Résultat : ${diceRoll.value} case(s)`;
+    } else {
+      document.getElementById("ctrlDiceFace").textContent = "?";
+      document.getElementById("ctrlDiceLabel").textContent = "Pas encore lancé";
+    }
+  } else {
+    diceSection.style.display = "none";
+  }
+
+  // Boutons MJ
+  document.getElementById("btnMJRoll").disabled    = !(st === "playing" && curPlayer && !diceRoll);
+  document.getElementById("btnMJEndTurn").disabled = !(st === "playing" && curPlayer);
+
+  // ── Liste joueurs ──
   document.getElementById("playerCount").textContent = players.length;
   const list = document.getElementById("playerList");
   if (!players.length) {
-    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.78rem">Aucun joueur…</div>`;
+    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.75rem">Aucun joueur…</div>`;
   } else {
     list.innerHTML = players.map(([id, p]) => {
       const isActive = state.currentTurn === id;
       const pos = p.position ? `${p.position.q},${p.position.r}` : "–";
-      return `<div class="player-row ${isActive ? 'active' : ''}">
-        <div class="player-dot" style="background:${p.color}"></div>
-        <span>${p.name}</span>
-        ${isActive ? `<span class="turn-tag">Tour</span>` : ""}
-        <span class="player-pos">${pos}</span>
+      return `<div class="ctrl-player ${isActive ? 'active-turn' : ''}">
+        <div class="ctrl-dot" style="background:${p.color}"></div>
+        <span style="font-size:.75rem">${p.name}</span>
+        ${isActive ? `<span class="ctrl-tag">Tour</span>` : ""}
+        <span class="ctrl-pos">${pos}</span>
       </div>`;
     }).join("");
   }
-  document.getElementById("btnStart").disabled =
-    players.length < 1 || state.status === "playing" || state.status === "picking";
 
+  // ── Journal ──
   document.getElementById("logList").innerHTML =
     (state.log?.length ? state.log : ["Aucun événement."])
       .map(e => `<li>${e}</li>`).join("");
 }
 
-function startGame() { socket.emit("master:startGame"); }
-function resetGame()  { socket.emit("master:reset"); }
+// ── Actions MJ ──
+function startGame()   { socket.emit("master:start"); }
+function resetGame()   { socket.emit("master:reset"); }
+function mjRollDice()  { socket.emit("master:rollDiceForPlayer"); }
+function mjEndTurn()   { socket.emit("master:forceEndTurn"); }
 
 // ════════════════════════════════════════════════════════════════════════════
 // INIT & RESIZE
