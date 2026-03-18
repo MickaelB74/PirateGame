@@ -298,6 +298,13 @@
     <div class="nav-item" data-tab="atout"                   onclick="switchTab('atout')">            <span>💨</span> Atouts            <span class="nav-badge" id="nb-atout">–</span></div>
     <div class="nav-item" data-tab="evenement"               onclick="switchTab('evenement')">        <span>⚡</span> Événements        <span class="nav-badge" id="nb-event">–</span></div>
     <div class="nav-group">Config</div>
+    <div class="nav-group">Plateau</div>
+    <div class="nav-item" data-tab="iles" onclick="switchTab('iles')">
+      <span>🏝</span> Îles <span class="nav-badge" id="nb-iles">–</span>
+    </div>
+    <div class="nav-item" data-tab="avancement" onclick="switchTab('avancement')">
+      <span>⏳</span> Avancement
+    </div>
     <div class="nav-item" data-tab="rules"                   onclick="switchTab('rules')">            <span>📋</span> Règles </div>
   </nav>
 
@@ -541,6 +548,41 @@
       </div>
     </div>
 
+    <!-- ── ÎLES ── -->
+    <div class="tab-panel" id="tab-iles">
+      <div class="section-head">
+        <div class="section-title">🏝 Îles</div>
+        <div class="section-desc">Îles affichées sur les bords du plateau. Chaque île a un nom, un biome, une icône et un nombre de slots objets (style cargaison).</div>
+      </div>
+      <div class="editor-block">
+        <h3>🏝 Liste des îles</h3>
+        <div class="count-row">
+          <label>Nombre d'îles</label>
+          <div class="count-stepper">
+            <button onclick="changeCount('iles',-1)">−</button>
+            <span class="count-val" id="cnt-iles">–</span>
+            <button onclick="changeCount('iles',+1)">+</button>
+          </div>
+        </div>
+        <div class="card-list" id="list-iles"></div>
+      </div>
+    </div>
+
+    <!-- ── AVANCEMENT ── -->
+    <div class="tab-panel" id="tab-avancement">
+      <div class="section-head">
+        <div class="section-title">⏳ Avancement</div>
+        <div class="section-desc">Nombre de cartes "Temps" affichées dans la barre d'avancement en haut du plateau.</div>
+      </div>
+      <div class="editor-block">
+        <h3>⏳ Cartes Temps</h3>
+        <div class="rule-field" style="max-width:320px">
+          <label>Nombre de cartes Temps</label>
+          <input type="number" id="nb_cartes_temps" min="1" max="20" value="6" oninput="markDirty()">
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -570,6 +612,8 @@ async function loadConfig() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const cfg = await res.json();
     state = cfg.cards;
+    if (!state.iles)       state.iles       = defaultIles();
+    if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
     applyRulesToForm(cfg.rules);
     renderAll();
     document.getElementById('loadingOverlay').style.display = 'none';
@@ -587,6 +631,11 @@ async function saveConfig() {
   statusEl.className = 'save-status';
 
   try {
+    // Collecter nb_cartes_temps avant envoi
+    state.avancement = {
+      nb_cartes_temps: parseInt(document.getElementById('nb_cartes_temps')?.value) || 6
+    };
+
     const body = { cards: state, rules: collectRules() };
     const res = await fetch('/api/config', {
       method: 'POST',
@@ -675,6 +724,8 @@ function renderAll() {
   renderSimpleList('action_defensive','🛡',  ['nom','description'], ['Nom de la carte','Description / effet']);
   renderSimpleList('atout',           '💨',  ['nom','description'], ['Nom','Description / effet']);
   renderEvenement();
+  renderIles();
+  renderAvancement();
   updateOverview();
 }
 
@@ -979,6 +1030,7 @@ function changeCount(key, delta) {
       enigme_latitude:  { id:uid(), valeur:0 },
       enigme_longitude: { id:uid(), valeur:0 },
       enigme_code:      { id:uid(), delta_lat:0, delta_lon:0, description:'' },
+      iles: { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:3 },
     }[key] || null;
     if (newItem) arr.push(newItem);
   } else {
@@ -1002,6 +1054,7 @@ function removeFrom(key, i) {
 }
 
 function rerenderKey(key) {
+  if (key === 'iles')             renderIles();
   if (key === 'parchemin_ile')    renderParcheminIle();
   if (key === 'enigme_latitude')  renderEnigmeLatitude();
   if (key === 'enigme_longitude') renderEnigmeLongitude();
@@ -1030,6 +1083,65 @@ function showSubtab(parent, sub, btn) {
   document.getElementById(`${parent}-${sub}`).style.display = 'block';
   panel.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+}
+
+// ── Îles ──────────────────────────────────────────────────────────────────────
+function renderIles() {
+  const arr = state.iles || [];
+  document.getElementById('cnt-iles').textContent = arr.length;
+  document.getElementById('nb-iles').textContent  = arr.length;
+  document.getElementById('list-iles').innerHTML  = arr.map((c,i) => `
+    <div class="card-entry">
+      <div class="card-entry-header">
+        <span class="card-num">${c.icon||'🏝'} ${esc(c.nom)||'Île '+(i+1)}</span>
+        <button class="btn-remove" onclick="removeFrom('iles',${i})">✕ Supprimer</button>
+      </div>
+      <div class="card-entry-fields triple">
+        <div class="entry-field">
+          <label>Icône</label>
+          <input type="text" value="${esc(c.icon)}" placeholder="ex : 🏝"
+            oninput="state.iles[${i}].icon=this.value;renderIles();markDirty()">
+        </div>
+        <div class="entry-field">
+          <label>Nom de l'île</label>
+          <input type="text" value="${esc(c.nom)}" placeholder="ex : Île aux Squelettes"
+            oninput="state.iles[${i}].nom=this.value;renderIles();markDirty()">
+        </div>
+        <div class="entry-field">
+          <label>Biome / ambiance</label>
+          <input type="text" value="${esc(c.biome)}" placeholder="ex : Forêt tropicale hostile"
+            oninput="state.iles[${i}].biome=this.value;markDirty()">
+        </div>
+      </div>
+      <div class="card-entry-fields single" style="margin-top:8px">
+        <div class="entry-field">
+          <label>Nombre de slots objets</label>
+          <input type="number" min="0" max="12" value="${c.nb_objets||3}"
+            oninput="state.iles[${i}].nb_objets=parseInt(this.value)||0;markDirty()">
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderAvancement() {
+  const nb = state.avancement?.nb_cartes_temps ?? 6;
+  const el = document.getElementById('nb_cartes_temps');
+  if (el) el.value = nb;
+}
+
+function defaultIles() {
+  return [
+    { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:3 },
+    { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:2 },
+    { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:4 },
+    { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:3 },
+    { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:2 },
+    { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:2 },
+    { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:3 },
+    { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:4 },
+    { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:3 },
+    { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:2 },
+  ];
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
