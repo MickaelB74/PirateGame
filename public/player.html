@@ -995,8 +995,8 @@
 
 <script>
 // ─── Hex Math ──────────────────────────────────────────────────────────────────
-const COLS = 25, ROWS = 21;
-const IMG_W = 1288, IMG_H = 952;
+const ROWS = 22, IMG_W = 1288, IMG_H = 952;
+function colsForRow(r) { return r % 2 === 0 ? 25 : 24; }
 
 let MARGIN_X   = 48.5;
 let MARGIN_Y   = 39.0;
@@ -1024,8 +1024,12 @@ function hexPoints(cx, cy, scale) {
 }
 
 const START_POSITIONS = [
-  { q: 0,  r: 0  }, { q: 12, r: 0  }, { q: 24, r: 0  },
-  { q: 24, r: 20 }, { q: 12, r: 20 }, { q: 0,  r: 20 },
+  { q:  0, r:  0 },
+  { q: 24, r:  0 },
+  { q:  0, r: 10 },
+  { q: 24, r: 10 },
+  { q:  0, r: 21 },
+  { q: 24, r: 21 },
 ];
 
 // ─── Socket ────────────────────────────────────────────────────────────────────
@@ -1241,7 +1245,8 @@ function renderMiniMap(state, isPickPhase) {
   const s = baseScale;
 
   for (let r = 0; r < ROWS; r++) {
-    for (let q = 0; q < COLS; q++) {
+    const cols = colsForRow(r);
+    for (let q = 0; q < cols; q++) {
       const { x, y } = hexCenter(q, r, s);
       const pts = hexPoints(x, y, s);
       html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.10)" stroke-width="${s}"/>`;

@@ -152,6 +152,13 @@
     /* LOADING */
     #loadingOverlay { position: fixed; inset: 0; background: rgba(5,3,1,.85); display: flex; align-items: center; justify-content: center; z-index: 200; font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); }
 
+    /* Bloc case île (multi-cases) */
+    .case-block { background: rgba(74,237,204,.04); border: 1px solid rgba(74,237,204,.15); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 6px; }
+    .case-block label { font-size: var(--fs-xs); color: rgba(74,237,204,.6); }
+    .case-block input { padding: 7px 10px; background: rgba(0,0,0,.52); border: 1px solid rgba(74,237,204,.3); border-radius: 6px; color: #4aedcc; font-family: monospace; font-size: var(--fs-md); }
+    .case-block input:focus { outline: none; border-color: #4aedcc; }
+    .case-block .case-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xs); color: rgba(74,237,204,.5); grid-column: 1/-1; margin-bottom: 2px; }
+
     @media (max-width: 640px) {
       .page { grid-template-columns: 1fr; }
       .sidenav { flex-direction: row; overflow-x: auto; padding: 6px 0; border-right: none; border-bottom: 1px solid var(--border); }
@@ -188,8 +195,8 @@
     <div class="nav-item" data-tab="iles"             onclick="switchTab('iles')">            <span>🏝</span> Îles              <span class="nav-badge" id="nb-iles">–</span></div>
     <div class="nav-item" data-tab="avancement"       onclick="switchTab('avancement')">      <span>⏳</span> Avancement</div>
     <div class="nav-group">Lieux</div>
-    <div class="nav-item" data-tab="port_commerce"    onclick="switchTab('port_commerce')">   <span>⚓</span> Ports de commerce <span class="nav-badge-soon">bientôt</span></div>
-    <div class="nav-item" data-tab="repaire_pirate"   onclick="switchTab('repaire_pirate')">  <span>💀</span> Repaires pirates  <span class="nav-badge-soon">bientôt</span></div>
+    <div class="nav-item" data-tab="port_commerce"    onclick="switchTab('port_commerce')">   <span>⚓</span> Ports de commerce <span class="nav-badge" id="nb-ports">–</span></div>
+    <div class="nav-item" data-tab="repaire_pirate"   onclick="switchTab('repaire_pirate')">  <span>💀</span> Repaires pirates  <span class="nav-badge" id="nb-repaires">–</span></div>
     <div class="nav-group">Config</div>
     <div class="nav-item" data-tab="rules"            onclick="switchTab('rules')">           <span>📋</span> Règles</div>
   </nav>
@@ -434,7 +441,7 @@
     <div class="tab-panel" id="tab-iles">
       <div class="section-head">
         <div class="section-title">🏝 Îles</div>
-        <div class="section-desc">Îles affichées sur les bords du plateau (mat-cards). Définissez le nom, l'ambiance, les slots objets et la coordonnée de la case sur la grille.</div>
+        <div class="section-desc">Chaque île peut occuper 1 à 3 cases sur la grille. Définissez la taille puis les coordonnées Q/R de chaque case.</div>
       </div>
       <div class="editor-block">
         <h3>🏝 Liste des îles</h3>
@@ -469,12 +476,12 @@
     <div class="tab-panel" id="tab-port_commerce">
       <div class="section-head">
         <div class="section-title">⚓ Ports de commerce</div>
-        <div class="section-desc">Cases spéciales du plateau permettant d'acheter des équipements, d'améliorer le navire ou d'échanger des ressources.</div>
+        <div class="section-desc">Cases spéciales du plateau pour l'achat d'équipements et l'échange de ressources. Chaque port occupe une seule case.</div>
       </div>
-      <div class="soon-block">
-        <div class="soon-icon">⚓</div>
-        <div class="soon-title">Section à venir</div>
-        <div class="soon-desc">Les ports de commerce seront configurables ici : nom, position sur la grille (Q / R), catalogue de marchandises et tarifs en doublons.</div>
+      <div class="editor-block">
+        <h3>⚓ Liste des ports</h3>
+        <div class="card-list" id="list-ports"></div>
+        <button class="btn-add" onclick="addLieu('ports')" style="margin-top:14px">+ Ajouter un port</button>
       </div>
     </div>
 
@@ -482,12 +489,12 @@
     <div class="tab-panel" id="tab-repaire_pirate">
       <div class="section-head">
         <div class="section-title">💀 Repaires de pirates</div>
-        <div class="section-desc">Cases spéciales du plateau abritant des pirates hostiles ou des factions à rallier.</div>
+        <div class="section-desc">Cases spéciales abritant des pirates hostiles ou des factions. Chaque repaire occupe une seule case.</div>
       </div>
-      <div class="soon-block">
-        <div class="soon-icon">💀</div>
-        <div class="soon-title">Section à venir</div>
-        <div class="soon-desc">Les repaires pirates seront configurables ici : nom, position sur la grille (Q / R), type (hostile / neutre / allié) et récompenses ou pénalités associées.</div>
+      <div class="editor-block">
+        <h3>💀 Liste des repaires</h3>
+        <div class="card-list" id="list-repaires"></div>
+        <button class="btn-add" onclick="addLieu('repaires')" style="margin-top:14px">+ Ajouter un repaire</button>
       </div>
     </div>
 
@@ -521,6 +528,19 @@ async function loadConfig() {
     state = cfg.cards;
     if (!state.iles)       state.iles       = defaultIles();
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
+    if (!state.ports)      state.ports      = [];
+    if (!state.repaires)   state.repaires   = [];
+    // Migration : ancien format coord_q/coord_r → cases[]
+    state.iles = state.iles.map(ile => {
+      if (!ile.cases) {
+        const cases = [];
+        if (ile.coord_q != null && ile.coord_r != null)
+          cases.push({ q: ile.coord_q, r: ile.coord_r });
+        const { coord_q, coord_r, ...rest } = ile;
+        return { ...rest, cases };
+      }
+      return ile;
+    });
     applyRulesToForm(cfg.rules);
     renderAll();
     document.getElementById('loadingOverlay').style.display = 'none';
@@ -608,6 +628,8 @@ function renderAll() {
   renderEvenement();
   renderIles();
   renderAvancement();
+  renderLieux('ports');
+  renderLieux('repaires');
   updateOverview();
 }
 
@@ -807,56 +829,108 @@ function renderEvenement() {
   document.getElementById('nb-event').textContent = arr.length;
 }
 
-// ── Îles (avec coordonnées Q/R) ───────────────────────────────────────────────
+// ── Îles (multi-cases 1 à 3) ─────────────────────────────────────────────────
 function renderIles() {
   const arr = state.iles || [];
   document.getElementById('cnt-iles').textContent = arr.length;
   document.getElementById('nb-iles').textContent  = arr.length;
-  document.getElementById('list-iles').innerHTML  = arr.map((c,i) => `
-    <div class="card-entry">
+  document.getElementById('list-iles').innerHTML  = arr.map((ile,i) => {
+    const taille = Math.min(3, Math.max(1, (ile.cases?.length || 1)));
+    const casesHTML = Array.from({length: taille}, (_,ci) => {
+      const cas = (ile.cases && ile.cases[ci]) || {q:'',r:''};
+      return `<div class="case-block">
+        <div class="case-title">Case ${ci+1}</div>
+        <div class="entry-field"><label>Q (0–24)</label>
+          <input type="number" min="0" max="24" value="${cas.q!=null&&cas.q!==''?cas.q:''}" placeholder="—"
+            oninput="setCaseCoord(${i},${ci},'q',this.value)"></div>
+        <div class="entry-field"><label>R (0–21)</label>
+          <input type="number" min="0" max="21" value="${cas.r!=null&&cas.r!==''?cas.r:''}" placeholder="—"
+            oninput="setCaseCoord(${i},${ci},'r',this.value)"></div>
+        <div></div>
+      </div>`;
+    }).join('');
+    return `<div class="card-entry">
       <div class="card-entry-header">
-        <span class="card-num">${c.icon||'🏝'} ${esc(c.nom)||'Île '+(i+1)}</span>
+        <span class="card-num">${ile.icon||'🏝'} ${esc(ile.nom)||'Île '+(i+1)}</span>
         <button class="btn-remove" onclick="removeFrom('iles',${i})">✕ Supprimer</button>
       </div>
       <div class="card-entry-fields triple">
-        <div class="entry-field">
-          <label>Icône</label>
-          <input type="text" value="${esc(c.icon)}" placeholder="ex : 🏝"
-            oninput="state.iles[${i}].icon=this.value;renderIles();markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Nom de l'île</label>
-          <input type="text" value="${esc(c.nom)}" placeholder="ex : Île aux Squelettes"
-            oninput="state.iles[${i}].nom=this.value;renderIles();markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Biome / ambiance</label>
-          <input type="text" value="${esc(c.biome)}" placeholder="ex : Forêt tropicale hostile"
-            oninput="state.iles[${i}].biome=this.value;markDirty()">
-        </div>
+        <div class="entry-field"><label>Icône</label>
+          <input type="text" value="${esc(ile.icon)}" placeholder="ex : 🏝"
+            oninput="state.iles[${i}].icon=this.value;renderIles();markDirty()"></div>
+        <div class="entry-field"><label>Nom de l'île</label>
+          <input type="text" value="${esc(ile.nom)}" placeholder="ex : Île aux Squelettes"
+            oninput="state.iles[${i}].nom=this.value;renderIles();markDirty()"></div>
+        <div class="entry-field"><label>Biome / ambiance</label>
+          <input type="text" value="${esc(ile.biome)}" placeholder="ex : Forêt tropicale hostile"
+            oninput="state.iles[${i}].biome=this.value;markDirty()"></div>
       </div>
-      <div class="card-entry-fields triple" style="margin-top:8px">
-        <div class="entry-field">
-          <label>Nombre de slots objets</label>
-          <input type="number" min="0" max="12" value="${c.nb_objets||3}"
-            oninput="state.iles[${i}].nb_objets=parseInt(this.value)||0;markDirty()">
-        </div>
-        <div class="entry-field coord">
-          <label>📍 Coordonnée Q (colonne 0–24)</label>
-          <input type="number" min="0" max="24"
-            value="${c.coord_q!=null&&c.coord_q!==''?c.coord_q:''}"
-            placeholder="—"
-            oninput="state.iles[${i}].coord_q=this.value!==''?parseInt(this.value):null;markDirty()">
-        </div>
-        <div class="entry-field coord">
-          <label>📍 Coordonnée R (rang 0–20)</label>
-          <input type="number" min="0" max="20"
-            value="${c.coord_r!=null&&c.coord_r!==''?c.coord_r:''}"
-            placeholder="—"
-            oninput="state.iles[${i}].coord_r=this.value!==''?parseInt(this.value):null;markDirty()">
-        </div>
+      <div class="card-entry-fields" style="grid-template-columns:1fr 1fr;margin-top:4px">
+        <div class="entry-field"><label>Nombre de slots objets</label>
+          <input type="number" min="0" max="12" value="${ile.nb_objets||3}"
+            oninput="state.iles[${i}].nb_objets=parseInt(this.value)||0;markDirty()"></div>
+        <div class="entry-field"><label>Taille (cases occupées)</label>
+          <select onchange="setIleTaille(${i},parseInt(this.value))">
+            <option value="1" ${taille===1?'selected':''}>1 case</option>
+            <option value="2" ${taille===2?'selected':''}>2 cases</option>
+            <option value="3" ${taille===3?'selected':''}>3 cases</option>
+          </select></div>
+      </div>
+      <div style="margin-top:8px">${casesHTML}</div>
+    </div>`;
+  }).join('');
+}
+
+// setIleTaille / setCaseCoord
+function setIleTaille(i, taille) {
+  const ile = state.iles[i];
+  if (!ile.cases) ile.cases = [];
+  while (ile.cases.length < taille) ile.cases.push({q:null, r:null});
+  ile.cases = ile.cases.slice(0, taille);
+  renderIles(); markDirty();
+}
+function setCaseCoord(i, ci, axis, val) {
+  if (!state.iles[i].cases) state.iles[i].cases = [];
+  while (state.iles[i].cases.length <= ci) state.iles[i].cases.push({q:null, r:null});
+  state.iles[i].cases[ci][axis] = val !== '' ? parseInt(val) : null;
+  markDirty();
+}
+
+// Lieux (ports / repaires)
+function renderLieux(key) {
+  const arr = state[key] || [];
+  const icon = key === 'ports' ? '⚓' : '💀';
+  const listEl = document.getElementById(`list-${key}`);
+  if (!listEl) return;
+  listEl.innerHTML = arr.map((lieu, i) => `
+    <div class="card-entry">
+      <div class="card-entry-header">
+        <span class="card-num">${icon} ${esc(lieu.nom)||'Lieu '+(i+1)}</span>
+        <button class="btn-remove" onclick="removeLieu('${key}',${i})">✕</button>
+      </div>
+      <div class="card-entry-fields triple">
+        <div class="entry-field"><label>Nom</label>
+          <input type="text" value="${esc(lieu.nom)}" placeholder="ex : Port de la Tortue"
+            oninput="state['${key}'][${i}].nom=this.value;renderLieux('${key}');markDirty()"></div>
+        <div class="entry-field coord"><label>📍 Q (colonne 0–24)</label>
+          <input type="number" min="0" max="24" value="${lieu.coord_q!=null?lieu.coord_q:''}" placeholder="—"
+            oninput="state['${key}'][${i}].coord_q=this.value!==''?parseInt(this.value):null;markDirty()"></div>
+        <div class="entry-field coord"><label>📍 R (rang 0–21)</label>
+          <input type="number" min="0" max="21" value="${lieu.coord_r!=null?lieu.coord_r:''}" placeholder="—"
+            oninput="state['${key}'][${i}].coord_r=this.value!==''?parseInt(this.value):null;markDirty()"></div>
       </div>
     </div>`).join('');
+  const badge = document.getElementById(key==='ports'?'nb-ports':'nb-repaires');
+  if (badge) badge.textContent = arr.length;
+}
+function addLieu(key) {
+  state[key] = state[key] || [];
+  state[key].push({id:uid(), nom:'', coord_q:null, coord_r:null});
+  renderLieux(key); markDirty(); updateOverview();
+}
+function removeLieu(key, i) {
+  state[key].splice(i, 1);
+  renderLieux(key); markDirty(); updateOverview();
 }
 
 // Avancement
@@ -894,6 +968,10 @@ function updateOverview() {
   document.getElementById('nb-atout').textContent     = s.atout?.length||0;
   document.getElementById('nb-event').textContent     = s.evenement?.length||0;
   document.getElementById('nb-iles').textContent      = s.iles?.length||0;
+  const nbPorts    = document.getElementById('nb-ports');
+  const nbRepaires = document.getElementById('nb-repaires');
+  if (nbPorts)    nbPorts.textContent    = s.ports?.length||0;
+  if (nbRepaires) nbRepaires.textContent = s.repaires?.length||0;
   updateActionBadge();
 }
 
@@ -933,7 +1011,7 @@ function changeCount(key, delta) {
       enigme_latitude:  { id:uid(), valeur:0 },
       enigme_longitude: { id:uid(), valeur:0 },
       enigme_code:      { id:uid(), delta_lat:0, delta_lon:0, description:'' },
-      iles:             { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:3, coord_q:null, coord_r:null },
+      iles:             { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:3, cases:[{q:null,r:null}] },
     }[key] || null;
     if (newItem) arr.push(newItem);
   } else {
@@ -974,16 +1052,16 @@ function rerenderKey(key) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function defaultIles() {
   return [
-    { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:3, coord_q:null, coord_r:null },
-    { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:2, coord_q:null, coord_r:null },
-    { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:4, coord_q:null, coord_r:null },
-    { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:3, coord_q:null, coord_r:null },
-    { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:2, coord_q:null, coord_r:null },
-    { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:2, coord_q:null, coord_r:null },
-    { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:3, coord_q:null, coord_r:null },
-    { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:4, coord_q:null, coord_r:null },
-    { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:3, coord_q:null, coord_r:null },
-    { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:2, coord_q:null, coord_r:null },
+    { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:3, cases:[{q:null,r:null}] },
+    { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:2, cases:[{q:null,r:null}] },
+    { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:4, cases:[{q:null,r:null}] },
+    { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:3, cases:[{q:null,r:null}] },
+    { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:2, cases:[{q:null,r:null}] },
+    { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:2, cases:[{q:null,r:null}] },
+    { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:3, cases:[{q:null,r:null}] },
+    { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:4, cases:[{q:null,r:null}] },
+    { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:3, cases:[{q:null,r:null}] },
+    { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:2, cases:[{q:null,r:null}] },
   ];
 }
 

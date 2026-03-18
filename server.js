@@ -104,6 +104,8 @@ let adminConfig = savedConfig || {
       { id: "ev_5", nom: "Chant des Sirènes", description: "Envoûté par les sirènes. Défausse une carte action au choix.", annule_relique: "",                 enabled: true },
     ],
     // ── FIX : îles et avancement absents des defaults ─────────────────────────
+    ports:   [],
+    repaires: [],
     iles: [
       { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 3 },
       { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 2 },
@@ -141,6 +143,19 @@ if (!adminConfig.cards.avancement) {
   adminConfig.cards.avancement = { nb_cartes_temps: 6 };
   console.log("  ✓ Clé 'avancement' ajoutée au config existant.");
 }
+if (!adminConfig.cards.ports)    adminConfig.cards.ports    = [];
+if (!adminConfig.cards.repaires) adminConfig.cards.repaires = [];
+// Migration îles : ancien format cases[] ou coord_q/coord_r
+adminConfig.cards.iles = (adminConfig.cards.iles || []).map(ile => {
+  if (!ile.cases) {
+    const cases = [];
+    if (ile.coord_q != null && ile.coord_r != null)
+      cases.push({ q: ile.coord_q, r: ile.coord_r });
+    const { coord_q, coord_r, ...rest } = ile;
+    return { ...rest, cases };
+  }
+  return ile;
+});
 
 // ─── Route REST : GET /api/config ─────────────────────────────────────────────
 app.get("/api/config", (_, res) => res.json(adminConfig));
@@ -164,9 +179,19 @@ app.post("/api/config", (req, res) => {
 });
 
 // ─── Hex Grid ─────────────────────────────────────────────────────────────────
-const COLS = RULES.grid.cols;
-const ROWS = RULES.grid.rows;
-const START_POSITIONS = RULES.players.startPositions;
+// 22 rangs (r=0..21), rangs pairs=25 cols (q=0..24), rangs impairs=24 cols (q=0..23)
+const ROWS = 22;
+function colsForRow(r) { return r % 2 === 0 ? 25 : 24; }
+
+// Points de départ — tous toujours disponibles simultanément
+const START_POSITIONS = [
+  { q:  0, r:  0 },
+  { q: 24, r:  0 },
+  { q:  0, r: 10 },
+  { q: 24, r: 10 },
+  { q:  0, r: 21 },
+  { q: 24, r: 21 },
+];
 
 function hexNeighbors(q, r) {
   const dirs = (r % 2 === 0)
@@ -174,7 +199,7 @@ function hexNeighbors(q, r) {
     : [[-1,0],[1,0],[0,-1],[1,-1],[0,1],[1,1]];
   return dirs
     .map(([dq, dr]) => ({ q: q + dq, r: r + dr }))
-    .filter(n => n.q >= 0 && n.q < COLS && n.r >= 0 && n.r < ROWS);
+    .filter(n => n.r >= 0 && n.r < ROWS && n.q >= 0 && n.q < colsForRow(n.r));
 }
 
 function hexesInRange(q, r, range) {
@@ -269,7 +294,7 @@ io.on("connection", (socket) => {
     gameState.turnOrder = playerIds;
     gameState.turnIndex = 0;
     gameState.currentTurn = playerIds[0];
-    gameState.pendingStartSlots = [...START_POSITIONS].slice(0, playerIds.length);
+    gameState.pendingStartSlots = [...START_POSITIONS]; // tous disponibles simultanément
     gameState.diceRoll = null;
     gameState.moveOptions = [];
     addLog(`Partie démarrée ! ${gameState.players[playerIds[0]].name} choisit sa case de départ.`);
@@ -318,6 +343,16 @@ io.on("connection", (socket) => {
     gameState.diceRoll = null;
     gameState.moveOptions = [];
     addLog(`${gameState.players[socket.id].name} se déplace en (${q},${r}).`);
+    broadcastState();
+  });
+
+  socket.on("player:endTurn", () => {
+    if (gameState.status !== "playing" || gameState.currentTurn !== socket.id) return;
+    gameState.turnIndex = (gameState.turnIndex + 1) % gameState.turnOrder.length;
+    gameState.currentTurn = gameState.turnOrder[gameState.turnIndex];
+    for (const p of Object.values(gameState.players)) p.hasMoved = false;
+    gameState.diceRoll = null; gameState.moveOptions = [];
+    addLog(`Tour suivant : ${gameState.players[gameState.currentTurn].name}.`);
     broadcastState();
   });
 

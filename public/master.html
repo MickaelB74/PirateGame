@@ -196,10 +196,15 @@
     #tooltip.show { display:block; }
     #tooltip strong { color:var(--gold2); font-family:'Cinzel',serif; font-size:.8rem; display:block; margin-bottom:2px; }
 
+    /* Coordonnées multiples sur la mat-card */
+    .ile-coords { display:flex; flex-wrap:wrap; gap:3px; margin-top:3px; }
+    .ile-coord-tag { font-family:monospace; font-size:.6rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:1px 5px; }
+    .ile-coord-tag.has-coord { color:#4aedcc; opacity:.9; background:rgba(74,237,204,.12); border-color:rgba(74,237,204,.35); }
+
     /* Tooltip hex coordonnées */
     #hexTip {
-      position:fixed; background:rgba(5,3,1,.96); border:1px solid rgba(74,237,204,.5);
-      border-radius:4px; padding:5px 11px; font-size:.85rem; color:#4aedcc;
+      position:fixed; background:rgba(5,3,1,.96); border:1px solid rgba(180,180,180,.4);
+      border-radius:4px; padding:5px 11px; font-size:.85rem; color:#aaa;
       font-family:monospace; pointer-events:none; z-index:201; display:none;
       white-space:nowrap; letter-spacing:.05em;
     }
@@ -290,7 +295,8 @@
 
 <script>
 // ─── Constantes grille ────────────────────────────────────────────────────────
-const COLS=25, ROWS=21, IMG_W=1288, IMG_H=952;
+const ROWS=22, IMG_W=1288, IMG_H=952;
+function colsForRow(r){ return r%2===0 ? 25 : 24; }
 let MARGIN_X=48, MARGIN_Y=44, COL_SP=48.6, ROW_SP=41.6, HEX_R=21.7, ROW_OFFSET=24.4;
 
 function hexCenterImg(q,r){ return { x: MARGIN_X+q*COL_SP+(r%2===1?ROW_OFFSET:0), y: MARGIN_Y+r*ROW_SP }; }
@@ -300,7 +306,7 @@ function hexPoints(cx,cy,s){ s=s||1; const R=HEX_R*s,pts=[]; for(let i=0;i<6;i++
 // ─── Config & Socket ──────────────────────────────────────────────────────────
 const socket=io();
 let state={}, cfg={};
-let hoveredIleCoord=null;
+let hoveredIleCases=[]; // tableau de {q,r} pour l'île survolée
 
 const playerUrl=`${location.protocol}//${location.hostname}:${location.port}/player`;
 document.getElementById('playerUrl').textContent=playerUrl;
@@ -324,15 +330,20 @@ function renderIles(){
 function ileCardHTML(ile){
   const nbObjets=ile.nb_objets||3;
   const slots=Array.from({length:nbObjets}).map(()=>`<div class="obj-slot">·</div>`).join('');
-  const hasCoord=(ile.coord_q!=null && ile.coord_r!=null && ile.coord_q!=='' && ile.coord_r!=='');
-  const coordStr=hasCoord?`Q${ile.coord_q}  R${ile.coord_r}`:'— pas de coordonnée';
-  return `<div class="ile-card" data-coord-q="${hasCoord?ile.coord_q:''}" data-coord-r="${hasCoord?ile.coord_r:''}">
+  // Support ancien format (coord_q/coord_r) et nouveau format (cases[])
+  let cases=[];
+  if(ile.cases && ile.cases.length) cases=ile.cases.filter(c=>c.q!=null&&c.r!=null);
+  else if(ile.coord_q!=null&&ile.coord_r!=null) cases=[{q:ile.coord_q,r:ile.coord_r}];
+  const coordsHTML=cases.length
+    ? cases.map(c=>`<span class="ile-coord-tag has-coord">Q${c.q} R${c.r}</span>`).join('')
+    : `<span class="ile-coord-tag">— aucune coord</span>`;
+  return `<div class="ile-card" data-cases='${JSON.stringify(cases)}'>
     <div class="ile-header">
       <span class="ile-icon">${ile.icon||'🏝'}</span>
       <div class="ile-info">
         <div class="ile-name">${ile.nom||'Île'}</div>
         <div class="ile-biome">${ile.biome||''}</div>
-        <div class="ile-coord ${hasCoord?'has-coord':''}">📍 ${coordStr}</div>
+        <div class="ile-coords">${coordsHTML}</div>
       </div>
     </div>
     <div class="ile-objets-label">Objets</div>
@@ -343,13 +354,10 @@ function ileCardHTML(ile){
 function bindIleHover(){
   document.querySelectorAll('.ile-card').forEach(card=>{
     card.addEventListener('mouseenter',()=>{
-      const q=card.dataset.coordQ, r=card.dataset.coordR;
-      if(q!==''&&r!==''){
-        hoveredIleCoord={q:parseInt(q),r:parseInt(r)};
-        renderMap();
-      }
+      try{ hoveredIleCases=JSON.parse(card.dataset.cases)||[]; }catch(e){ hoveredIleCases=[]; }
+      if(hoveredIleCases.length) renderMap();
     });
-    card.addEventListener('mouseleave',()=>{ hoveredIleCoord=null; renderMap(); });
+    card.addEventListener('mouseleave',()=>{ hoveredIleCases=[]; renderMap(); });
   });
 }
 
@@ -420,11 +428,14 @@ function renderMap(){
   const svg=document.getElementById('hexOverlay');
   let html='';
 
-  // Grille
-  for(let r=0;r<ROWS;r++) for(let q=0;q<COLS;q++){
-    const {x,y}=hexCenter(q,r,scale);
-    html+=`<polygon class="hex-cell" data-q="${q}" data-r="${r}" points="${hexPoints(x,y,scale)}"
-      fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}" style="cursor:crosshair"/>`;
+  // Grille — rangs pairs 25 cols, rangs impairs 24 cols
+  for(let r=0;r<ROWS;r++){
+    const cols=colsForRow(r);
+    for(let q=0;q<cols;q++){
+      const {x,y}=hexCenter(q,r,scale);
+      html+=`<polygon class="hex-cell" data-q="${q}" data-r="${r}" points="${hexPoints(x,y,scale)}"
+        fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}" style="cursor:crosshair"/>`;
+    }
   }
 
   // Cases de départ
@@ -441,14 +452,29 @@ function renderMap(){
       html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
 
-  // Surbrillance île survolée (hover matcard)
-  if(hoveredIleCoord){
-    const {q,r}=hoveredIleCoord;
+  // Surbrillance île survolée (hover matcard) — toutes les cases
+  for(const {q,r} of hoveredIleCases){
     const {x,y}=hexCenter(q,r,scale);
     html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(212,160,23,0.32)" stroke="#d4a017" stroke-width="${2.5*scale}" style="pointer-events:none"/>`;
     html+=`<text x="${x}" y="${y-(HEX_R+6)*scale}" text-anchor="middle"
       fill="#d4a017" font-family="monospace" font-size="${8*scale}" font-weight="bold"
-      style="pointer-events:none;text-shadow:0 0 4px #000">Q${q} R${r}</text>`;
+      style="pointer-events:none">Q${q} R${r}</text>`;
+  }
+
+  // Ports de commerce
+  for(const port of (cfg.ports||[])){
+    if(port.coord_q==null||port.coord_r==null) continue;
+    const {x,y}=hexCenter(port.coord_q,port.coord_r,scale);
+    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(74,200,255,0.18)" stroke="#4ac8ff" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${10*scale}" style="pointer-events:none">⚓</text>`;
+  }
+
+  // Repaires pirates
+  for(const rep of (cfg.repaires||[])){
+    if(rep.coord_q==null||rep.coord_r==null) continue;
+    const {x,y}=hexCenter(rep.coord_q,rep.coord_r,scale);
+    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(180,60,60,0.18)" stroke="#c04040" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${10*scale}" style="pointer-events:none">💀</text>`;
   }
 
   // Joueurs
@@ -471,12 +497,22 @@ function renderMap(){
   bindHexHover();
 }
 
-// ─── Hover hex cells ──────────────────────────────────────────────────────────
+// ─── Hover hex cells — surbrillance grise + tooltip coords ───────────────────
 const hexTip=document.getElementById('hexTip');
 function bindHexHover(){
+  const svg=document.getElementById('hexOverlay');
   document.querySelectorAll('.hex-cell').forEach(cell=>{
-    cell.addEventListener('mouseenter',()=>{
-      hexTip.textContent=`Q${cell.dataset.q}  R${cell.dataset.r}`;
+    cell.addEventListener('mouseenter',e=>{
+      const q=parseInt(cell.dataset.q), r=parseInt(cell.dataset.r);
+      const scale=getScale();
+      const {x,y}=hexCenter(q,r,scale);
+      let ghost=document.getElementById('hex-ghost');
+      if(!ghost){ ghost=document.createElementNS('http://www.w3.org/2000/svg','polygon'); ghost.id='hex-ghost'; ghost.style.pointerEvents='none'; svg.appendChild(ghost); }
+      ghost.setAttribute('points',hexPoints(x,y,scale));
+      ghost.setAttribute('fill','rgba(180,180,180,0.18)');
+      ghost.setAttribute('stroke','rgba(200,200,200,0.5)');
+      ghost.setAttribute('stroke-width', 1.5*scale);
+      hexTip.textContent=`Q${q}  R${r}`;
       hexTip.classList.add('show');
     });
     cell.addEventListener('mousemove',e=>{
@@ -484,7 +520,11 @@ function bindHexHover(){
       if(x+120>window.innerWidth) x=e.clientX-130;
       hexTip.style.left=x+'px'; hexTip.style.top=y+'px';
     });
-    cell.addEventListener('mouseleave',()=>hexTip.classList.remove('show'));
+    cell.addEventListener('mouseleave',()=>{
+      const ghost=document.getElementById('hex-ghost');
+      if(ghost) ghost.removeAttribute('points');
+      hexTip.classList.remove('show');
+    });
   });
 }
 
