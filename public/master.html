@@ -297,7 +297,7 @@
 <script>
 // ─── Constantes grille ────────────────────────────────────────────────────────
 const ROWS=22, IMG_W=1288, IMG_H=952;
-function colsForRow(r){ return r%2===0 ? 25 : 24; }
+function colsForRow(r){ return r%2===0 ? 26 : 25; }
 let MARGIN_X=48, MARGIN_Y=44, COL_SP=48.6, ROW_SP=41.6, HEX_R=21.7, ROW_OFFSET=24.4;
 
 function hexCenterImg(q,r){ return { x: MARGIN_X+q*COL_SP+(r%2===1?ROW_OFFSET:0), y: MARGIN_Y+r*ROW_SP }; }
@@ -429,7 +429,7 @@ function renderMap(){
   const svg=document.getElementById('hexOverlay');
   let html='';
 
-  // Grille — rangs pairs 25 cols, rangs impairs 24 cols
+  // Grille — rangs pairs 26 cols, rangs impairs 25 cols
   for(let r=0;r<ROWS;r++){
     const cols=colsForRow(r);
     for(let q=0;q<cols;q++){
