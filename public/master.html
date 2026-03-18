@@ -206,8 +206,9 @@
       position:fixed; background:rgba(5,3,1,.96); border:1px solid rgba(180,180,180,.4);
       border-radius:4px; padding:5px 11px; font-size:.85rem; color:#aaa;
       font-family:monospace; pointer-events:none; z-index:201; display:none;
-      white-space:nowrap; letter-spacing:.05em;
+      white-space:nowrap; letter-spacing:.05em; transition:color .15s;
     }
+    #hexTip strong { font-family:'Cinzel', serif; font-size:.8rem; }
     #hexTip.show { display:block; }
   </style>
 </head>
@@ -438,29 +439,6 @@ function renderMap(){
     }
   }
 
-  // ── OBSTACLES (îles, ports, repaires) — affichés en premier (sous les highlights) ──
-  for(const ile of (cfg.iles||[])){
-    const cases=(ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
-    if(!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
-    for(const cas of cases){
-      const {x,y}=hexCenter(cas.q,cas.r,scale);
-      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(80,55,20,0.6)" stroke="rgba(184,134,11,0.55)" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
-      html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11*scale}" style="pointer-events:none">${ile.icon||'🏝'}</text>`;
-    }
-  }
-  for(const port of (cfg.ports||[])){
-    if(port.coord_q==null||port.coord_r==null) continue;
-    const {x,y}=hexCenter(port.coord_q,port.coord_r,scale);
-    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(20,60,80,0.6)" stroke="#4ac8ff" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
-    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11*scale}" style="pointer-events:none">⚓</text>`;
-  }
-  for(const rep of (cfg.repaires||[])){
-    if(rep.coord_q==null||rep.coord_r==null) continue;
-    const {x,y}=hexCenter(rep.coord_q,rep.coord_r,scale);
-    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(60,10,10,0.6)" stroke="#c04040" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
-    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11*scale}" style="pointer-events:none">💀</text>`;
-  }
-
   // ── Cases de départ (picking) ─────────────────────────────────────────────
   if(state.status==='picking'&&state.pendingStartSlots)
     for(const {q,r} of state.pendingStartSlots){
@@ -484,17 +462,6 @@ function renderMap(){
       style="pointer-events:none">Q${q} R${r}</text>`;
   }
 
-  // Cases d'îles (obstacles opaques)
-  for(const ile of (cfg.iles||[])){
-    const cases=(ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
-    if(!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
-    for(const cas of cases){
-      const {x,y}=hexCenter(cas.q,cas.r,scale);
-      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(80,55,20,0.55)" stroke="rgba(184,134,11,0.5)" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
-      html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${10*scale}" style="pointer-events:none">${ile.icon||'🏝'}</text>`;
-    }
-  }
-
   // Joueurs
   for(const [id,p] of Object.entries(state.players||{})){
     if(!p.position) continue;
@@ -512,25 +479,96 @@ function renderMap(){
   }
 
   svg.innerHTML=`<defs><filter id="shadow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/></filter></defs>`+html;
+  buildObstacleIndex();
   bindHexHover();
+}
+
+// ─── Index des lieux par case (recalculé à chaque renderMap) ────────────────
+let obstacleIndex = new Map(); // clé "q,r" -> { type, label, icon }
+
+function buildObstacleIndex() {
+  obstacleIndex.clear();
+  // Îles (multi-cases)
+  for (const ile of (cfg.iles||[])) {
+    const cases = (ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
+    if (!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
+    for (const c of cases)
+      obstacleIndex.set(`${c.q},${c.r}`, { type:'ile', label:ile.nom||'Île', icon:'🏝' });
+  }
+  // Ports
+  for (const p of (cfg.ports||[])) {
+    if (p.coord_q!=null&&p.coord_r!=null)
+      obstacleIndex.set(`${p.coord_q},${p.coord_r}`, { type:'port', label:p.nom||'Port', icon:'⚓' });
+  }
+  // Repaires
+  for (const r of (cfg.repaires||[])) {
+    if (r.coord_q!=null&&r.coord_r!=null)
+      obstacleIndex.set(`${r.coord_q},${r.coord_r}`, { type:'repaire', label:r.nom||'Repaire', icon:'💀' });
+  }
+  // Épaves
+  for (const e of (cfg.epaves||[])) {
+    if (e.coord_q!=null&&e.coord_r!=null)
+      obstacleIndex.set(`${e.coord_q},${e.coord_r}`, { type:'epave', label:e.nom||'Épave', icon:'🚢' });
+  }
 }
 
 // ─── Hover hex cells — surbrillance grise + tooltip coords ───────────────────
 const hexTip=document.getElementById('hexTip');
 function bindHexHover(){
   const svg=document.getElementById('hexOverlay');
+  // Couleurs par type de lieu
+  const LIEU_STYLES = {
+    ile:     { fill:'rgba(30,100,30,0.35)',  stroke:'#5aad52', tipColor:'#5aad52' },
+    port:    { fill:'rgba(20,60,130,0.35)',  stroke:'#4ac8ff', tipColor:'#4ac8ff' },
+    repaire: { fill:'rgba(120,20,20,0.35)',  stroke:'#c04040', tipColor:'#e07070' },
+    epave:   { fill:'rgba(90,70,20,0.35)',   stroke:'#c8a840', tipColor:'#d4b850' },
+    default: { fill:'rgba(180,180,180,0.18)',stroke:'rgba(200,200,200,0.5)', tipColor:'#aaa' },
+  };
+
   document.querySelectorAll('.hex-cell').forEach(cell=>{
     cell.addEventListener('mouseenter',e=>{
       const q=parseInt(cell.dataset.q), r=parseInt(cell.dataset.r);
       const scale=getScale();
       const {x,y}=hexCenter(q,r,scale);
+      const lieu=obstacleIndex.get(`${q},${r}`);
+      const style=lieu ? LIEU_STYLES[lieu.type]||LIEU_STYLES.default : LIEU_STYLES.default;
+
+      // Surbrillance ghost
       let ghost=document.getElementById('hex-ghost');
-      if(!ghost){ ghost=document.createElementNS('http://www.w3.org/2000/svg','polygon'); ghost.id='hex-ghost'; ghost.style.pointerEvents='none'; svg.appendChild(ghost); }
+      if(!ghost){
+        ghost=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+        ghost.id='hex-ghost'; ghost.style.pointerEvents='none';
+        svg.appendChild(ghost);
+      }
       ghost.setAttribute('points',hexPoints(x,y,scale));
-      ghost.setAttribute('fill','rgba(180,180,180,0.18)');
-      ghost.setAttribute('stroke','rgba(200,200,200,0.5)');
-      ghost.setAttribute('stroke-width', 1.5*scale);
-      hexTip.textContent=`Q${q}  R${r}`;
+      ghost.setAttribute('fill',style.fill);
+      ghost.setAttribute('stroke',style.stroke);
+      ghost.setAttribute('stroke-width', 1.8*scale);
+
+      // Icône ghost (si lieu)
+      let ghostIcon=document.getElementById('hex-ghost-icon');
+      if(!ghostIcon){
+        ghostIcon=document.createElementNS('http://www.w3.org/2000/svg','text');
+        ghostIcon.id='hex-ghost-icon'; ghostIcon.style.pointerEvents='none';
+        ghostIcon.setAttribute('text-anchor','middle');
+        ghostIcon.setAttribute('dominant-baseline','central');
+        svg.appendChild(ghostIcon);
+      }
+      if(lieu){
+        ghostIcon.setAttribute('x', x); ghostIcon.setAttribute('y', y);
+        ghostIcon.setAttribute('font-size', 11*scale);
+        ghostIcon.textContent=lieu.icon;
+      } else {
+        ghostIcon.textContent='';
+      }
+
+      // Tooltip
+      hexTip.style.color = style.tipColor;
+      if(lieu){
+        hexTip.innerHTML = `<span style="opacity:.7">${lieu.icon}</span> <strong>${lieu.label}</strong> <span style="opacity:.5;font-size:.8em">Q${q} R${r}</span>`;
+      } else {
+        hexTip.textContent=`Q${q}  R${r}`;
+      }
       hexTip.classList.add('show');
     });
     cell.addEventListener('mousemove',e=>{
@@ -541,6 +579,8 @@ function bindHexHover(){
     cell.addEventListener('mouseleave',()=>{
       const ghost=document.getElementById('hex-ghost');
       if(ghost) ghost.removeAttribute('points');
+      const ghostIcon=document.getElementById('hex-ghost-icon');
+      if(ghostIcon) ghostIcon.textContent='';
       hexTip.classList.remove('show');
     });
   });

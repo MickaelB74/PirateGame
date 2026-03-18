@@ -1256,17 +1256,22 @@ function renderMiniMap(state, isPickPhase) {
     }
   }
 
-  // ── Obstacles (îles, ports, repaires) — affichés sous les highlights ──────
+  // ── Obstacles (îles, ports, repaires, épaves) — affichés dans la minimap ───
   // Reçus via state.obstacles depuis le serveur (type + icône + coords)
   for (const obs of (state.obstacles || [])) {
     const { x, y } = hexCenter(obs.q, obs.r, s);
     const pts = hexPoints(x, y, s);
-    const fill   = obs.type === 'ile'    ? 'rgba(80,55,20,0.6)'
-                 : obs.type === 'port'   ? 'rgba(20,60,80,0.6)'
-                 :                         'rgba(60,10,10,0.6)';
-    const stroke = obs.type === 'ile'    ? 'rgba(184,134,11,0.55)'
+    // Cohérence visuelle avec les couleurs hover de master.html
+    const fill   = obs.type === 'ile'    ? 'rgba(30,100,30,0.45)'
+                 : obs.type === 'port'   ? 'rgba(20,60,130,0.45)'
+                 : obs.type === 'repaire'? 'rgba(120,20,20,0.45)'
+                 : obs.type === 'epave'  ? 'rgba(90,70,20,0.45)'
+                 :                         'rgba(60,60,60,0.35)';
+    const stroke = obs.type === 'ile'    ? '#5aad52'
                  : obs.type === 'port'   ? '#4ac8ff'
-                 :                         '#c04040';
+                 : obs.type === 'repaire'? '#c04040'
+                 : obs.type === 'epave'  ? '#c8a840'
+                 :                         '#888';
     html += `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="${1.5*s}" style="pointer-events:none"/>`;
     html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${9*s}" style="pointer-events:none">${obs.icon || ''}</text>`;
   }

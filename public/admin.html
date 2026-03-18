@@ -197,6 +197,7 @@
     <div class="nav-group">Lieux</div>
     <div class="nav-item" data-tab="port_commerce"    onclick="switchTab('port_commerce')">   <span>⚓</span> Ports de commerce <span class="nav-badge" id="nb-ports">–</span></div>
     <div class="nav-item" data-tab="repaire_pirate"   onclick="switchTab('repaire_pirate')">  <span>💀</span> Repaires pirates  <span class="nav-badge" id="nb-repaires">–</span></div>
+    <div class="nav-item" data-tab="epave"             onclick="switchTab('epave')">            <span>🚢</span> Épaves            <span class="nav-badge" id="nb-epaves">–</span></div>
     <div class="nav-group">Config</div>
     <div class="nav-item" data-tab="rules"            onclick="switchTab('rules')">           <span>📋</span> Règles</div>
   </nav>
@@ -498,6 +499,20 @@
       </div>
     </div>
 
+
+    <!-- ÉPAVES -->
+    <div class="tab-panel" id="tab-epave">
+      <div class="section-head">
+        <div class="section-title">🚢 Épaves</div>
+        <div class="section-desc">Cases spéciales représentant des navires naufragés. Impossibles à traverser, elles peuvent recéler des trésors. Chaque épave occupe une seule case.</div>
+      </div>
+      <div class="editor-block">
+        <h3>🚢 Liste des épaves</h3>
+        <div class="card-list" id="list-epaves"></div>
+        <button class="btn-add" onclick="addLieu('epaves')" style="margin-top:14px">+ Ajouter une épave</button>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -530,6 +545,7 @@ async function loadConfig() {
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
     if (!state.ports)      state.ports      = [];
     if (!state.repaires)   state.repaires   = [];
+    if (!state.epaves)     state.epaves     = [];
     // Migration : ancien format coord_q/coord_r → cases[]
     state.iles = state.iles.map(ile => {
       if (!ile.cases) {
@@ -630,6 +646,7 @@ function renderAll() {
   renderAvancement();
   renderLieux('ports');
   renderLieux('repaires');
+  renderLieux('epaves');
   updateOverview();
 }
 
@@ -970,8 +987,10 @@ function updateOverview() {
   document.getElementById('nb-iles').textContent      = s.iles?.length||0;
   const nbPorts    = document.getElementById('nb-ports');
   const nbRepaires = document.getElementById('nb-repaires');
+  const nbEpaves   = document.getElementById('nb-epaves');
   if (nbPorts)    nbPorts.textContent    = s.ports?.length||0;
   if (nbRepaires) nbRepaires.textContent = s.repaires?.length||0;
+  if (nbEpaves)   nbEpaves.textContent   = s.epaves?.length||0;
   updateActionBadge();
 }
 

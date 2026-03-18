@@ -106,6 +106,7 @@ let adminConfig = savedConfig || {
     // ── FIX : îles et avancement absents des defaults ─────────────────────────
     ports:   [],
     repaires: [],
+    epaves:  [],
     iles: [
       { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 3 },
       { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 2 },
@@ -145,6 +146,7 @@ if (!adminConfig.cards.avancement) {
 }
 if (!adminConfig.cards.ports)    adminConfig.cards.ports    = [];
 if (!adminConfig.cards.repaires) adminConfig.cards.repaires = [];
+if (!adminConfig.cards.epaves)   adminConfig.cards.epaves   = [];
 // Migration îles : ancien format cases[] ou coord_q/coord_r
 adminConfig.cards.iles = (adminConfig.cards.iles || []).map(ile => {
   if (!ile.cases) {
@@ -221,6 +223,10 @@ function getObstaclesArray() {
     if (rep.coord_q!=null&&rep.coord_r!=null)
       obs.push({ q:rep.coord_q, r:rep.coord_r, type:'repaire', icon:'💀' });
   }
+  for (const ep of (cards.epaves||[])) {
+    if (ep.coord_q!=null&&ep.coord_r!=null)
+      obs.push({ q:ep.coord_q, r:ep.coord_r, type:'epave', icon:'🚢' });
+  }
   return obs;
 }
 
@@ -252,6 +258,12 @@ function getBlockedCells() {
   for (const rep of (cards.repaires || [])) {
     if (rep.coord_q != null && rep.coord_r != null)
       blocked.add(`${rep.coord_q},${rep.coord_r}`);
+  }
+
+  // Épaves
+  for (const ep of (cards.epaves || [])) {
+    if (ep.coord_q != null && ep.coord_r != null)
+      blocked.add(`${ep.coord_q},${ep.coord_r}`);
   }
 
   return blocked;
