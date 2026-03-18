@@ -438,18 +438,41 @@ function renderMap(){
     }
   }
 
-  // Cases de départ
+  // ── OBSTACLES (îles, ports, repaires) — affichés en premier (sous les highlights) ──
+  for(const ile of (cfg.iles||[])){
+    const cases=(ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
+    if(!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
+    for(const cas of cases){
+      const {x,y}=hexCenter(cas.q,cas.r,scale);
+      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(80,55,20,0.6)" stroke="rgba(184,134,11,0.55)" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
+      html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11*scale}" style="pointer-events:none">${ile.icon||'🏝'}</text>`;
+    }
+  }
+  for(const port of (cfg.ports||[])){
+    if(port.coord_q==null||port.coord_r==null) continue;
+    const {x,y}=hexCenter(port.coord_q,port.coord_r,scale);
+    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(20,60,80,0.6)" stroke="#4ac8ff" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11*scale}" style="pointer-events:none">⚓</text>`;
+  }
+  for(const rep of (cfg.repaires||[])){
+    if(rep.coord_q==null||rep.coord_r==null) continue;
+    const {x,y}=hexCenter(rep.coord_q,rep.coord_r,scale);
+    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(60,10,10,0.6)" stroke="#c04040" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11*scale}" style="pointer-events:none">💀</text>`;
+  }
+
+  // ── Cases de départ (picking) ─────────────────────────────────────────────
   if(state.status==='picking'&&state.pendingStartSlots)
     for(const {q,r} of state.pendingStartSlots){
       const {x,y}=hexCenter(q,r,scale);
       html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
 
-  // Options déplacement
+  // ── Options de déplacement ────────────────────────────────────────────────
   if(state.moveOptions?.length)
     for(const {q,r} of state.moveOptions){
       const {x,y}=hexCenter(q,r,scale);
-      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
+      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(255,200,50,0.28)" stroke="#ffc832" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
 
   // Surbrillance île survolée (hover matcard) — toutes les cases
@@ -461,20 +484,15 @@ function renderMap(){
       style="pointer-events:none">Q${q} R${r}</text>`;
   }
 
-  // Ports de commerce
-  for(const port of (cfg.ports||[])){
-    if(port.coord_q==null||port.coord_r==null) continue;
-    const {x,y}=hexCenter(port.coord_q,port.coord_r,scale);
-    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(74,200,255,0.18)" stroke="#4ac8ff" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
-    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${10*scale}" style="pointer-events:none">⚓</text>`;
-  }
-
-  // Repaires pirates
-  for(const rep of (cfg.repaires||[])){
-    if(rep.coord_q==null||rep.coord_r==null) continue;
-    const {x,y}=hexCenter(rep.coord_q,rep.coord_r,scale);
-    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(180,60,60,0.18)" stroke="#c04040" stroke-width="${1.8*scale}" style="pointer-events:none"/>`;
-    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${10*scale}" style="pointer-events:none">💀</text>`;
+  // Cases d'îles (obstacles opaques)
+  for(const ile of (cfg.iles||[])){
+    const cases=(ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
+    if(!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
+    for(const cas of cases){
+      const {x,y}=hexCenter(cas.q,cas.r,scale);
+      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(80,55,20,0.55)" stroke="rgba(184,134,11,0.5)" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
+      html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${10*scale}" style="pointer-events:none">${ile.icon||'🏝'}</text>`;
+    }
   }
 
   // Joueurs

@@ -7,725 +7,180 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --ink:   #1a1209;
-      --parch: #f5ead6;
-      --gold:  #b8860b;
-      --gold2: #d4a017;
-      --green: #2d5a27;
-    }
-
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --ink:#1a1209; --parch:#f5ead6; --gold:#b8860b; --gold2:#d4a017; --green:#2d5a27; }
     body {
-      background: var(--ink);
-      color: var(--parch);
-      font-family: 'Crimson Pro', Georgia, serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(184,134,11,.1) 0%, transparent 55%),
+      background:var(--ink); color:var(--parch);
+      font-family:'Crimson Pro',Georgia,serif; min-height:100vh; display:flex; flex-direction:column;
+      background-image:radial-gradient(ellipse at 50% 0%,rgba(184,134,11,.1) 0%,transparent 55%),
         url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
     }
 
-    /* ── LOGIN ─────────────────────────────────────────────────────── */
-    #loginScreen {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 32px 24px; gap: 24px;
-      animation: fadeIn .4s ease;
-    }
-    .logo {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: 1.4rem; color: var(--gold2);
-      text-align: center; line-height: 1.4;
-    }
-    .logo span { display: block; font-size: .65rem; color: #8a7a5e; letter-spacing: .12em; text-transform: uppercase; margin-top: 4px; }
+    /* LOGIN */
+    #loginScreen { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; gap:24px; animation:fadeIn .4s ease; }
+    .logo { font-family:'Cinzel Decorative',serif; font-size:1.4rem; color:var(--gold2); text-align:center; line-height:1.4; }
+    .logo span { display:block; font-size:.65rem; color:#8a7a5e; letter-spacing:.12em; text-transform:uppercase; margin-top:4px; }
+    .input-wrap { width:100%; max-width:300px; display:flex; flex-direction:column; gap:7px; }
+    .input-wrap label { font-size:.8rem; color:var(--gold); letter-spacing:.06em; text-transform:uppercase; }
+    .input-wrap input { background:rgba(255,255,255,.07); border:1px solid rgba(184,134,11,.4); border-radius:6px; padding:12px 14px; font-family:'Crimson Pro',serif; font-size:1rem; color:var(--parch); outline:none; transition:border-color .2s; }
+    .input-wrap input:focus { border-color:var(--gold2); }
+    .input-wrap input::placeholder { color:#6a5a3a; }
 
-    .input-wrap { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 7px; }
-    .input-wrap label { font-size: .8rem; color: var(--gold); letter-spacing: .06em; text-transform: uppercase; }
-    .input-wrap input {
-      background: rgba(255,255,255,.07); border: 1px solid rgba(184,134,11,.4);
-      border-radius: 6px; padding: 12px 14px; font-family: 'Crimson Pro', serif;
-      font-size: 1rem; color: var(--parch); outline: none; transition: border-color .2s;
-    }
-    .input-wrap input:focus { border-color: var(--gold2); }
-    .input-wrap input::placeholder { color: #6a5a3a; }
-
-    /* ── GAME SCREEN ───────────────────────────────────────────────── */
-    #gameScreen { display: none; flex-direction: column; flex: 1; animation: fadeIn .3s ease; }
-
+    /* GAME SCREEN */
+    #gameScreen { display:none; flex-direction:column; flex:1; animation:fadeIn .3s ease; }
     header {
-      background: rgba(255,255,255,.04); border-bottom: 1px solid rgba(184,134,11,.2);
-      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      flex-shrink: 0;
-      position: sticky; top: 0; z-index: 20;
-      backdrop-filter: blur(8px);
+      background:rgba(255,255,255,.04); border-bottom:1px solid rgba(184,134,11,.2);
+      padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+      flex-shrink:0; position:sticky; top:0; z-index:20; backdrop-filter:blur(8px);
     }
-    .player-name { font-family: 'Cinzel Decorative', serif; font-size: .85rem; color: var(--gold2); }
-    .player-name .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+    .player-name { font-family:'Cinzel Decorative',serif; font-size:.85rem; color:var(--gold2); }
+    .player-name .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; vertical-align:middle; }
+    #turnBadge { font-size:.64rem; padding:3px 9px; border-radius:12px; text-transform:uppercase; letter-spacing:.09em; border:1px solid transparent; }
+    #turnBadge.my-turn    { background:rgba(45,90,39,.3);    color:#6abf61; border-color:#6abf61; }
+    #turnBadge.other-turn { background:rgba(0,0,0,.2);       color:#8a7a5e; border-color:#4a3b20; }
+    #turnBadge.waiting    { background:rgba(0,0,0,.2);       color:#8a7a5e; border-color:#4a3b20; }
+    #turnBadge.picking    { background:rgba(74,238,204,.15); color:#4aedcc; border-color:#4aedcc; }
 
-    #turnBadge {
-      font-size: .64rem; padding: 3px 9px; border-radius: 12px;
-      text-transform: uppercase; letter-spacing: .09em; border: 1px solid transparent;
-    }
-    #turnBadge.my-turn    { background: rgba(45,90,39,.3); color: #6abf61; border-color: #6abf61; }
-    #turnBadge.other-turn { background: rgba(0,0,0,.2);   color: #8a7a5e; border-color: #4a3b20; }
-    #turnBadge.waiting    { background: rgba(0,0,0,.2);   color: #8a7a5e; border-color: #4a3b20; }
-    #turnBadge.picking    { background: rgba(74,238,204,.15); color: #4aedcc; border-color: #4aedcc; }
+    .content { padding:12px 14px 20px; display:flex; flex-direction:column; gap:12px; flex:1; overflow-y:auto; }
+    .content::-webkit-scrollbar { width:3px; }
+    .content::-webkit-scrollbar-thumb { background:rgba(184,134,11,.25); border-radius:10px; }
 
-    .content {
-      padding: 12px 14px 20px;
-      display: flex; flex-direction: column; gap: 12px;
-      flex: 1; overflow-y: auto;
-    }
+    .card { background:rgba(255,255,255,.05); border:1px solid rgba(184,134,11,.2); border-radius:10px; padding:14px 16px; }
+    .card h2 { font-family:'Cinzel Decorative',serif; font-size:.72rem; color:var(--gold); margin-bottom:10px; text-transform:uppercase; letter-spacing:.06em; }
 
-    /* Scrollbar */
-    .content::-webkit-scrollbar { width: 3px; }
-    .content::-webkit-scrollbar-track { background: transparent; }
-    .content::-webkit-scrollbar-thumb { background: rgba(184,134,11,.25); border-radius: 10px; }
+    /* STATUS CARD */
+    #statusCard { text-align:center; padding:18px 16px; border-radius:12px; transition:all .3s; }
+    #statusCard.my-turn     { background:rgba(45,90,39,.2);    border:1px solid rgba(45,90,39,.5); }
+    #statusCard.picking-mine{ background:rgba(74,238,204,.1);  border:1px solid rgba(74,238,204,.4); }
+    #statusCard.other       { background:rgba(0,0,0,.2);       border:1px solid rgba(255,255,255,.07); }
+    .big-icon { font-size:2rem; margin-bottom:5px; }
+    .big-text { font-family:'Cinzel Decorative',serif; font-size:.88rem; color:var(--gold2); line-height:1.4; }
+    .sub-text { font-size:.82rem; color:#8a7a5e; margin-top:4px; font-style:italic; }
 
-    .card {
-      background: rgba(255,255,255,.05); border: 1px solid rgba(184,134,11,.2);
-      border-radius: 10px; padding: 14px 16px;
-    }
-    .card h2 {
-      font-family: 'Cinzel Decorative', serif; font-size: .72rem; color: var(--gold);
-      margin-bottom: 10px; text-transform: uppercase; letter-spacing: .06em;
-    }
+    /* DICE */
+    #diceSection { text-align:center; }
+    .dice-face { display:inline-flex; align-items:center; justify-content:center; width:64px; height:64px; border-radius:12px; border:2px solid var(--gold); font-size:1.8rem; color:var(--gold2); background:rgba(255,255,255,.07); margin-bottom:10px; transition:all .3s; }
+    .dice-face.rolling { animation:diceRoll .5s ease; }
+    @keyframes diceRoll { 0%{transform:rotate(0)scale(1)} 25%{transform:rotate(-15deg)scale(1.1)} 50%{transform:rotate(15deg)scale(.95)} 75%{transform:rotate(-8deg)scale(1.05)} 100%{transform:rotate(0)scale(1)} }
 
-    /* ── STATUS CARD ── */
-    #statusCard {
-      text-align: center; padding: 18px 16px; border-radius: 12px; transition: all .3s;
-    }
-    #statusCard.my-turn { background: rgba(45,90,39,.2); border: 1px solid rgba(45,90,39,.5); }
-    #statusCard.picking-mine { background: rgba(74,238,204,.1); border: 1px solid rgba(74,238,204,.4); }
-    #statusCard.other { background: rgba(0,0,0,.2); border: 1px solid rgba(255,255,255,.07); }
-    .big-icon { font-size: 2rem; margin-bottom: 5px; }
-    .big-text { font-family: 'Cinzel Decorative', serif; font-size: .88rem; color: var(--gold2); line-height: 1.4; }
-    .sub-text { font-size: .82rem; color: #8a7a5e; margin-top: 4px; font-style: italic; }
+    /* MAP */
+    #mapSection { position:relative; border-radius:8px; overflow:hidden; border:1px solid rgba(184,134,11,.3); }
+    #mapViewport { position:relative; width:100%; overflow:hidden; border-radius:8px; }
+    #miniMap { display:block; width:100%; height:auto; transition:transform .4s ease,transform-origin .4s ease; transform-origin:0 0; }
+    #miniSvg { position:absolute; top:0; left:0; pointer-events:all; transition:transform .4s ease,transform-origin .4s ease; transform-origin:0 0; }
+    .hex-clickable { cursor:pointer; }
+    .hex-clickable:hover polygon { fill:rgba(255,200,50,.45)!important; }
+    #zoomLabel { position:absolute; top:6px; right:8px; background:rgba(0,0,0,.6); color:#ffc832; font-size:.65rem; padding:2px 8px; border-radius:10px; border:1px solid rgba(255,200,50,.3); pointer-events:none; opacity:0; transition:opacity .3s; }
+    #zoomLabel.visible { opacity:1; }
 
-    /* ── DICE SECTION ── */
-    #diceSection { text-align: center; }
-    .dice-face {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 64px; height: 64px; border-radius: 12px;
-      border: 2px solid var(--gold);
-      font-size: 1.8rem;
-      color: var(--gold2); background: rgba(255,255,255,.07);
-      margin-bottom: 10px;
-      transition: all .3s;
-    }
-    .dice-face.rolling { animation: diceRoll .5s ease; }
-    @keyframes diceRoll {
-      0%   { transform: rotate(0deg) scale(1); }
-      25%  { transform: rotate(-15deg) scale(1.1); }
-      50%  { transform: rotate(15deg) scale(0.95); }
-      75%  { transform: rotate(-8deg) scale(1.05); }
-      100% { transform: rotate(0deg) scale(1); }
-    }
+    /* ACTION BUTTONS */
+    .btn-action { width:100%; padding:13px; border-radius:8px; font-family:'Cinzel Decorative',serif; font-size:.88rem; cursor:pointer; transition:all .2s; letter-spacing:.04em; border:1px solid transparent; }
+    .btn-action:active:not(:disabled) { transform:scale(.98); }
+    .btn-action:disabled { background:rgba(255,255,255,.04); border-color:rgba(255,255,255,.08); color:#4a3b20; cursor:not-allowed; }
+    .btn-roll { background:linear-gradient(135deg,#6b3d08,#8b5010); border-color:var(--gold); color:var(--gold2); box-shadow:0 4px 16px rgba(184,134,11,.2); }
+    .btn-roll:hover:not(:disabled) { background:linear-gradient(135deg,#7d4a0f,#9d6018); }
+    .btn-end { background:linear-gradient(135deg,#1e3d1a,#2d5a27); border-color:#4aaa40; color:#d4f5d0; box-shadow:0 4px 16px rgba(45,90,39,.25); }
+    .btn-end:hover:not(:disabled) { background:linear-gradient(135deg,#2a4d24,#3a6a32); }
+    .btn-join { width:100%; max-width:300px; padding:13px; background:transparent; border:1px solid var(--gold); border-radius:6px; color:var(--gold2); font-family:'Cinzel Decorative',serif; font-size:.85rem; cursor:pointer; transition:all .2s; }
+    .btn-join:hover { background:rgba(184,134,11,.1); }
 
-    /* ── MAP ── */
-    #mapSection {
-      position: relative; border-radius: 8px;
-      overflow: hidden; border: 1px solid rgba(184,134,11,.3);
-    }
-    #mapViewport {
-      position: relative; width: 100%;
-      overflow: hidden; border-radius: 8px;
-    }
-    #miniMap {
-      display: block; width: 100%; height: auto;
-      transition: transform .4s ease, transform-origin .4s ease;
-      transform-origin: 0 0;
-    }
-    #miniSvg {
-      position: absolute; top: 0; left: 0;
-      pointer-events: all;
-      transition: transform .4s ease, transform-origin .4s ease;
-      transform-origin: 0 0;
-    }
-    .hex-clickable { cursor: pointer; }
-    .hex-clickable:hover polygon { fill: rgba(255,200,50,.45) !important; }
-    #zoomLabel {
-      position: absolute; top: 6px; right: 8px;
-      background: rgba(0,0,0,.6); color: #ffc832;
-      font-size: .65rem; padding: 2px 8px; border-radius: 10px;
-      border: 1px solid rgba(255,200,50,.3);
-      pointer-events: none; opacity: 0; transition: opacity .3s;
-    }
-    #zoomLabel.visible { opacity: 1; }
+    /* PLAYERS LIST */
+    .p-row { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:5px; background:rgba(255,255,255,.03); font-size:.85rem; margin-bottom:4px; }
+    .p-row.active-p { background:rgba(106,191,97,.1); }
+    .p-row .p-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .p-row .p-pos { margin-left:auto; font-size:.68rem; color:#6a5a3a; font-family:monospace; }
+    #logList { list-style:none; max-height:130px; overflow-y:auto; }
+    #logList li { font-size:.76rem; color:#8a7a5e; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04); line-height:1.4; }
+    #logList li:first-child { color:var(--parch); }
+    .conn-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+    .conn-dot.connected { background:#6abf61; }
+    .conn-dot.disconnected { background:#e07070; }
+    .instruction { text-align:center; font-size:.8rem; color:#8a7a5e; font-style:italic; padding:5px 0; }
+    .instruction strong { color:var(--gold2); font-style:normal; }
 
-    /* ── ACTION BUTTONS ── */
-    .btn-action {
-      width: 100%; padding: 13px; border-radius: 8px;
-      font-family: 'Cinzel Decorative', serif; font-size: .88rem;
-      cursor: pointer; transition: all .2s; letter-spacing: .04em;
-      border: 1px solid transparent;
-    }
-    .btn-action:active:not(:disabled) { transform: scale(.98); }
-    .btn-action:disabled { background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.08); color: #4a3b20; cursor: not-allowed; }
+    /* SEPARATOR */
+    .section-sep { display:flex; align-items:center; gap:8px; padding:2px 0; }
+    .section-sep::before,.section-sep::after { content:''; flex:1; height:1px; background:rgba(184,134,11,.12); }
+    .section-sep span { font-family:'Cinzel Decorative',serif; font-size:.55rem; color:#4a3b20; text-transform:uppercase; letter-spacing:.12em; white-space:nowrap; }
 
-    .btn-roll {
-      background: linear-gradient(135deg, #6b3d08, #8b5010);
-      border-color: var(--gold); color: var(--gold2);
-      box-shadow: 0 4px 16px rgba(184,134,11,.2);
-    }
-    .btn-roll:hover:not(:disabled) { background: linear-gradient(135deg, #7d4a0f, #9d6018); }
+    /* CALIB DRAWER */
+    .calib-toggle { background:rgba(74,238,204,.1); border:1px solid rgba(74,238,204,.35); color:#4aedcc; font-family:'Crimson Pro',serif; font-size:.75rem; padding:4px 10px; border-radius:4px; cursor:pointer; }
+    #calibDrawer { display:none; position:fixed; bottom:0; left:0; right:0; background:rgba(15,10,5,.97); border-top:2px solid rgba(74,238,204,.4); padding:14px 16px 20px; z-index:100; max-height:70vh; overflow-y:auto; }
+    #calibDrawer.open { display:block; }
+    .calib-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .calib-header h3 { font-family:'Cinzel Decorative',serif; font-size:.72rem; color:#4aedcc; letter-spacing:.06em; }
+    .calib-close { background:none; border:none; color:#4aedcc; font-size:1.2rem; cursor:pointer; padding:0 4px; }
+    .slider-row { display:flex; flex-direction:column; gap:3px; margin-bottom:10px; }
+    .slider-row label { display:flex; justify-content:space-between; font-size:.7rem; color:var(--gold); letter-spacing:.03em; }
+    .slider-row label span { color:#4aedcc; font-family:monospace; }
+    .slider-row input[type=range] { width:100%; accent-color:#4aedcc; cursor:pointer; height:4px; }
+    .calib-code { background:rgba(0,0,0,.6); border:1px solid rgba(74,238,204,.2); border-radius:4px; padding:8px 10px; font-family:monospace; font-size:.66rem; color:#4aedcc; white-space:pre; line-height:1.7; margin-top:4px; }
+    .calib-copy { width:100%; margin-top:8px; padding:8px; background:rgba(74,238,204,.15); border:1px solid rgba(74,238,204,.4); color:#4aedcc; font-family:'Crimson Pro',serif; font-size:.8rem; border-radius:4px; cursor:pointer; }
 
-    .btn-end {
-      background: linear-gradient(135deg, #1e3d1a, #2d5a27);
-      border-color: #4aaa40; color: #d4f5d0;
-      box-shadow: 0 4px 16px rgba(45,90,39,.25);
-    }
-    .btn-end:hover:not(:disabled) { background: linear-gradient(135deg, #2a4d24, #3a6a32); }
+    /* RESOURCES */
+    .resources-bar { display:flex; align-items:center; background:rgba(10,7,2,.8); border:1px solid rgba(184,134,11,.25); border-radius:10px; overflow:hidden; }
+    .res-item { flex:1; display:flex; align-items:center; justify-content:center; gap:7px; padding:9px 8px; position:relative; }
+    .res-item:not(:last-child)::after { content:''; position:absolute; right:0; top:20%; bottom:20%; width:1px; background:rgba(184,134,11,.15); }
+    .res-icon { font-size:.95rem; line-height:1; }
+    .res-right { display:flex; flex-direction:column; gap:1px; }
+    .res-value { font-family:'Cinzel Decorative',serif; font-size:.8rem; color:var(--gold2); line-height:1; }
+    .res-label { font-size:.55rem; color:#6a5a3a; text-transform:uppercase; letter-spacing:.06em; line-height:1; }
 
-    .btn-join {
-      width: 100%; max-width: 300px; padding: 13px;
-      background: transparent; border: 1px solid var(--gold); border-radius: 6px;
-      color: var(--gold2); font-family: 'Cinzel Decorative', serif;
-      font-size: .85rem; cursor: pointer; transition: all .2s;
-    }
-    .btn-join:hover { background: rgba(184,134,11,.1); }
+    /* SHIP */
+    .ship-card { background:rgba(14,9,3,.9); border:1px solid rgba(184,134,11,.3); border-radius:12px; overflow:hidden; position:relative; }
+    .ship-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% -10%,rgba(184,134,11,.07) 0%,transparent 65%); pointer-events:none; }
+    .ship-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px 8px; border-bottom:1px solid rgba(184,134,11,.12); }
+    .ship-title { font-family:'Cinzel Decorative',serif; font-size:.72rem; color:var(--gold2); letter-spacing:.05em; }
+    .ship-name-badge { font-size:.68rem; color:#6a5a3a; font-style:italic; }
+    .ship-stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:rgba(184,134,11,.08); }
+    .stat-block { background:rgba(14,9,3,.95); padding:10px 12px; display:flex; flex-direction:column; gap:6px; transition:background .2s; cursor:default; }
+    .stat-block:hover { background:rgba(28,18,6,.95); }
+    .stat-label { display:flex; align-items:center; gap:5px; font-size:.62rem; text-transform:uppercase; letter-spacing:.09em; color:#5a4a2a; }
+    .stat-icon { font-size:.9rem; line-height:1; }
+    .stat-name { flex:1; }
+    .stat-level-badge { font-size:.54rem; padding:1px 5px; border-radius:6px; background:rgba(184,134,11,.12); color:var(--gold); border:1px solid rgba(184,134,11,.25); font-family:monospace; letter-spacing:.03em; }
+    .stat-pips { display:flex; gap:3px; }
+    .pip { flex:1; height:7px; border-radius:2px; border:1px solid rgba(184,134,11,.2); background:rgba(255,255,255,.03); transition:all .4s cubic-bezier(.34,1.56,.64,1); }
+    .pip.filled { background:var(--gold2); border-color:var(--gold2); box-shadow:0 0 5px rgba(212,160,23,.4); }
+    .stat-block.hull    .pip.filled { background:#bf3535; border-color:#d94040; box-shadow:0 0 5px rgba(191,53,53,.55); }
+    .stat-block.sails   .pip.filled { background:#3dc9ae; border-color:#4aedcc; box-shadow:0 0 5px rgba(74,237,204,.45); }
+    .stat-block.cannons .pip.filled { background:#d46820; border-color:#e07830; box-shadow:0 0 5px rgba(212,104,32,.5); }
+    .stat-block.crew    .pip.filled { background:#5aad52; border-color:#6abf61; box-shadow:0 0 5px rgba(90,173,82,.45); }
+    .stat-desc { font-size:.65rem; color:#4a3b20; font-style:italic; line-height:1.2; }
+    .upgrade-hint { font-size:.55rem; color:rgba(74,237,204,.45); letter-spacing:.05em; display:none; margin-top:1px; }
+    .stat-block:hover .upgrade-hint { display:block; }
 
-    /* ── PLAYERS LIST ── */
-    .p-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 10px; border-radius: 5px;
-      background: rgba(255,255,255,.03); font-size: .85rem;
-      margin-bottom: 4px;
-    }
-    .p-row.active-p { background: rgba(106,191,97,.1); }
-    .p-row .p-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .p-row .p-pos { margin-left: auto; font-size: .68rem; color: #6a5a3a; font-family: monospace; }
+    /* DECK */
+    .deck-card { background:rgba(14,9,3,.88); border:1px solid rgba(184,134,11,.3); border-radius:12px; padding:12px 14px; position:relative; }
+    .deck-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 100%,rgba(184,134,11,.04) 0%,transparent 70%); pointer-events:none; }
+    .deck-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .deck-title { font-family:'Cinzel Decorative',serif; font-size:.7rem; color:var(--gold); letter-spacing:.06em; }
+    .deck-count { font-size:.62rem; color:#5a4a2a; font-family:monospace; }
+    .cards-row { display:flex; gap:7px; overflow-x:auto; padding-bottom:4px; scrollbar-width:thin; scrollbar-color:rgba(184,134,11,.2) transparent; }
+    .cards-row::-webkit-scrollbar { height:3px; }
+    .cards-row::-webkit-scrollbar-thumb { background:rgba(184,134,11,.25); border-radius:10px; }
+    .play-card { flex-shrink:0; width:80px; height:116px; border-radius:8px; border:1px solid rgba(184,134,11,.25); background:linear-gradient(165deg,rgba(30,20,7,.98),rgba(14,9,3,.98)); display:flex; flex-direction:column; align-items:center; justify-content:space-between; padding:7px 5px 6px; cursor:pointer; transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s ease,border-color .2s ease; position:relative; overflow:hidden; user-select:none; }
+    .card-slot-empty { flex-shrink:0; width:80px; height:116px; border-radius:8px; border:1px dashed rgba(184,134,11,.18); background:rgba(255,255,255,.015); display:flex; align-items:center; justify-content:center; color:#2e2210; font-size:1.1rem; }
 
-    #logList { list-style: none; max-height: 130px; overflow-y: auto; }
-    #logList li { font-size: .76rem; color: #8a7a5e; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.04); line-height: 1.4; }
-    #logList li:first-child { color: var(--parch); }
+    /* HOLD */
+    .hold-card { background:rgba(14,9,3,.88); border:1px solid rgba(184,134,11,.28); border-radius:12px; padding:12px 14px 14px; position:relative; }
+    .hold-card::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 110%,rgba(184,134,11,.04) 0%,transparent 65%); pointer-events:none; border-radius:12px; }
+    .hold-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .hold-title { font-family:'Cinzel Decorative',serif; font-size:.68rem; color:var(--gold); letter-spacing:.05em; }
+    .hold-count { font-size:.6rem; color:#5a4a2a; font-family:monospace; }
+    .cargo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+    .equip-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+    .hold-slot { aspect-ratio:1; border-radius:6px; border:1px dashed rgba(184,134,11,.18); background:rgba(255,255,255,.02); display:flex; align-items:center; justify-content:center; font-size:.65rem; color:#2a1e0a; transition:border-color .2s,background .2s; min-height:42px; }
+    .hold-slot.equip { min-height:48px; border-color:rgba(74,114,184,.18); }
+    .hold-slot.empty::after { content:''; display:block; width:14px; height:14px; border-radius:50%; border:1px dashed rgba(184,134,11,.15); }
+    .hold-slot.equip.empty::after { border-color:rgba(74,114,184,.18); }
+    .hold-divider { height:1px; background:rgba(184,134,11,.1); margin:12px 0 0; }
 
-    .conn-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
-    .conn-dot.connected { background: #6abf61; }
-    .conn-dot.disconnected { background: #e07070; }
-
-    .instruction {
-      text-align: center; font-size: .8rem; color: #8a7a5e; font-style: italic;
-      padding: 5px 0;
-    }
-    .instruction strong { color: var(--gold2); font-style: normal; }
-
-    /* ── CALIB DRAWER ── */
-    .calib-toggle {
-      background: rgba(74,238,204,.1);
-      border: 1px solid rgba(74,238,204,.35);
-      color: #4aedcc;
-      font-family: 'Crimson Pro', serif;
-      font-size: .75rem;
-      padding: 4px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #calibDrawer {
-      display: none;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: rgba(15, 10, 5, 0.97);
-      border-top: 2px solid rgba(74,238,204,.4);
-      padding: 14px 16px 20px;
-      z-index: 100;
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    #calibDrawer.open { display: block; }
-    .calib-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .calib-header h3 { font-family: 'Cinzel Decorative', serif; font-size: .72rem; color: #4aedcc; letter-spacing: .06em; }
-    .calib-close { background: none; border: none; color: #4aedcc; font-size: 1.2rem; cursor: pointer; padding: 0 4px; }
-    .slider-row { display: flex; flex-direction: column; gap: 3px; margin-bottom: 10px; }
-    .slider-row label { display: flex; justify-content: space-between; font-size: .7rem; color: var(--gold); letter-spacing: .03em; }
-    .slider-row label span { color: #4aedcc; font-family: monospace; }
-    .slider-row input[type=range] { width: 100%; accent-color: #4aedcc; cursor: pointer; height: 4px; }
-    .calib-code {
-      background: rgba(0,0,0,.6); border: 1px solid rgba(74,238,204,.2);
-      border-radius: 4px; padding: 8px 10px; font-family: monospace;
-      font-size: .66rem; color: #4aedcc; white-space: pre; line-height: 1.7; margin-top: 4px;
-    }
-    .calib-copy {
-      width: 100%; margin-top: 8px; padding: 8px;
-      background: rgba(74,238,204,.15); border: 1px solid rgba(74,238,204,.4);
-      color: #4aedcc; font-family: 'Crimson Pro', serif; font-size: .8rem;
-      border-radius: 4px; cursor: pointer;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-
-
-    /* ════════════════════════════════════════════════════════════════
-       SHIP DASHBOARD STYLES
-       ════════════════════════════════════════════════════════════════ */
-
-    /* Resources bar */
-    .resources-bar {
-      display: flex;
-      align-items: center;
-      gap: 0;
-      background: rgba(10,7,2,.8);
-      border: 1px solid rgba(184,134,11,.25);
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .res-item {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 9px 8px;
-      position: relative;
-    }
-    .res-item:not(:last-child)::after {
-      content: '';
-      position: absolute;
-      right: 0; top: 20%; bottom: 20%;
-      width: 1px;
-      background: rgba(184,134,11,.15);
-    }
-    .res-icon { font-size: .95rem; line-height: 1; }
-    .res-right { display: flex; flex-direction: column; gap: 1px; }
-    .res-value {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .8rem;
-      color: var(--gold2);
-      line-height: 1;
-    }
-    .res-label {
-      font-size: .55rem;
-      color: #6a5a3a;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      line-height: 1;
-    }
-
-    /* Ship card */
-    .ship-card {
-      background: rgba(14,9,3,.9);
-      border: 1px solid rgba(184,134,11,.3);
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-    }
-    .ship-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% -10%, rgba(184,134,11,.07) 0%, transparent 65%);
-      pointer-events: none;
-    }
-    .ship-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px 8px;
-      border-bottom: 1px solid rgba(184,134,11,.12);
-    }
-    .ship-title {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .72rem;
-      color: var(--gold2);
-      letter-spacing: .05em;
-    }
-    .ship-name-badge {
-      font-size: .68rem;
-      color: #6a5a3a;
-      font-style: italic;
-    }
-
-    /* 2×2 stat grid */
-    .ship-stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1px;
-      background: rgba(184,134,11,.08);
-    }
-    .stat-block {
-      background: rgba(14,9,3,.95);
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: background .2s;
-      cursor: default;
-    }
-    .stat-block:hover { background: rgba(28,18,6,.95); }
-
-    .stat-label {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: .62rem;
-      text-transform: uppercase;
-      letter-spacing: .09em;
-      color: #5a4a2a;
-    }
-    .stat-icon { font-size: .9rem; line-height: 1; }
-    .stat-name { flex: 1; }
-    .stat-level-badge {
-      font-size: .54rem;
-      padding: 1px 5px;
-      border-radius: 6px;
-      background: rgba(184,134,11,.12);
-      color: var(--gold);
-      border: 1px solid rgba(184,134,11,.25);
-      font-family: monospace;
-      letter-spacing: .03em;
-    }
-
-    /* Pips */
-    .stat-pips { display: flex; gap: 3px; }
-    .pip {
-      flex: 1;
-      height: 7px;
-      border-radius: 2px;
-      border: 1px solid rgba(184,134,11,.2);
-      background: rgba(255,255,255,.03);
-      transition: all .4s cubic-bezier(.34,1.56,.64,1);
-    }
-    .pip.filled {
-      background: var(--gold2);
-      border-color: var(--gold2);
-      box-shadow: 0 0 5px rgba(212,160,23,.4);
-    }
-    .pip.filled::after {
-      content: '';
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.25) 50%, transparent 100%);
-    }
-
-    /* Stat color variants */
-    .stat-block.hull    .pip.filled { background: #bf3535; border-color: #d94040; box-shadow: 0 0 5px rgba(191,53,53,.55); }
-    .stat-block.sails   .pip.filled { background: #3dc9ae; border-color: #4aedcc; box-shadow: 0 0 5px rgba(74,237,204,.45); }
-    .stat-block.cannons .pip.filled { background: #d46820; border-color: #e07830; box-shadow: 0 0 5px rgba(212,104,32,.5); }
-    .stat-block.crew    .pip.filled { background: #5aad52; border-color: #6abf61; box-shadow: 0 0 5px rgba(90,173,82,.45); }
-
-    .stat-desc {
-      font-size: .65rem;
-      color: #4a3b20;
-      font-style: italic;
-      line-height: 1.2;
-    }
-
-    .upgrade-hint {
-      font-size: .55rem;
-      color: rgba(74,237,204,.45);
-      letter-spacing: .05em;
-      display: none;
-      margin-top: 1px;
-    }
-    .stat-block:hover .upgrade-hint { display: block; }
-
-    /* ── CARD DECK ── */
-    .deck-card {
-      background: rgba(14,9,3,.88);
-      border: 1px solid rgba(184,134,11,.3);
-      border-radius: 12px;
-      padding: 12px 14px;
-      position: relative;
-    }
-    .deck-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 100%, rgba(184,134,11,.04) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .deck-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-    .deck-title {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .7rem;
-      color: var(--gold);
-      letter-spacing: .06em;
-    }
-    .deck-count {
-      font-size: .62rem;
-      color: #5a4a2a;
-      font-family: monospace;
-    }
-
-    /* Horizontal scroll */
-    .cards-row {
-      display: flex;
-      gap: 7px;
-      overflow-x: auto;
-      padding-bottom: 4px;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(184,134,11,.2) transparent;
-    }
-    .cards-row::-webkit-scrollbar { height: 3px; }
-    .cards-row::-webkit-scrollbar-track { background: transparent; }
-    .cards-row::-webkit-scrollbar-thumb { background: rgba(184,134,11,.25); border-radius: 10px; }
-
-    /* Individual card */
-    .play-card {
-      flex-shrink: 0;
-      width: 80px;
-      height: 116px;
-      border-radius: 8px;
-      border: 1px solid rgba(184,134,11,.25);
-      background: linear-gradient(165deg, rgba(30,20,7,.98) 0%, rgba(14,9,3,.98) 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: space-between;
-      padding: 7px 5px 6px;
-      cursor: pointer;
-      transition: transform .22s cubic-bezier(.34,1.56,.64,1), box-shadow .22s ease, border-color .2s ease;
-      position: relative;
-      overflow: hidden;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* Grain texture */
-    .play-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      border-radius: 8px;
-    }
-
-    /* Top decorative line */
-    .play-card::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 10%; right: 10%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
-    }
-
-    .play-card:hover {
-      transform: translateY(-8px) rotate(-1deg);
-      z-index: 5;
-    }
-    .play-card:active {
-      transform: translateY(-3px) rotate(0deg) scale(.96);
-      transition-duration: .1s;
-    }
-
-    /* Card type accents */
-    .play-card.action   { border-color: rgba(212,104,32,.4); }
-    .play-card.action:hover   { border-color: rgba(212,104,32,.8); box-shadow: 0 10px 26px rgba(0,0,0,.65), 0 0 14px rgba(212,104,32,.2), 0 -2px 8px rgba(212,104,32,.1) inset; }
-
-    .play-card.event    { border-color: rgba(74,237,204,.3); }
-    .play-card.event:hover    { border-color: rgba(74,237,204,.7); box-shadow: 0 10px 26px rgba(0,0,0,.65), 0 0 14px rgba(74,237,204,.18), 0 -2px 8px rgba(74,237,204,.08) inset; }
-
-    .play-card.treasure { border-color: rgba(212,160,23,.45); }
-    .play-card.treasure:hover { border-color: rgba(212,160,23,.9); box-shadow: 0 10px 26px rgba(0,0,0,.65), 0 0 16px rgba(212,160,23,.25), 0 -2px 8px rgba(212,160,23,.1) inset; }
-
-    .play-card.curse    { border-color: rgba(140,50,190,.4); }
-    .play-card.curse:hover    { border-color: rgba(180,80,230,.75); box-shadow: 0 10px 26px rgba(0,0,0,.65), 0 0 14px rgba(140,50,190,.25), 0 -2px 8px rgba(140,50,190,.1) inset; }
-
-    .play-card.crew-card{ border-color: rgba(90,173,82,.35); }
-    .play-card.crew-card:hover{ border-color: rgba(106,191,97,.75); box-shadow: 0 10px 26px rgba(0,0,0,.65), 0 0 14px rgba(106,191,97,.2), 0 -2px 8px rgba(106,191,97,.08) inset; }
-
-    .card-type-tag {
-      font-size: .46rem;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      padding: 2px 0;
-      font-family: 'Cinzel Decorative', serif;
-      width: 100%;
-      text-align: center;
-      border-radius: 3px;
-    }
-    .play-card.action    .card-type-tag { color: #d46820; background: rgba(212,104,32,.1); }
-    .play-card.event     .card-type-tag { color: #3dc9ae; background: rgba(74,237,204,.08); }
-    .play-card.treasure  .card-type-tag { color: var(--gold2); background: rgba(212,160,23,.1); }
-    .play-card.curse     .card-type-tag { color: #b060e8; background: rgba(140,50,190,.1); }
-    .play-card.crew-card .card-type-tag { color: #5aad52; background: rgba(90,173,82,.1); }
-
-    .card-icon {
-      font-size: 1.65rem;
-      line-height: 1;
-      filter: drop-shadow(0 2px 5px rgba(0,0,0,.6));
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .card-name {
-      font-family: 'Crimson Pro', serif;
-      font-size: .58rem;
-      color: rgba(245,234,214,.7);
-      text-align: center;
-      line-height: 1.2;
-    }
-
-    .card-cost {
-      position: absolute;
-      top: 4px; right: 4px;
-      width: 15px; height: 15px;
-      border-radius: 50%;
-      background: rgba(0,0,0,.7);
-      border: 1px solid rgba(184,134,11,.4);
-      display: flex;
-      align-items: center; justify-content: center;
-      font-family: monospace;
-      font-size: .58rem;
-      color: var(--gold2);
-      font-weight: bold;
-    }
-
-    /* ── Separator ── */
-    .section-sep {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 2px 0;
-    }
-    .section-sep::before,
-    .section-sep::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(184,134,11,.12);
-    }
-    .section-sep span {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .55rem;
-      color: #4a3b20;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      white-space: nowrap;
-    }
-
-    /* ── Empty card slot ── */
-    .card-slot-empty {
-      flex-shrink: 0;
-      width: 80px;
-      height: 116px;
-      border-radius: 8px;
-      border: 1px dashed rgba(184,134,11,.18);
-      background: rgba(255,255,255,.015);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #2e2210;
-      font-size: 1.1rem;
-    }
-
-    /* ── HOLD & EQUIPMENT CARD ── */
-    .hold-card {
-      background: rgba(14,9,3,.88);
-      border: 1px solid rgba(184,134,11,.28);
-      border-radius: 12px;
-      padding: 12px 14px 14px;
-      position: relative;
-    }
-    .hold-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 50% 110%, rgba(184,134,11,.04) 0%, transparent 65%);
-      pointer-events: none;
-      border-radius: 12px;
-    }
-
-    .hold-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .hold-title {
-      font-family: 'Cinzel Decorative', serif;
-      font-size: .68rem;
-      color: var(--gold);
-      letter-spacing: .05em;
-    }
-    .hold-count {
-      font-size: .6rem;
-      color: #5a4a2a;
-      font-family: monospace;
-    }
-
-    /* 5-col cargo grid */
-    .cargo-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
-    }
-
-    /* 6-col (3×2) equip grid */
-    .equip-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 5px;
-    }
-
-    .hold-slot {
-      aspect-ratio: 1;
-      border-radius: 6px;
-      border: 1px dashed rgba(184,134,11,.18);
-      background: rgba(255,255,255,.02);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .65rem;
-      color: #2a1e0a;
-      transition: border-color .2s, background .2s;
-      position: relative;
-      overflow: hidden;
-      min-height: 42px;
-    }
-
-    /* Equip slots slightly taller */
-    .hold-slot.equip {
-      min-height: 48px;
-      border-color: rgba(74,114,184,.18);
-    }
-
-    .hold-slot.empty::after {
-      content: '';
-      display: block;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      border: 1px dashed rgba(184,134,11,.15);
-    }
-
-    .hold-slot.equip.empty::after {
-      border-color: rgba(74,114,184,.18);
-    }
-
-    /* Filled slot (future use) */
-    .hold-slot.filled {
-      border-style: solid;
-      border-color: rgba(184,134,11,.4);
-      background: rgba(184,134,11,.08);
-      cursor: pointer;
-    }
-    .hold-slot.filled:hover {
-      border-color: rgba(184,134,11,.7);
-      background: rgba(184,134,11,.14);
-    }
-
-    .hold-divider {
-      height: 1px;
-      background: rgba(184,134,11,.1);
-      margin: 12px 0 0;
-    }
-
+    @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
   </style>
 </head>
 <body>
 
-<!-- ── LOGIN ────────────────────────────────────────────────────── -->
 <div id="loginScreen">
   <div class="logo">⚔ Plateau en Ligne<span>Interface joueur</span></div>
   <div class="input-wrap">
@@ -738,33 +193,24 @@
   </p>
 </div>
 
-<!-- ── GAME SCREEN ───────────────────────────────────────────────── -->
 <div id="gameScreen">
-
   <header>
-    <span class="player-name">
-      <span class="dot" id="myColorDot"></span>
-      <span id="headerName">Joueur</span>
-    </span>
+    <span class="player-name"><span class="dot" id="myColorDot"></span><span id="headerName">Joueur</span></span>
     <span id="turnBadge" class="waiting">En attente</span>
     <button class="calib-toggle" onclick="toggleCalib()">⚙</button>
   </header>
 
   <div class="content">
-
-    <!-- Status card -->
     <div id="statusCard" class="other">
       <div class="big-icon" id="bigIcon">⏳</div>
       <div class="big-text" id="bigText">En attente du début…</div>
       <div class="sub-text" id="subText">Le maître de jeu démarre bientôt.</div>
     </div>
 
-    <!-- Dice section -->
     <div id="diceSection" class="card" style="display:none">
       <h2>🎲 Lancer le dé</h2>
       <div style="text-align:center">
-        <div class="dice-face" id="diceFace">?</div>
-        <br>
+        <div class="dice-face" id="diceFace">?</div><br>
         <button class="btn-action btn-roll" id="btnRoll" onclick="rollDice()">Lancer le dé !</button>
       </div>
       <div class="instruction" id="diceInstruction" style="margin-top:10px;display:none">
@@ -772,7 +218,6 @@
       </div>
     </div>
 
-    <!-- Mini map -->
     <div id="mapSection" style="display:none">
       <div id="mapViewport">
         <img id="miniMap" src="/Map.jpg" alt="Carte" />
@@ -781,612 +226,338 @@
       </div>
     </div>
 
-    <!-- End turn -->
-    <button class="btn-action btn-end" id="btnEndTurn" disabled onclick="endTurn()">
-      Terminer mon tour →
-    </button>
+    <button class="btn-action btn-end" id="btnEndTurn" disabled onclick="endTurn()">Terminer mon tour →</button>
 
-    <!-- ── SEPARATOR ── -->
     <div class="section-sep"><span>⛵ Navire &amp; Main</span></div>
 
-    <!-- ── RESOURCES BAR ── -->
     <div class="resources-bar" id="resourcesBar">
-      <div class="res-item">
-        <span class="res-icon">🪙</span>
-        <div class="res-right">
-          <span class="res-value" id="resDoublons">0</span>
-          <span class="res-label">Doublons</span>
-        </div>
-      </div>
-      <div class="res-item">
-        <span class="res-icon">⚓</span>
-        <div class="res-right">
-          <span class="res-value" id="resReputation">0</span>
-          <span class="res-label">Réputation</span>
-        </div>
-      </div>
-      <div class="res-item">
-        <span class="res-icon">🔭</span>
-        <div class="res-right">
-          <span class="res-value" id="resResearch">0</span>
-          <span class="res-label">Recherche</span>
-        </div>
-      </div>
+      <div class="res-item"><span class="res-icon">🪙</span><div class="res-right"><span class="res-value" id="resDoublons">0</span><span class="res-label">Doublons</span></div></div>
+      <div class="res-item"><span class="res-icon">⚓</span><div class="res-right"><span class="res-value" id="resReputation">0</span><span class="res-label">Réputation</span></div></div>
+      <div class="res-item"><span class="res-icon">🔭</span><div class="res-right"><span class="res-value" id="resResearch">0</span><span class="res-label">Recherche</span></div></div>
     </div>
 
-    <!-- ── SHIP STATS ── -->
     <div class="ship-card" id="shipDashboard">
-      <div class="ship-header">
-        <span class="ship-title">⛵ Mon Navire</span>
-        <span class="ship-name-badge" id="shipNameDisplay">Le Vengeur des Mers</span>
-      </div>
+      <div class="ship-header"><span class="ship-title">⛵ Mon Navire</span><span class="ship-name-badge" id="shipNameDisplay">Le Vengeur des Mers</span></div>
       <div class="ship-stats-grid">
-
-        <!-- COQUE -->
         <div class="stat-block hull">
-          <div class="stat-label">
-            <span class="stat-icon">🛡</span>
-            <span class="stat-name">Coque</span>
-            <span class="stat-level-badge" id="hullLvlBadge">Niv. 1</span>
-          </div>
-          <div class="stat-pips">
-            <div class="pip filled" id="hull-pip-0"></div>
-            <div class="pip" id="hull-pip-1"></div>
-            <div class="pip" id="hull-pip-2"></div>
-          </div>
-          <div class="stat-desc" id="hullDesc">Résistance de base</div>
-          <div class="upgrade-hint">▲ amélioration disponible</div>
+          <div class="stat-label"><span class="stat-icon">🛡</span><span class="stat-name">Coque</span><span class="stat-level-badge" id="hullLvlBadge">Niv.1</span></div>
+          <div class="stat-pips"><div class="pip filled" id="hull-pip-0"></div><div class="pip" id="hull-pip-1"></div><div class="pip" id="hull-pip-2"></div></div>
+          <div class="stat-desc" id="hullDesc">Résistance de base</div><div class="upgrade-hint">▲ amélioration disponible</div>
         </div>
-
-        <!-- VOILES -->
         <div class="stat-block sails">
-          <div class="stat-label">
-            <span class="stat-icon">⛵</span>
-            <span class="stat-name">Voiles</span>
-            <span class="stat-level-badge" id="sailsLvlBadge">Niv. 1</span>
-          </div>
-          <div class="stat-pips">
-            <div class="pip filled" id="sails-pip-0"></div>
-            <div class="pip" id="sails-pip-1"></div>
-            <div class="pip" id="sails-pip-2"></div>
-          </div>
-          <div class="stat-desc" id="sailsDesc">Déplacement +1</div>
-          <div class="upgrade-hint">▲ amélioration disponible</div>
+          <div class="stat-label"><span class="stat-icon">⛵</span><span class="stat-name">Voiles</span><span class="stat-level-badge" id="sailsLvlBadge">Niv.1</span></div>
+          <div class="stat-pips"><div class="pip filled" id="sails-pip-0"></div><div class="pip" id="sails-pip-1"></div><div class="pip" id="sails-pip-2"></div></div>
+          <div class="stat-desc" id="sailsDesc">Déplacement +1</div><div class="upgrade-hint">▲ amélioration disponible</div>
         </div>
-
-        <!-- CANONS -->
         <div class="stat-block cannons">
-          <div class="stat-label">
-            <span class="stat-icon">💣</span>
-            <span class="stat-name">Canons</span>
-            <span class="stat-level-badge" id="cannonsLvlBadge">Niv. 1</span>
-          </div>
-          <div class="stat-pips">
-            <div class="pip filled" id="cannons-pip-0"></div>
-            <div class="pip" id="cannons-pip-1"></div>
-            <div class="pip" id="cannons-pip-2"></div>
-          </div>
-          <div class="stat-desc" id="cannonsDesc">Portée de tir : 1</div>
-          <div class="upgrade-hint">▲ amélioration disponible</div>
+          <div class="stat-label"><span class="stat-icon">💣</span><span class="stat-name">Canons</span><span class="stat-level-badge" id="cannonsLvlBadge">Niv.1</span></div>
+          <div class="stat-pips"><div class="pip filled" id="cannons-pip-0"></div><div class="pip" id="cannons-pip-1"></div><div class="pip" id="cannons-pip-2"></div></div>
+          <div class="stat-desc" id="cannonsDesc">Portée de tir : 1</div><div class="upgrade-hint">▲ amélioration disponible</div>
         </div>
-
-        <!-- ÉQUIPAGE -->
         <div class="stat-block crew">
-          <div class="stat-label">
-            <span class="stat-icon">☠</span>
-            <span class="stat-name">Équipage</span>
-            <span class="stat-level-badge" id="crewLvlBadge">Niv. 1</span>
-          </div>
-          <div class="stat-pips">
-            <div class="pip filled" id="crew-pip-0"></div>
-            <div class="pip" id="crew-pip-1"></div>
-            <div class="pip" id="crew-pip-2"></div>
-          </div>
-          <div class="stat-desc" id="crewDesc">5 matelots</div>
-          <div class="upgrade-hint">▲ amélioration disponible</div>
+          <div class="stat-label"><span class="stat-icon">👥</span><span class="stat-name">Équipage</span><span class="stat-level-badge" id="crewLvlBadge">Niv.1</span></div>
+          <div class="stat-pips"><div class="pip filled" id="crew-pip-0"></div><div class="pip" id="crew-pip-1"></div><div class="pip" id="crew-pip-2"></div></div>
+          <div class="stat-desc" id="crewDesc">5 matelots</div><div class="upgrade-hint">▲ amélioration disponible</div>
         </div>
-
       </div>
     </div>
 
-    <!-- ── CARD HAND ── -->
     <div class="deck-card" id="deckSection">
-      <div class="deck-header">
-        <span class="deck-title">🃏 Main</span>
-        <span class="deck-count" id="deckCountLabel">0 / 5 cartes</span>
-      </div>
+      <div class="deck-header"><span class="deck-title">🃏 Main</span><span class="deck-count" id="deckCountLabel">0 / 5 cartes</span></div>
       <div class="cards-row" id="cardsRow">
-        <!-- Slots vides — les cartes seront ajoutées dynamiquement -->
-        <div class="card-slot-empty">–</div>
-        <div class="card-slot-empty">–</div>
-        <div class="card-slot-empty">–</div>
-        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div><div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div><div class="card-slot-empty">–</div>
         <div class="card-slot-empty">–</div>
       </div>
     </div>
 
-    <!-- ── HOLD & EQUIPMENT ── -->
     <div class="hold-card" id="holdSection">
-
-      <!-- CALE CARGAISON -->
-      <div class="hold-header">
-        <span class="hold-title">📦 Cale · Cargaison</span>
-        <span class="hold-count" id="cargoCountLabel">0 / 10</span>
-      </div>
+      <div class="hold-header"><span class="hold-title">📦 Cale · Cargaison</span><span class="hold-count" id="cargoCountLabel">0 / 10</span></div>
       <div class="hold-grid cargo-grid" id="cargoGrid">
-        <div class="hold-slot empty" data-index="0"></div>
-        <div class="hold-slot empty" data-index="1"></div>
-        <div class="hold-slot empty" data-index="2"></div>
-        <div class="hold-slot empty" data-index="3"></div>
-        <div class="hold-slot empty" data-index="4"></div>
-        <div class="hold-slot empty" data-index="5"></div>
-        <div class="hold-slot empty" data-index="6"></div>
-        <div class="hold-slot empty" data-index="7"></div>
-        <div class="hold-slot empty" data-index="8"></div>
-        <div class="hold-slot empty" data-index="9"></div>
+        <div class="hold-slot empty" data-index="0"></div><div class="hold-slot empty" data-index="1"></div>
+        <div class="hold-slot empty" data-index="2"></div><div class="hold-slot empty" data-index="3"></div>
+        <div class="hold-slot empty" data-index="4"></div><div class="hold-slot empty" data-index="5"></div>
+        <div class="hold-slot empty" data-index="6"></div><div class="hold-slot empty" data-index="7"></div>
+        <div class="hold-slot empty" data-index="8"></div><div class="hold-slot empty" data-index="9"></div>
       </div>
-
       <div class="hold-divider"></div>
-
-      <!-- ÉQUIPEMENT -->
-      <div class="hold-header" style="margin-top:10px">
-        <span class="hold-title">⚔ Équipement</span>
-        <span class="hold-count" id="equipCountLabel">0 / 6</span>
-      </div>
+      <div class="hold-header" style="margin-top:10px"><span class="hold-title">⚔ Équipement</span><span class="hold-count" id="equipCountLabel">0 / 6</span></div>
       <div class="hold-grid equip-grid" id="equipGrid">
-        <div class="hold-slot equip empty" data-index="0"></div>
-        <div class="hold-slot equip empty" data-index="1"></div>
-        <div class="hold-slot equip empty" data-index="2"></div>
-        <div class="hold-slot equip empty" data-index="3"></div>
-        <div class="hold-slot equip empty" data-index="4"></div>
-        <div class="hold-slot equip empty" data-index="5"></div>
+        <div class="hold-slot equip empty" data-index="0"></div><div class="hold-slot equip empty" data-index="1"></div>
+        <div class="hold-slot equip empty" data-index="2"></div><div class="hold-slot equip empty" data-index="3"></div>
+        <div class="hold-slot equip empty" data-index="4"></div><div class="hold-slot equip empty" data-index="5"></div>
       </div>
-
     </div>
 
-    <!-- Players list (collapsed) -->
-    <div class="card">
-      <h2>Joueurs</h2>
-      <div id="playersList"></div>
-    </div>
+    <div class="card"><h2>Joueurs</h2><div id="playersList"></div></div>
+    <div class="card"><h2>Journal</h2><ul id="logList"><li>En attente…</li></ul></div>
+  </div>
+</div>
 
-    <!-- Log -->
-    <div class="card">
-      <h2>Journal</h2>
-      <ul id="logList"><li>En attente…</li></ul>
-    </div>
-
-  </div><!-- end .content -->
-</div><!-- end #gameScreen -->
-
-<!-- ── CALIBRATION DRAWER ── -->
 <div id="calibDrawer">
   <div class="calib-header">
     <h3>⚙ Calibration grille</h3>
     <button class="calib-close" onclick="toggleCalib()">✕</button>
   </div>
-  <div class="slider-row">
-    <label>Rayon (HEX_R) <span id="vR">21.00</span>px</label>
-    <input type="range" id="sR" min="10" max="50" step="0.1" value="21" oninput="updateCalib()">
-  </div>
-  <div class="slider-row">
-    <label>Marge gauche (MARGIN_X) <span id="vMX">48.5</span>px</label>
-    <input type="range" id="sMX" min="0" max="120" step="0.5" value="48.5" oninput="updateCalib()">
-  </div>
-  <div class="slider-row">
-    <label>Marge haute (MARGIN_Y) <span id="vMY">39.0</span>px</label>
-    <input type="range" id="sMY" min="0" max="120" step="0.5" value="39.0" oninput="updateCalib()">
-  </div>
-  <div class="slider-row">
-    <label>Espacement col (COL_SP) <span id="vCS">48.40</span>px</label>
-    <input type="range" id="sCS" min="20" max="80" step="0.1" value="48.4" oninput="updateCalib()">
-  </div>
-  <div class="slider-row">
-    <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
-    <input type="range" id="sRS" min="15" max="70" step="0.1" value="41.6" oninput="updateCalib()">
-  </div>
-  <div class="slider-row">
-    <label>Offset rang impaire <span id="vOF">24.40</span>px</label>
-    <input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()">
-  </div>
-  <div class="calib-code" id="calibCode"></div>
+  <div class="slider-row"><label>Rayon (HEX_R) <span id="vR">21.70</span>px</label><input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()"></div>
+  <div class="slider-row"><label>Marge gauche (MARGIN_X) <span id="vMX">48</span>px</label><input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()"></div>
+  <div class="slider-row"><label>Marge haute (MARGIN_Y) <span id="vMY">44</span>px</label><input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()"></div>
+  <div class="slider-row"><label>Espacement col (COL_SP) <span id="vCS">48.6</span>px</label><input type="range" id="sCS" min="20" max="80" step="0.1" value="48.6" oninput="updateCalib()"></div>
+  <div class="slider-row"><label>Espacement rang (ROW_SP) <span id="vRS">41.6</span>px</label><input type="range" id="sRS" min="20" max="70" step="0.1" value="41.6" oninput="updateCalib()"></div>
+  <div class="slider-row"><label>Décalage impair (ROW_OFFSET) <span id="vOF">24.4</span>px</label><input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()"></div>
+  <pre class="calib-code" id="calibCode"></pre>
   <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
 </div>
 
 <script>
-// ─── Hex Math ──────────────────────────────────────────────────────────────────
-const ROWS = 22, IMG_W = 1288, IMG_H = 952;
-function colsForRow(r) { return r % 2 === 0 ? 25 : 24; }
+// ─── Grille : 22 rangs (r=0..21), rangs pairs=25 cols, impairs=24 cols ────────
+const ROWS=22, IMG_W=1288, IMG_H=952;
+function colsForRow(r){ return r%2===0?25:24; }
+let MARGIN_X=48, MARGIN_Y=44, COL_SP=48.6, ROW_SP=41.6, HEX_R=21.7, ROW_OFFSET=24.4;
 
-let MARGIN_X   = 48.5;
-let MARGIN_Y   = 39.0;
-let COL_SP     = 48.400;
-let ROW_SP     = 41.600;
-let HEX_R      = 21.000;
-let ROW_OFFSET = 24.400;
-
-function hexCenter(q, r, scale) {
-  const s = scale || 1;
-  return {
-    x: (MARGIN_X + q * COL_SP + (r % 2 === 1 ? ROW_OFFSET : 0)) * s,
-    y: (MARGIN_Y + r * ROW_SP) * s,
-  };
+function hexCenter(q,r,s){
+  s=s||1;
+  return { x:(MARGIN_X+q*COL_SP+(r%2===1?ROW_OFFSET:0))*s, y:(MARGIN_Y+r*ROW_SP)*s };
 }
-function hexPoints(cx, cy, scale) {
-  const s = scale || 1;
-  const R = HEX_R * s;
-  const pts = [];
-  for (let i = 0; i < 6; i++) {
-    const angle = Math.PI / 2 + (Math.PI / 3) * i;
-    pts.push(`${cx + R * Math.cos(angle)},${cy - R * Math.sin(angle)}`);
-  }
-  return pts.join(" ");
+function hexPoints(cx,cy,s){
+  s=s||1; const R=HEX_R*s, pts=[];
+  for(let i=0;i<6;i++){ const a=Math.PI/2+(Math.PI/3)*i; pts.push(`${cx+R*Math.cos(a)},${cy-R*Math.sin(a)}`); }
+  return pts.join(' ');
 }
 
-const START_POSITIONS = [
-  { q:  0, r:  0 },
-  { q: 24, r:  0 },
-  { q:  0, r: 10 },
-  { q: 24, r: 10 },
-  { q:  0, r: 21 },
-  { q: 24, r: 21 },
+// Points de départ — tous disponibles simultanément
+const START_POSITIONS=[
+  {q:0,r:0},{q:24,r:0},{q:0,r:10},{q:24,r:10},{q:0,r:21},{q:24,r:21}
 ];
 
-// ─── Socket ────────────────────────────────────────────────────────────────────
-const socket = io();
-let myId = socket.id;
-let myName = "";
-let joined = false;
-let gameState = {};
-let myColor = "#b8860b";
+const socket=io();
+let myId=socket.id, myName='', joined=false, gameState={}, myColor='#b8860b';
 
-socket.on("connect", () => {
-  myId = socket.id;
-  document.getElementById("connDot").className = "conn-dot connected";
-  document.getElementById("connStatus").innerHTML = `<span class="conn-dot connected"></span>Connecté`;
-  if (joined) socket.emit("player:join", { name: myName });
+socket.on('connect',()=>{
+  myId=socket.id;
+  document.getElementById('connDot').className='conn-dot connected';
+  document.getElementById('connStatus').innerHTML='<span class="conn-dot connected"></span>Connecté';
+  if(joined) socket.emit('player:join',{name:myName});
 });
-socket.on("disconnect", () => {
-  document.getElementById("connDot").className = "conn-dot disconnected";
-});
+socket.on('disconnect',()=>{ document.getElementById('connDot').className='conn-dot disconnected'; });
 
-function joinGame() {
-  const name = document.getElementById("nameInput").value.trim();
-  if (!name) { document.getElementById("nameInput").focus(); return; }
-  myName = name;
-  joined = true;
-  socket.emit("player:join", { name });
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("gameScreen").style.display = "flex";
-  document.getElementById("headerName").textContent = name;
+function joinGame(){
+  const name=document.getElementById('nameInput').value.trim();
+  if(!name){ document.getElementById('nameInput').focus(); return; }
+  myName=name; joined=true;
+  socket.emit('player:join',{name});
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('gameScreen').style.display='flex';
+  document.getElementById('headerName').textContent=name;
 }
-document.getElementById("nameInput").addEventListener("keydown", e => { if (e.key === "Enter") joinGame(); });
+document.getElementById('nameInput').addEventListener('keydown',e=>{ if(e.key==='Enter') joinGame(); });
 
-socket.on("game:state", (state) => {
-  gameState = state;
-  myId = state.myId || socket.id;
-  if (state.players?.[myId]) {
-    myColor = state.players[myId].color || "#b8860b";
-    document.getElementById("myColorDot").style.background = myColor;
-  }
+socket.on('game:state',(state)=>{
+  gameState=state; myId=state.myId||socket.id;
+  if(state.players?.[myId]){ myColor=state.players[myId].color||'#b8860b'; document.getElementById('myColorDot').style.background=myColor; }
   renderGame(state);
 });
 
-// ─── Render ────────────────────────────────────────────────────────────────────
-function renderGame(state) {
-  const isMyTurn    = state.isMyTurn;
-  const status      = state.status;
-  const isPickingPhase = status === "picking";
-  const isMyPickTurn   = isPickingPhase && isMyTurn;
-  const rolled = state.diceRoll?.playerId === myId;
-  const moved  = state.players?.[myId]?.hasMoved;
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderGame(state){
+  const isMyTurn=state.isMyTurn, status=state.status;
+  const isPickingPhase=status==='picking', isMyPickTurn=isPickingPhase&&isMyTurn;
+  const rolled=state.diceRoll?.playerId===myId, moved=state.players?.[myId]?.hasMoved;
 
-  // Badge
-  const badge = document.getElementById("turnBadge");
-  if (status === "waiting")   { badge.textContent = "En attente";   badge.className = "waiting"; }
-  else if (isMyPickTurn)      { badge.textContent = "Choisis !";    badge.className = "picking"; }
-  else if (isPickingPhase)    { badge.textContent = "Attends…";     badge.className = "waiting"; }
-  else if (isMyTurn)          { badge.textContent = "Ton tour !";   badge.className = "my-turn"; }
-  else                        { badge.textContent = "Tour adverse"; badge.className = "other-turn"; }
+  const badge=document.getElementById('turnBadge');
+  if(status==='waiting')   { badge.textContent='En attente';  badge.className='waiting'; }
+  else if(isMyPickTurn)    { badge.textContent='Choisis !';   badge.className='picking'; }
+  else if(isPickingPhase)  { badge.textContent='Attends…';   badge.className='waiting'; }
+  else if(isMyTurn)        { badge.textContent='Ton tour !'; badge.className='my-turn'; }
+  else                     { badge.textContent='Attends…';   badge.className='other-turn'; }
 
-  // Status card
-  const card = document.getElementById("statusCard");
-  const icon = document.getElementById("bigIcon");
-  const text = document.getElementById("bigText");
-  const sub  = document.getElementById("subText");
+  const card=document.getElementById('statusCard');
+  const icon=document.getElementById('bigIcon');
+  const text=document.getElementById('bigText');
+  const sub=document.getElementById('subText');
+  if(status==='waiting'){ card.className='other'; icon.textContent='⏳'; text.textContent='En attente du début…'; sub.textContent='Le maître de jeu démarre bientôt.'; }
+  else if(isMyPickTurn){ card.className='picking-mine'; icon.textContent='🗺'; text.textContent='Choisis ta position de départ !'; sub.textContent='Appuie sur une case teal sur la carte.'; }
+  else if(isPickingPhase){ card.className='other'; icon.textContent='👁'; text.textContent='Choix en cours…'; sub.textContent=`${state.players?.[state.currentTurn]?.name||'?'} choisit.`; }
+  else if(isMyTurn&&!moved){ card.className='my-turn'; icon.textContent='🎲'; text.textContent='C\'est ton tour !'; sub.textContent='Lance le dé puis déplace-toi.'; }
+  else if(isMyTurn&&moved) { card.className='my-turn'; icon.textContent='✅'; text.textContent='Déplacement effectué !'; sub.textContent='Tu peux terminer ton tour.'; }
+  else{ card.className='other'; icon.textContent='👁'; text.textContent=`Tour de ${state.players?.[state.currentTurn]?.name||'?'}`; sub.textContent='Patiente…'; }
 
-  if (status === "waiting") {
-    card.className = "other"; icon.textContent = "⏳";
-    text.textContent = "En attente du début…";
-    sub.textContent  = "Le maître de jeu démarre bientôt.";
-  } else if (isMyPickTurn) {
-    card.className = "picking-mine"; icon.textContent = "🗺";
-    text.textContent = "Choisis ta case de départ";
-    sub.textContent  = "Appuie sur une case en surbrillance.";
-  } else if (isPickingPhase) {
-    const cur = state.players?.[state.currentTurn]?.name || "?";
-    card.className = "other"; icon.textContent = "👁";
-    text.textContent = `${cur} choisit sa position`;
-    sub.textContent  = "Patiente…";
-  } else if (isMyTurn) {
-    const myPos = state.players?.[myId]?.position;
-    if (!myPos) {
-      card.className = "other"; icon.textContent = "⚠";
-      text.textContent = "Position inconnue"; sub.textContent = "";
-    } else if (!rolled && !moved) {
-      card.className = "my-turn"; icon.textContent = "⚔";
-      text.textContent = "C'est ton tour !";
-      sub.textContent  = "Lance le dé pour commencer.";
-    } else if (rolled && !moved) {
-      card.className = "my-turn"; icon.textContent = "🎯";
-      text.textContent = `Déplace-toi (${state.diceRoll.value} cases)`;
-      sub.textContent  = "Appuie sur une case sur la carte.";
-    } else {
-      card.className = "my-turn"; icon.textContent = "✅";
-      text.textContent = "Déplacement effectué !";
-      sub.textContent  = "Tu peux maintenant terminer ton tour.";
-    }
-  } else {
-    const cur = state.players?.[state.currentTurn]?.name || "?";
-    card.className = "other"; icon.textContent = "👁";
-    text.textContent = `Tour de ${cur}`;
-    sub.textContent  = "Patiente…";
+  const showDice=isMyTurn&&status==='playing'&&!moved;
+  document.getElementById('diceSection').style.display=showDice?'block':'none';
+  if(rolled&&!moved){
+    document.getElementById('diceFace').textContent=['⚀','⚁','⚂','⚃','⚄','⚅'][state.diceRoll.value-1]||state.diceRoll.value;
+    document.getElementById('btnRoll').disabled=true;
+    document.getElementById('diceInstruction').style.display='block';
+    document.getElementById('diceValue').textContent=state.diceRoll.value;
+  } else if(!rolled&&!moved){
+    document.getElementById('diceFace').textContent='?';
+    document.getElementById('btnRoll').disabled=false;
+    document.getElementById('diceInstruction').style.display='none';
   }
 
-  // Dice section
-  const showDice = isMyTurn && status === "playing" && !moved;
-  document.getElementById("diceSection").style.display = showDice ? "block" : "none";
-  if (rolled && !moved) {
-    document.getElementById("diceFace").textContent = ["⚀","⚁","⚂","⚃","⚄","⚅"][state.diceRoll.value - 1] || state.diceRoll.value;
-    document.getElementById("btnRoll").disabled = true;
-    document.getElementById("diceInstruction").style.display = "block";
-    document.getElementById("diceValue").textContent = state.diceRoll.value;
-  } else if (!rolled && !moved) {
-    document.getElementById("diceFace").textContent = "?";
-    document.getElementById("btnRoll").disabled = false;
-    document.getElementById("diceInstruction").style.display = "none";
-  }
+  const showMap=(isMyPickTurn&&state.pendingStartSlots?.length>0)||(isMyTurn&&status==='playing'&&rolled&&!moved);
+  document.getElementById('mapSection').style.display=showMap?'block':'none';
+  if(showMap) renderMiniMap(state,isMyPickTurn);
 
-  // Map
-  const showMap = (isMyPickTurn && state.pendingStartSlots?.length > 0)
-               || (isMyTurn && status === "playing" && rolled && !moved);
-  document.getElementById("mapSection").style.display = showMap ? "block" : "none";
-  if (showMap) renderMiniMap(state, isMyPickTurn);
+  document.getElementById('btnEndTurn').disabled=!(isMyTurn&&status==='playing');
 
-  // End turn
-  document.getElementById("btnEndTurn").disabled = !(isMyTurn && status === "playing");
+  const players=Object.entries(state.players||{});
+  document.getElementById('playersList').innerHTML=players.length
+    ?players.map(([id,p])=>{
+        const isActive=state.currentTurn===id, pos=p.position?`Q${p.position.q}R${p.position.r}`:'–';
+        return `<div class="p-row ${isActive?'active-p':''}">
+          <div class="p-dot" style="background:${p.color}"></div>
+          <span>${p.name}${id===myId?' <span style="font-size:.62rem;color:var(--gold)">(vous)</span>':''}</span>
+          <span class="p-pos">${pos}</span>
+        </div>`;
+      }).join('')
+    :`<div style="color:#6a5a3a;font-style:italic;font-size:.82rem">Aucun joueur.</div>`;
 
-  // Players list
-  const pList = document.getElementById("playersList");
-  const players = Object.entries(state.players || {});
-  if (!players.length) {
-    pList.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.82rem">Aucun autre joueur.</div>`;
-  } else {
-    pList.innerHTML = players.map(([id, p]) => {
-      const isActive = state.currentTurn === id;
-      const pos = p.position ? `${p.position.q},${p.position.r}` : "–";
-      return `<div class="p-row ${isActive ? 'active-p' : ''}">
-        <div class="p-dot" style="background:${p.color}"></div>
-        <span>${p.name}${id === myId ? ' <span style="font-size:.62rem;color:var(--gold)">(vous)</span>' : ''}</span>
-        <span class="p-pos">${pos}</span>
-      </div>`;
-    }).join("");
-  }
-
-  // Log
-  document.getElementById("logList").innerHTML =
-    (state.log?.length ? state.log : ["Aucun événement."])
-      .map(e => `<li>${e}</li>`).join("");
-
-  // Ship dashboard
-  if (state.players?.[myId]?.ship) {
-    renderShipDashboard(state.players[myId].ship);
-  } else {
-    renderShipDashboard(localShipStats);
-  }
-  if (state.players?.[myId]?.resources) {
-    renderResources(state.players[myId].resources);
-  }
+  document.getElementById('logList').innerHTML=(state.log?.length?state.log:['Aucun événement.']).map(e=>`<li>${e}</li>`).join('');
+  if(state.players?.[myId]?.ship) renderShipDashboard(state.players[myId].ship);
+  if(state.players?.[myId]?.resources) renderResources(state.players[myId].resources);
 }
 
-// ─── Mini Map ──────────────────────────────────────────────────────────────────
-function renderMiniMap(state, isPickPhase) {
-  const img      = document.getElementById("miniMap");
-  const svg      = document.getElementById("miniSvg");
-  const viewport = document.getElementById("mapViewport");
-  const label    = document.getElementById("zoomLabel");
+// ─── Mini Map ─────────────────────────────────────────────────────────────────
+function renderMiniMap(state,isPickPhase){
+  const img=document.getElementById('miniMap');
+  const svg=document.getElementById('miniSvg');
+  const viewport=document.getElementById('mapViewport');
+  const label=document.getElementById('zoomLabel');
+  const baseScale=img.clientWidth/IMG_W;
+  const imgH=IMG_H*baseScale;
+  let zoom=1, panX=0, panY=0;
+  const VIEWPORT_H=240;
 
-  const baseScale = img.clientWidth / IMG_W;
-  const imgH = IMG_H * baseScale;
-
-  let zoom = 1, panX = 0, panY = 0;
-  const VIEWPORT_H = 240;
-
-  const hexes = isPickPhase ? (state.pendingStartSlots || []) : (state.moveOptions || []);
-
-  if (!isPickPhase && hexes.length > 0) {
-    const myPos = state.players?.[myId]?.position;
-    const allHexes = myPos ? [myPos, ...hexes] : hexes;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const { q, r } of allHexes) {
-      const { x, y } = hexCenter(q, r, 1);
-      minX = Math.min(minX, x - HEX_R); minY = Math.min(minY, y - HEX_R);
-      maxX = Math.max(maxX, x + HEX_R); maxY = Math.max(maxY, y + HEX_R);
+  const hexes=isPickPhase?(state.pendingStartSlots||[]):(state.moveOptions||[]);
+  if(!isPickPhase&&hexes.length>0){
+    const myPos=state.players?.[myId]?.position;
+    const allHexes=myPos?[myPos,...hexes]:hexes;
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const {q,r} of allHexes){
+      const {x,y}=hexCenter(q,r,1);
+      minX=Math.min(minX,x-HEX_R); minY=Math.min(minY,y-HEX_R);
+      maxX=Math.max(maxX,x+HEX_R); maxY=Math.max(maxY,y+HEX_R);
     }
-    const PAD = HEX_R * 2.5;
-    minX = Math.max(0, minX - PAD); minY = Math.max(0, minY - PAD);
-    maxX = Math.min(IMG_W, maxX + PAD); maxY = Math.min(IMG_H, maxY + PAD);
-    const regionW = maxX - minX, regionH = maxY - minY;
-    const containerW = img.clientWidth;
-    const zoomX = containerW / (regionW * baseScale);
-    const zoomY = VIEWPORT_H / (regionH * baseScale);
-    zoom = Math.min(zoomX, zoomY, 3.5);
-    panX = -minX * baseScale * zoom;
-    panY = -minY * baseScale * zoom;
-    viewport.style.height = VIEWPORT_H + "px";
-    label.classList.add("visible");
-  } else {
-    viewport.style.height = "auto";
-    label.classList.remove("visible");
-  }
+    const PAD=HEX_R*2.5;
+    minX=Math.max(0,minX-PAD); minY=Math.max(0,minY-PAD);
+    maxX=Math.min(IMG_W,maxX+PAD); maxY=Math.min(IMG_H,maxY+PAD);
+    const zoomX=img.clientWidth/((maxX-minX)*baseScale);
+    const zoomY=VIEWPORT_H/((maxY-minY)*baseScale);
+    zoom=Math.min(zoomX,zoomY,3.5);
+    panX=-minX*baseScale*zoom; panY=-minY*baseScale*zoom;
+    viewport.style.height=VIEWPORT_H+'px'; label.classList.add('visible');
+  } else { viewport.style.height='auto'; label.classList.remove('visible'); }
 
-  img.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-  img.style.transformOrigin = "0 0";
-  img.style.width = img.clientWidth + "px";
-  img.style.height = imgH + "px";
+  img.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;
+  img.style.transformOrigin='0 0'; img.style.width=img.clientWidth+'px'; img.style.height=imgH+'px';
+  const svgW=img.clientWidth, svgH=imgH;
+  svg.setAttribute('width',svgW); svg.setAttribute('height',svgH);
+  svg.style.width=svgW+'px'; svg.style.height=svgH+'px';
+  svg.style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`; svg.style.transformOrigin='0 0';
 
-  const svgW = img.clientWidth, svgH = imgH;
-  svg.setAttribute("width", svgW); svg.setAttribute("height", svgH);
-  svg.style.width = svgW + "px"; svg.style.height = svgH + "px";
-  svg.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-  svg.style.transformOrigin = "0 0";
-
-  let html = "";
-  const s = baseScale;
-
-  for (let r = 0; r < ROWS; r++) {
-    const cols = colsForRow(r);
-    for (let q = 0; q < cols; q++) {
-      const { x, y } = hexCenter(q, r, s);
-      const pts = hexPoints(x, y, s);
-      html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.10)" stroke-width="${s}"/>`;
+  const s=baseScale;
+  let html='';
+  // Grille complète — rangs pairs 25 cols, impairs 24 cols
+  for(let r=0;r<ROWS;r++){
+    const cols=colsForRow(r);
+    for(let q=0;q<cols;q++){
+      const {x,y}=hexCenter(q,r,s);
+      html+=`<polygon points="${hexPoints(x,y,s)}" fill="transparent" stroke="rgba(184,134,11,0.10)" stroke-width="${s}"/>`;
     }
   }
 
-  if (isPickPhase) {
-    for (const { q, r } of (state.pendingStartSlots || [])) {
-      const { x, y } = hexCenter(q, r, s);
-      const pts = hexPoints(x, y, s);
-      html += `<g class="hex-clickable" onclick="pickStart(${q},${r})">
-        <polygon points="${pts}" fill="rgba(74,238,204,0.3)" stroke="#4aedcc" stroke-width="${2*s}"/>
-      </g>`;
+  // ── Obstacles (îles, ports, repaires) — sous les highlights ──────────────
+  for(const obs of (state.obstacles||[])){
+    const {x,y}=hexCenter(obs.q,obs.r,s);
+    const fill=obs.type==='ile'?'rgba(80,55,20,0.6)':obs.type==='port'?'rgba(20,60,80,0.6)':'rgba(60,10,10,0.6)';
+    const stroke=obs.type==='ile'?'rgba(184,134,11,0.55)':obs.type==='port'?'#4ac8ff':'#c04040';
+    html+=`<polygon points="${hexPoints(x,y,s)}" fill="${fill}" stroke="${stroke}" stroke-width="${1.5*s}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${9*s}" style="pointer-events:none">${obs.icon||''}</text>`;
+  }
+
+  if(isPickPhase){
+    for(const {q,r} of (state.pendingStartSlots||[])){
+      const {x,y}=hexCenter(q,r,s);
+      html+=`<g class="hex-clickable" onclick="pickStart(${q},${r})"><polygon points="${hexPoints(x,y,s)}" fill="rgba(74,238,204,0.3)" stroke="#4aedcc" stroke-width="${2*s}"/></g>`;
     }
   } else {
-    html += `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="rgba(0,0,0,0.35)"/>`;
-    for (const { q, r } of (state.moveOptions || [])) {
-      const { x, y } = hexCenter(q, r, s);
-      const pts = hexPoints(x, y, s);
-      html += `<g class="hex-clickable" onclick="moveHere(${q},${r})">
-        <polygon points="${pts}" fill="rgba(255,200,50,0.30)" stroke="#ffc832" stroke-width="${2*s}"/>
-      </g>`;
+    html+=`<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="rgba(0,0,0,0.35)"/>`;
+    for(const {q,r} of (state.moveOptions||[])){
+      const {x,y}=hexCenter(q,r,s);
+      html+=`<g class="hex-clickable" onclick="moveHere(${q},${r})"><polygon points="${hexPoints(x,y,s)}" fill="rgba(255,200,50,0.30)" stroke="#ffc832" stroke-width="${2*s}"/></g>`;
     }
   }
 
-  for (const [id, p] of Object.entries(state.players || {})) {
-    if (!p.position) continue;
-    const { x, y } = hexCenter(p.position.q, p.position.r, s);
-    const isMe = id === myId;
-    const radius = (isMe ? 9 : 7) * s;
-    if (isMe) {
-      html += `<circle cx="${x}" cy="${y}" r="${radius+3*s}" fill="none" stroke="${p.color}" stroke-width="${1.5*s}" opacity="0.7"/>`;
-    }
-    html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${s}"/>`;
-    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*s}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
+  for(const [id,p] of Object.entries(state.players||{})){
+    if(!p.position) continue;
+    const {x,y}=hexCenter(p.position.q,p.position.r,s);
+    const isMe=id===myId, radius=(isMe?9:7)*s;
+    if(isMe) html+=`<circle cx="${x}" cy="${y}" r="${radius+3*s}" fill="none" stroke="${p.color}" stroke-width="${1.5*s}" opacity="0.7"/>`;
+    html+=`<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${s}"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*s}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
   }
-  svg.innerHTML = html;
+  svg.innerHTML=html;
 }
 
-document.getElementById("miniMap").addEventListener("load", () => {
-  if (gameState.status) renderGame(gameState);
-});
-window.addEventListener("resize", () => {
-  if (gameState.status) renderGame(gameState);
-});
+document.getElementById('miniMap').addEventListener('load',()=>{ if(gameState.status) renderGame(gameState); });
+window.addEventListener('resize',()=>{ if(gameState.status) renderGame(gameState); });
 
-// ─── Actions ───────────────────────────────────────────────────────────────────
-function rollDice() {
-  const face = document.getElementById("diceFace");
-  face.classList.add("rolling");
-  setTimeout(() => face.classList.remove("rolling"), 500);
-  socket.emit("player:rollDice");
-}
-function pickStart(q, r) { socket.emit("player:pickStart", { q, r }); }
-function moveHere(q, r)  { socket.emit("player:move",      { q, r }); }
-function endTurn()        { socket.emit("player:endTurn"); }
+// ─── Actions ──────────────────────────────────────────────────────────────────
+function rollDice(){ const f=document.getElementById('diceFace'); f.classList.add('rolling'); setTimeout(()=>f.classList.remove('rolling'),500); socket.emit('player:rollDice'); }
+function pickStart(q,r){ socket.emit('player:pickStart',{q,r}); }
+function moveHere(q,r) { socket.emit('player:move',{q,r}); }
+function endTurn()      { socket.emit('player:endTurn'); }
 
-// ─── Calibration ───────────────────────────────────────────────────────────────
-function toggleCalib() {
-  document.getElementById("calibDrawer").classList.toggle("open");
+// ─── Calibration ──────────────────────────────────────────────────────────────
+function toggleCalib(){ document.getElementById('calibDrawer').classList.toggle('open'); updateCalibDisplay(); }
+function updateCalib(){
+  HEX_R=parseFloat(document.getElementById('sR').value);
+  MARGIN_X=parseFloat(document.getElementById('sMX').value);
+  MARGIN_Y=parseFloat(document.getElementById('sMY').value);
+  COL_SP=parseFloat(document.getElementById('sCS').value);
+  ROW_SP=parseFloat(document.getElementById('sRS').value);
+  ROW_OFFSET=parseFloat(document.getElementById('sOF').value);
+  document.getElementById('vR').textContent=HEX_R.toFixed(2);
+  document.getElementById('vMX').textContent=MARGIN_X.toFixed(1);
+  document.getElementById('vMY').textContent=MARGIN_Y.toFixed(1);
+  document.getElementById('vCS').textContent=COL_SP.toFixed(2);
+  document.getElementById('vRS').textContent=ROW_SP.toFixed(2);
+  document.getElementById('vOF').textContent=ROW_OFFSET.toFixed(2);
   updateCalibDisplay();
+  if(document.getElementById('mapSection').style.display!=='none') renderMiniMap(gameState,gameState.status==='picking'&&gameState.isMyTurn);
 }
-function updateCalib() {
-  HEX_R      = parseFloat(document.getElementById("sR").value);
-  MARGIN_X   = parseFloat(document.getElementById("sMX").value);
-  MARGIN_Y   = parseFloat(document.getElementById("sMY").value);
-  COL_SP     = parseFloat(document.getElementById("sCS").value);
-  ROW_SP     = parseFloat(document.getElementById("sRS").value);
-  ROW_OFFSET = parseFloat(document.getElementById("sOF").value);
-  document.getElementById("vR").textContent  = HEX_R.toFixed(2);
-  document.getElementById("vMX").textContent = MARGIN_X.toFixed(1);
-  document.getElementById("vMY").textContent = MARGIN_Y.toFixed(1);
-  document.getElementById("vCS").textContent = COL_SP.toFixed(2);
-  document.getElementById("vRS").textContent = ROW_SP.toFixed(2);
-  document.getElementById("vOF").textContent = ROW_OFFSET.toFixed(2);
-  updateCalibDisplay();
-  if (document.getElementById("mapSection").style.display !== "none") {
-    renderMiniMap(gameState, gameState.status === "picking" && gameState.isMyTurn);
-  }
+function updateCalibDisplay(){
+  document.getElementById('calibCode').textContent=
+`HEX_R      = ${HEX_R.toFixed(3)}\nMARGIN_X   = ${MARGIN_X.toFixed(1)}\nMARGIN_Y   = ${MARGIN_Y.toFixed(1)}\nCOL_SP     = ${COL_SP.toFixed(3)}\nROW_SP     = ${ROW_SP.toFixed(3)}\nROW_OFFSET = ${ROW_OFFSET.toFixed(3)}`;
 }
-function updateCalibDisplay() {
-  document.getElementById("calibCode").textContent =
-`HEX_R      = ${HEX_R.toFixed(3)}
-MARGIN_X   = ${MARGIN_X.toFixed(1)}
-MARGIN_Y   = ${MARGIN_Y.toFixed(1)}
-COL_SP     = ${COL_SP.toFixed(3)}
-ROW_SP     = ${ROW_SP.toFixed(3)}
-ROW_OFFSET = ${ROW_OFFSET.toFixed(3)}`;
+function copyCalib(){
+  const txt=`const HEX_R=${HEX_R.toFixed(3)};\nconst MARGIN_X=${MARGIN_X.toFixed(1)};\nconst MARGIN_Y=${MARGIN_Y.toFixed(1)};\nconst COL_SP=${COL_SP.toFixed(3)};\nconst ROW_SP=${ROW_SP.toFixed(3)};\nconst ROW_OFFSET=${ROW_OFFSET.toFixed(3)};`;
+  navigator.clipboard.writeText(txt).then(()=>{ const b=document.querySelector('.calib-copy'); b.textContent='✓ Copié !'; setTimeout(()=>b.textContent='📋 Copier les constantes',1500); });
 }
-function copyCalib() {
-  const txt = `const HEX_R = ${HEX_R.toFixed(3)};\nconst MARGIN_X = ${MARGIN_X.toFixed(1)};\nconst MARGIN_Y = ${MARGIN_Y.toFixed(1)};\nconst COL_SP = ${COL_SP.toFixed(3)};\nconst ROW_SP = ${ROW_SP.toFixed(3)};\nconst ROW_OFFSET = ${ROW_OFFSET.toFixed(3)};`;
-  navigator.clipboard.writeText(txt).then(() => {
-    const btn = document.querySelector(".calib-copy");
-    btn.textContent = "✓ Copié !";
-    setTimeout(() => btn.textContent = "📋 Copier les constantes", 1500);
+
+// ─── Ship Dashboard ───────────────────────────────────────────────────────────
+const STAT_DESC={ hull:['Résistance de base','Coque renforcée (+2 PV)','Blindage de fer (+5 PV)'], sails:['Déplacement +1','Voiles de soie (+2)','Grand-voile (+3)'], cannons:['Portée de tir : 1','Portée de tir : 2','Artillerie lourde : 3'], crew:['5 matelots','10 matelots aguerris','Élite de 15 corsaires'] };
+const localShipStats={hull:{level:1},sails:{level:1},cannons:{level:1},crew:{level:1}};
+
+function renderShipDashboard(stats){
+  ['hull','sails','cannons','crew'].forEach(k=>{
+    const lvl=stats[k]?.level??1;
+    document.getElementById(`${k}LvlBadge`).textContent=`Niv. ${lvl}`;
+    document.getElementById(`${k}Desc`).textContent=STAT_DESC[k][lvl-1]||'';
+    for(let i=0;i<3;i++){ const p=document.getElementById(`${k}-pip-${i}`); if(p) p.classList.toggle('filled',i<lvl); }
   });
 }
-updateCalibDisplay();
-
-// ─── Ship Dashboard ────────────────────────────────────────────────────────────
-const STAT_DESCRIPTIONS = {
-  hull:    ["Résistance de base", "Coque renforcée (+2 PV)", "Blindage de fer (+5 PV)"],
-  sails:   ["Déplacement +1",    "Voiles de soie (+2)",     "Grand-voile (+3)"],
-  cannons: ["Portée de tir : 1", "Portée de tir : 2",       "Artillerie lourde : 3"],
-  crew:    ["5 matelots",        "10 matelots aguerris",    "Élite de 15 corsaires"],
-};
-
-const localShipStats = { hull: { level: 1 }, sails: { level: 1 }, cannons: { level: 1 }, crew: { level: 1 } };
-
-function renderShipDashboard(stats) {
-  const keys = ["hull","sails","cannons","crew"];
-  const badges = { hull:"hullLvlBadge", sails:"sailsLvlBadge", cannons:"cannonsLvlBadge", crew:"crewLvlBadge" };
-  const descs  = { hull:"hullDesc",     sails:"sailsDesc",     cannons:"cannonsDesc",     crew:"crewDesc"     };
-
-  keys.forEach(k => {
-    const lvl = stats[k]?.level ?? 1;
-    document.getElementById(badges[k]).textContent = `Niv. ${lvl}`;
-    document.getElementById(descs[k]).textContent  = STAT_DESCRIPTIONS[k][lvl - 1] || "";
-    for (let i = 0; i < 3; i++) {
-      const pip = document.getElementById(`${k}-pip-${i}`);
-      if (pip) pip.classList.toggle("filled", i < lvl);
-    }
-  });
+function renderResources(res){
+  document.getElementById('resDoublons').textContent=res?.doublons??0;
+  document.getElementById('resReputation').textContent=res?.reputation??0;
+  document.getElementById('resResearch').textContent=res?.research??0;
 }
+function playCard(cardId){ console.log('Card played:',cardId); }
 
-function renderResources(res) {
-  document.getElementById("resDoublons").textContent   = res?.doublons   ?? 0;
-  document.getElementById("resReputation").textContent = res?.reputation ?? 0;
-  document.getElementById("resResearch").textContent   = res?.research   ?? 0;
-}
-
-function playCard(cardId) {
-  // Placeholder — will connect to socket when card system is ready
-  console.log("Card played:", cardId);
-}
-
-// Initial render
 renderShipDashboard(localShipStats);
 renderResources({});
-
+updateCalibDisplay();
 </script>
 </body>
 </html>

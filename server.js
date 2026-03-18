@@ -174,6 +174,8 @@ app.post("/api/config", (req, res) => {
 
   // ── FIX : notifier les masters du changement de config en temps réel ─────
   io.to("master").emit("config:updated", adminConfig.cards);
+  // Re-broadcaster le gameState avec les nouveaux obstacles
+  broadcastState();
 
   res.json({ ok });
 });
@@ -202,24 +204,96 @@ function hexNeighbors(q, r) {
     .filter(n => n.r >= 0 && n.r < ROWS && n.q >= 0 && n.q < colsForRow(n.r));
 }
 
-function hexesInRange(q, r, range) {
-  const visited = new Set();
-  const result  = [];
-  const queue   = [{ q, r, dist: 0 }];
-  visited.add(`${q},${r}`);
-  while (queue.length) {
-    const { q: cq, r: cr, dist } = queue.shift();
-    if (dist > 0) result.push({ q: cq, r: cr });
-    if (dist < range) {
-      for (const n of hexNeighbors(cq, cr)) {
-        const key = `${n.q},${n.r}`;
-        if (!visited.has(key)) {
-          visited.add(key);
-          queue.push({ ...n, dist: dist + 1 });
-        }
+// ─── Obstacles pour broadcast (format léger pour les clients) ────────────────
+function getObstaclesArray() {
+  const obs = [];
+  const cards = adminConfig.cards;
+  for (const ile of (cards.iles || [])) {
+    const cases = (ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
+    if (!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
+    for (const c of cases) obs.push({ q:c.q, r:c.r, type:'ile', icon:ile.icon||'🏝' });
+  }
+  for (const port of (cards.ports||[])) {
+    if (port.coord_q!=null&&port.coord_r!=null)
+      obs.push({ q:port.coord_q, r:port.coord_r, type:'port', icon:'⚓' });
+  }
+  for (const rep of (cards.repaires||[])) {
+    if (rep.coord_q!=null&&rep.coord_r!=null)
+      obs.push({ q:rep.coord_q, r:rep.coord_r, type:'repaire', icon:'💀' });
+  }
+  return obs;
+}
+
+// ─── Obstacles depuis la config ───────────────────────────────────────────────
+// Retourne un Set de clés "q,r" des cases bloquées (îles, ports, repaires).
+// Une case bloquée peut être une DESTINATION valide mais pas un point de TRANSIT.
+function getBlockedCells() {
+  const blocked = new Set();
+  const cards = adminConfig.cards;
+
+  // Îles — support format cases[] ET ancien format coord_q/coord_r
+  for (const ile of (cards.iles || [])) {
+    if (ile.cases && ile.cases.length) {
+      for (const c of ile.cases) {
+        if (c.q != null && c.r != null) blocked.add(`${c.q},${c.r}`);
       }
+    } else if (ile.coord_q != null && ile.coord_r != null) {
+      blocked.add(`${ile.coord_q},${ile.coord_r}`);
     }
   }
+
+  // Ports de commerce
+  for (const port of (cards.ports || [])) {
+    if (port.coord_q != null && port.coord_r != null)
+      blocked.add(`${port.coord_q},${port.coord_r}`);
+  }
+
+  // Repaires de pirates
+  for (const rep of (cards.repaires || [])) {
+    if (rep.coord_q != null && rep.coord_r != null)
+      blocked.add(`${rep.coord_q},${rep.coord_r}`);
+  }
+
+  return blocked;
+}
+
+// ─── BFS avec obstacles ────────────────────────────────────────────────────────
+// Les cases bloquées (îles, ports, repaires) sont des destinations valides
+// mais ne peuvent pas être traversées : le BFS s'arrête à elles sans continuer.
+function hexesInRange(q, r, range) {
+  const blocked  = getBlockedCells();
+  const visited  = new Set();
+  const result   = [];
+  // file : { q, r, dist, blockedHere }
+  // blockedHere : si true, on a atterri sur un obstacle → on ne continue pas au-delà
+  const queue    = [{ q, r, dist: 0, blockedHere: false }];
+  visited.add(`${q},${r}`);
+
+  while (queue.length) {
+    const { q: cq, r: cr, dist, blockedHere } = queue.shift();
+
+    // Ajouter comme destination valide (sauf la case de départ)
+    if (dist > 0) result.push({ q: cq, r: cr });
+
+    // Ne pas continuer depuis une case bloquée ni au-delà de la portée
+    if (dist >= range || blockedHere) continue;
+
+    for (const n of hexNeighbors(cq, cr)) {
+      const key = `${n.q},${n.r}`;
+      if (visited.has(key)) continue;
+      visited.add(key);
+
+      // Vérifier si la case voisine est occupée par un autre joueur (ne peut pas y aller)
+      const occupiedByOther = Object.values(gameState.players).some(
+        p => p.position && p.position.q === n.q && p.position.r === n.r
+      );
+      if (occupiedByOther) continue;
+
+      const isBlocked = blocked.has(key);
+      queue.push({ ...n, dist: dist + 1, blockedHere: isBlocked });
+    }
+  }
+
   return result;
 }
 
@@ -254,10 +328,12 @@ let gameState = {
 };
 
 function broadcastState() {
-  io.to("master").emit("game:state", gameState);
+  const obstacles = getObstaclesArray();
+  io.to("master").emit("game:state", { ...gameState, obstacles });
   for (const [id, player] of Object.entries(gameState.players)) {
     io.to(id).emit("game:state", {
-      ...gameState, isMyTurn: gameState.currentTurn === id,
+      ...gameState, obstacles,
+      isMyTurn: gameState.currentTurn === id,
       myName: player.name, myId: id,
     });
   }
