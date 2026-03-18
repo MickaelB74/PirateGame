@@ -3,106 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Maître de Jeu — Plateau</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <title>Maître de Jeu</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --ink:    #1a1209;
-      --parch:  #f5ead6;
-      --gold:   #b8860b;
-      --gold2:  #d4a017;
-      --teal:   #4aedcc;
-      --border: rgba(184,134,11,.22);
-    }
-    html, body { width:100%; height:100%; background:#0d0a06; color:var(--parch); font-family:'Crimson Pro',Georgia,serif; overflow:hidden; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --gold:#b8860b; --gold2:#d4a017; --border:rgba(184,134,11,.22); --ink:#0f0b05; --parch:#f0e4c8; }
+    html, body { height:100%; overflow:hidden; }
+    body { background:var(--ink); color:var(--parch); font-family:'Crimson Pro',Georgia,serif; font-size:1rem; }
 
     /* HEADER */
     header {
-      background:var(--ink); border-bottom:2px solid var(--gold);
-      padding:10px 20px; display:flex; align-items:center; gap:16px;
-      flex-shrink:0; z-index:20; height:50px;
+      height:50px; background:rgba(8,5,1,.98); border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:14px; padding:0 18px; flex-shrink:0;
     }
-    header h1 { font-family:'Cinzel Decorative',serif; font-size:1.1rem; color:var(--gold2); letter-spacing:.04em; }
-    .badge { font-size:.75rem; padding:3px 12px; border-radius:20px; border:1px solid var(--gold); text-transform:uppercase; letter-spacing:.1em; }
-    .badge.waiting { color:var(--gold2); border-color:var(--gold); }
-    .badge.picking  { color:#4aedcc; border-color:#4aedcc; }
-    .badge.playing  { color:#6abf61; border-color:#6abf61; }
+    header h1 { font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold2); }
+    .badge { font-size:.82rem; padding:3px 11px; border-radius:12px; font-family:'Cinzel',serif; letter-spacing:.06em; border:1px solid; }
+    .badge.waiting  { background:rgba(90,90,90,.2);  border-color:#555; color:#aaa; }
+    .badge.picking  { background:rgba(74,237,204,.1); border-color:#4aedcc; color:#4aedcc; }
+    .badge.playing  { background:rgba(106,191,97,.1); border-color:#6abf61; color:#6abf61; }
+    .badge.ended    { background:rgba(200,100,50,.1); border-color:#c86432; color:#c86432; }
     .header-controls { margin-left:auto; display:flex; gap:8px; align-items:center; }
-    .btn { padding:7px 16px; border-radius:4px; border:1px solid var(--gold); background:transparent; color:var(--gold2); font-family:'Crimson Pro',serif; font-size:.95rem; cursor:pointer; transition:background .15s; }
-    .btn:hover:not(:disabled) { background:rgba(184,134,11,.15); }
-    .btn:disabled { opacity:.35; cursor:not-allowed; }
-    .btn-danger { border-color:#e07070; color:#e07070; }
-    .btn-danger:hover { background:rgba(224,112,112,.12) !important; }
+    .header-info { font-size:.85rem; color:#7a6a4a; display:flex; align-items:center; gap:6px; }
+    #playerUrl { font-family:monospace; font-size:.78rem; color:#4aedcc; cursor:pointer; }
+    .btn { padding:5px 14px; border-radius:5px; border:1px solid var(--border); background:rgba(184,134,11,.12); color:var(--gold2); font-family:'Cinzel',serif; font-size:.78rem; cursor:pointer; transition:background .2s; }
+    .btn:hover { background:rgba(184,134,11,.26); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-danger { border-color:rgba(200,80,50,.4); color:#c86432; background:rgba(200,80,50,.06); }
+    .btn-danger:hover { background:rgba(200,80,50,.16); }
+    .calib-toggle { padding:5px 12px; border-radius:5px; border:1px solid rgba(74,237,204,.3); background:rgba(74,237,204,.06); color:#4aedcc; font-family:'Cinzel',serif; font-size:.72rem; cursor:pointer; }
+    .calib-toggle:hover { background:rgba(74,237,204,.14); }
 
-    /* GRILLE PLATEAU — header=50px */
+    /* PLATEAU */
     .plateau {
       display:grid;
-      grid-template-columns:230px 1fr 230px;
+      grid-template-columns:220px 1fr 220px;
       grid-template-rows:88px 1fr;
       width:100vw;
       height:calc(100vh - 50px);
     }
 
-    /* ═══ BORD HAUT span 3 cols ═══ */
+    /* BORD HAUT */
     .zone-top {
       grid-column:1/4; grid-row:1;
       display:flex; align-items:stretch;
       background:linear-gradient(180deg,rgba(8,5,1,.98),rgba(13,9,5,.92));
-      border-bottom:1px solid var(--border);
-      position:relative;
+      border-bottom:1px solid var(--border); position:relative;
     }
     .zone-top::after {
       content:''; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%);
-      width:300px; height:1px;
-      background:linear-gradient(90deg,transparent,var(--gold2),transparent);
+      width:300px; height:1px; background:linear-gradient(90deg,transparent,var(--gold2),transparent);
     }
-
-    /* Bloc Enigmes */
-    .top-enigmes {
-      display:flex; align-items:center; gap:8px;
-      padding:0 20px; border-right:1px solid var(--border);
-      flex-shrink:0;
-    }
-    .top-label {
-      font-family:'Cinzel Decorative',serif; font-size:.6rem;
-      color:var(--gold); text-transform:uppercase; letter-spacing:.14em;
-      white-space:nowrap; opacity:.65; margin-right:4px;
-    }
-
-    /* Slot de carte universel */
+    .top-enigmes { display:flex; align-items:center; gap:8px; padding:0 20px; border-right:1px solid var(--border); flex-shrink:0; }
+    .top-label { font-family:'Cinzel Decorative',serif; font-size:.65rem; color:var(--gold); text-transform:uppercase; letter-spacing:.14em; white-space:nowrap; opacity:.7; margin-right:4px; }
     .card-slot {
-      width:58px; height:76px;
-      border:1px dashed rgba(184,134,11,.3);
-      border-radius:6px;
+      width:62px; height:78px; border:1px dashed rgba(184,134,11,.3); border-radius:6px;
       background:rgba(255,255,255,.025);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
-      gap:3px; flex-shrink:0; cursor:default;
-      position:relative;
+      gap:3px; flex-shrink:0; cursor:default; position:relative;
     }
-    .card-slot .cs-icon { font-size:1.3rem; }
-    .card-slot .cs-label {
-      font-size:.5rem; text-transform:uppercase; letter-spacing:.07em;
-      color:#6a5a3a; text-align:center; line-height:1.2; padding:0 3px;
-    }
-    .card-slot .cs-sub {
-      font-size:.42rem; color:#4a3a1a; text-align:center; line-height:1.2;
-    }
-
-    /* Bloc Avancement */
-    .top-avancement {
-      flex:1; display:flex; align-items:center; gap:6px;
-      padding:0 16px; overflow-x:auto;
-      scrollbar-width:none;
-    }
+    .card-slot .cs-icon { font-size:1.4rem; }
+    .card-slot .cs-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.06em; color:#6a5a3a; text-align:center; line-height:1.2; padding:0 3px; }
+    .card-slot .cs-sub  { font-size:.48rem; color:#4a3a1a; text-align:center; }
+    .top-avancement { flex:1; display:flex; align-items:center; gap:6px; padding:0 16px; overflow-x:auto; scrollbar-width:none; }
     .top-avancement::-webkit-scrollbar { display:none; }
-    .av-arrow { color:rgba(184,134,11,.3); font-size:.8rem; flex-shrink:0; }
+    .av-arrow { color:rgba(184,134,11,.35); font-size:.9rem; flex-shrink:0; }
 
-    /* ═══ BORDS LATÉRAUX ═══ */
+    /* BORDS LATERAUX */
     .zone-ile-gauche, .zone-ile-droite {
-      grid-row:2;
-      display:flex; flex-direction:column; gap:0;
+      grid-row:2; display:flex; flex-direction:column; gap:0;
       overflow-y:auto; overflow-x:hidden;
       background:linear-gradient(180deg,rgba(10,7,3,.96),rgba(15,10,5,.99));
       scrollbar-width:thin; scrollbar-color:var(--gold) transparent;
@@ -113,74 +82,74 @@
     ::-webkit-scrollbar-thumb { background:rgba(184,134,11,.3); border-radius:2px; }
 
     .ile-section-title {
-      font-family:'Cinzel Decorative',serif; font-size:.58rem;
-      color:var(--gold); text-transform:uppercase; letter-spacing:.1em;
-      padding:8px 10px 6px; border-bottom:1px solid rgba(184,134,11,.12);
+      font-family:'Cinzel Decorative',serif; font-size:.62rem; color:var(--gold);
+      text-transform:uppercase; letter-spacing:.1em;
+      padding:9px 10px 7px; border-bottom:1px solid rgba(184,134,11,.12);
       text-align:center; flex-shrink:0;
     }
 
-    /* Mat Card île — prend la hauteur dispo équitablement */
+    /* MAT CARD ÎLE */
     .ile-card {
       flex:1; min-height:0;
-      background:rgba(20,13,5,.9);
-      border-bottom:1px solid rgba(184,134,11,.1);
-      padding:8px 10px;
-      display:flex; flex-direction:column; gap:5px;
-      position:relative; overflow:hidden;
-      transition:background .2s;
+      background:rgba(20,13,5,.9); border-bottom:1px solid rgba(184,134,11,.1);
+      padding:9px 11px; display:flex; flex-direction:column; gap:5px;
+      position:relative; overflow:hidden; transition:background .2s; cursor:default;
     }
     .ile-card:last-child { border-bottom:none; }
-    .ile-card:hover { background:rgba(26,17,6,.95); }
+    .ile-card:hover { background:rgba(30,20,8,.98); }
     .ile-card::before {
       content:''; position:absolute; top:0; left:0;
       width:2px; height:100%; background:var(--gold2); opacity:0; transition:opacity .2s;
     }
     .ile-card:hover::before { opacity:1; }
+    .ile-card.hex-highlight { background:rgba(184,134,11,.15) !important; }
+    .ile-card.hex-highlight::before { opacity:1; }
 
-    .ile-header { display:flex; align-items:flex-start; gap:6px; }
-    .ile-icon { font-size:1.2rem; flex-shrink:0; margin-top:1px; }
+    .ile-header { display:flex; align-items:flex-start; gap:7px; }
+    .ile-icon { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
     .ile-info { flex:1; min-width:0; }
-    .ile-name {
-      font-family:'Cinzel',serif; font-size:.75rem; font-weight:600;
-      color:#eedcb4; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
-    .ile-biome {
-      font-size:.62rem; color:#8a7a5e; font-style:italic; margin-top:1px;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
+    .ile-name { font-family:'Cinzel',serif; font-size:.82rem; font-weight:600; color:#eedcb4; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ile-biome { font-size:.68rem; color:#8a7a5e; font-style:italic; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    /* Coordonnée */
+    .ile-coord { font-family:monospace; font-size:.65rem; color:rgba(74,237,204,.45); margin-top:2px; letter-spacing:.04em; }
+    .ile-coord.has-coord { color:#4aedcc; opacity:.9; }
 
-    /* Slots objets (style cargaison) */
-    .ile-objets-label {
-      font-size:.52rem; text-transform:uppercase; letter-spacing:.08em;
-      color:#5a4a2a; margin-top:auto; padding-top:4px;
-    }
-    .ile-objets-grid {
-      display:grid; grid-template-columns:repeat(auto-fill,minmax(28px,1fr)); gap:3px;
-    }
+    .ile-objets-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.08em; color:#5a4a2a; margin-top:auto; padding-top:4px; }
+    .ile-objets-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(24px,1fr)); gap:3px; }
     .obj-slot {
       aspect-ratio:1; border:1px dashed rgba(184,134,11,.2); border-radius:3px;
       background:rgba(255,255,255,.02);
       display:flex; align-items:center; justify-content:center;
-      font-size:.6rem; color:#3a2a10; cursor:default;
-      transition:border-color .15s;
+      font-size:.6rem; color:#3a2a10; cursor:default; transition:border-color .15s;
     }
     .obj-slot:hover { border-color:rgba(184,134,11,.4); }
 
-    /* ═══ CENTRE : CARTE DU MONDE ═══ */
+    /* CENTRE : CARTE DU MONDE — FIX CENTRAGE + CONTAIN */
     .zone-carte {
       grid-column:2; grid-row:2;
-      position:relative; overflow:hidden;
-      background:#0d0a06;
-      display:flex; align-items:flex-start; justify-content:flex-start;
+      position:relative; overflow:hidden; background:#0a0705;
+      /* centrer l'image dans la zone */
+      display:flex; align-items:center; justify-content:center;
     }
-    #mapContainer { position:relative; display:inline-block; flex-shrink:0; }
-    #mapImg { display:block; width:100%; max-width:1288px; height:auto; user-select:none; }
-    #hexCanvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-    #hexOverlay { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+    #mapContainer {
+      position:relative;
+      /* s'adapte à la zone disponible */
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+    }
+    #mapImg {
+      display:block;
+      /* contain : toute l'image visible, ratio préservé */
+      max-width:100%; max-height:100%; width:auto; height:auto;
+      object-fit:contain; user-select:none; position:relative; z-index:1;
+    }
+    #hexCanvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2; }
+    /* L'overlay SVG est repositionné par JS pour coller exactement à l'image */
+    #hexOverlay { position:absolute; z-index:3; pointer-events:all; overflow:visible; }
 
-    /* Sidebar flottante */
+    /* Sidebar */
     .sidebar {
-      position:absolute; right:0; top:0; width:256px; height:100%;
+      position:absolute; right:0; top:0; width:260px; height:100%;
       background:rgba(20,13,5,.97); border-left:1px solid rgba(184,134,11,.2);
       display:flex; flex-direction:column; overflow-y:auto;
       padding:12px; gap:10px; z-index:15;
@@ -190,83 +159,66 @@
     .sidebar-toggle {
       position:absolute; right:0; top:50%; transform:translateY(-50%);
       background:rgba(20,13,5,.92); border:1px solid var(--border); border-right:none;
-      color:var(--gold2); font-size:.72rem; padding:10px 5px; cursor:pointer;
-      border-radius:4px 0 0 4px;
-      writing-mode:vertical-rl; text-orientation:mixed;
+      color:var(--gold2); font-size:.78rem; padding:10px 5px; cursor:pointer;
+      border-radius:4px 0 0 4px; writing-mode:vertical-rl; text-orientation:mixed;
       letter-spacing:.1em; font-family:'Cinzel',serif; z-index:16;
     }
-    .sidebar-toggle:hover { background:rgba(30,20,8,.95); }
+    .sidebar-toggle:hover { background:rgba(30,20,8,.98); }
 
-    .panel { background:rgba(255,255,255,.04); border:1px solid rgba(184,134,11,.18); border-radius:6px; padding:10px 12px; }
-    .panel h2 {
-      font-family:'Cinzel Decorative',serif; font-size:.72rem; color:var(--gold);
-      text-transform:uppercase; letter-spacing:.06em;
-      margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid rgba(184,134,11,.18);
-    }
-    .player-row {
-      display:flex; align-items:center; gap:7px;
-      padding:6px 7px; border-radius:4px; font-size:.92rem;
-      margin-bottom:4px; background:rgba(255,255,255,.03);
-    }
-    .player-row.active { background:rgba(106,191,97,.1); border:1px solid rgba(106,191,97,.3); }
+    .panel { background:rgba(255,255,255,.03); border:1px solid rgba(184,134,11,.12); border-radius:6px; padding:12px; flex-shrink:0; }
+    .panel h2 { font-family:'Cinzel',serif; font-size:.85rem; color:var(--gold2); margin-bottom:10px; letter-spacing:.06em; }
+    .player-row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:4px; font-size:.9rem; margin-bottom:4px; background:rgba(255,255,255,.02); }
+    .player-row.active { background:rgba(106,191,97,.08); border:1px solid rgba(106,191,97,.2); }
     .player-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .player-pos { margin-left:auto; font-size:.72rem; color:#6a5a3a; font-family:monospace; }
-    .turn-tag { font-size:.62rem; padding:1px 5px; background:#2d5a27; color:#d4f5d0; border-radius:6px; }
-    #logList { list-style:none; max-height:220px; overflow-y:auto; }
-    #logList li { font-size:.8rem; color:#8a7a5e; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04); line-height:1.4; }
-    #logList li:first-child { color:var(--parch); }
-    .url-box {
-      background:rgba(0,0,0,.4); color:var(--gold2); padding:7px 9px; border-radius:4px;
-      font-family:monospace; font-size:.76rem; word-break:break-all; cursor:pointer;
-      border:1px solid rgba(184,134,11,.3);
-    }
-    .legend { display:flex; flex-wrap:wrap; gap:5px; }
-    .legend-item { display:flex; align-items:center; gap:4px; font-size:.75rem; color:#8a7a5e; }
-    .legend-swatch { width:10px; height:10px; border-radius:2px; }
+    .turn-tag { margin-left:auto; font-size:.68rem; background:rgba(106,191,97,.2); border:1px solid #6abf61; border-radius:3px; padding:1px 6px; color:#6abf61; font-family:'Cinzel',serif; }
+    .player-pos { font-family:monospace; font-size:.75rem; color:#4aedcc; margin-left:auto; }
+    .panel ul { list-style:none; font-size:.84rem; color:#7a6a4a; max-height:200px; overflow-y:auto; }
+    .panel ul li { padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04); line-height:1.35; }
+    .legend-row { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#6a5a3a; margin-top:6px; }
 
     /* Calibration */
-    #calibPanel { display:none; }
-    #calibPanel.open { display:block; }
-    .calib-toggle {
-      background:rgba(74,238,204,.1); border:1px solid rgba(74,238,204,.4);
-      color:#4aedcc; font-family:'Crimson Pro',serif; font-size:.82rem;
-      padding:5px 12px; border-radius:4px; cursor:pointer; transition:background .15s;
-    }
-    .calib-toggle:hover { background:rgba(74,238,204,.2); }
+    .calib-panel-inner { display:none; }
+    .calib-panel-inner.open { display:block; }
     .slider-row { display:flex; flex-direction:column; gap:2px; margin-bottom:8px; }
-    .slider-row label { display:flex; justify-content:space-between; font-size:.72rem; color:var(--gold); letter-spacing:.03em; }
-    .slider-row label span { color:#4aedcc; font-family:monospace; font-size:.78rem; }
+    .slider-row label { display:flex; justify-content:space-between; font-size:.75rem; color:var(--gold); letter-spacing:.03em; }
+    .slider-row label span { color:#4aedcc; font-family:monospace; font-size:.8rem; }
     .slider-row input[type=range] { width:100%; accent-color:#4aedcc; cursor:pointer; height:3px; }
-    .calib-copy {
-      width:100%; margin-top:6px; padding:6px;
-      background:rgba(74,238,204,.15); border:1px solid rgba(74,238,204,.5);
-      color:#4aedcc; font-family:'Crimson Pro',serif; font-size:.78rem;
-      border-radius:4px; cursor:pointer;
-    }
+    .calib-copy { width:100%; margin-top:6px; padding:6px; background:rgba(74,238,204,.15); border:1px solid rgba(74,238,204,.5); color:#4aedcc; font-family:'Crimson Pro',serif; font-size:.82rem; border-radius:4px; cursor:pointer; }
     .calib-copy:hover { background:rgba(74,238,204,.25); }
-    .calib-code {
-      background:rgba(0,0,0,.5); border:1px solid rgba(74,238,204,.2); border-radius:4px;
-      padding:6px; font-family:monospace; font-size:.67rem; color:#4aedcc;
-      white-space:pre; margin-top:6px; line-height:1.6;
-    }
+    .calib-code { background:rgba(0,0,0,.5); border:1px solid rgba(74,238,204,.2); border-radius:4px; padding:6px; font-family:monospace; font-size:.7rem; color:#4aedcc; white-space:pre; margin-top:6px; line-height:1.6; }
 
-    /* Tooltip */
+    /* Tooltip général */
     #tooltip {
       position:fixed; background:rgba(8,5,1,.97); border:1px solid var(--border);
-      border-radius:5px; padding:7px 11px; font-size:.8rem; color:#e8d4a8;
-      max-width:200px; pointer-events:none; z-index:100; display:none; line-height:1.5;
+      border-radius:5px; padding:8px 13px; font-size:.9rem; color:#e8d4a8;
+      max-width:220px; pointer-events:none; z-index:200; display:none; line-height:1.6;
     }
     #tooltip.show { display:block; }
-    #tooltip strong { color:var(--gold2); font-family:'Cinzel',serif; font-size:.72rem; display:block; margin-bottom:2px; }
+    #tooltip strong { color:var(--gold2); font-family:'Cinzel',serif; font-size:.8rem; display:block; margin-bottom:2px; }
+
+    /* Tooltip hex coordonnées */
+    #hexTip {
+      position:fixed; background:rgba(5,3,1,.96); border:1px solid rgba(74,237,204,.5);
+      border-radius:4px; padding:5px 11px; font-size:.85rem; color:#4aedcc;
+      font-family:monospace; pointer-events:none; z-index:201; display:none;
+      white-space:nowrap; letter-spacing:.05em;
+    }
+    #hexTip.show { display:block; }
   </style>
 </head>
 <body>
 <div id="tooltip"></div>
+<div id="hexTip"></div>
 
 <!-- HEADER -->
 <header>
   <h1>⚓ Maître de Jeu</h1>
   <span id="statusBadge" class="badge waiting">En attente</span>
+  <div class="header-info">
+    <span>👥 <span id="playerCount">0</span></span>
+    <span style="color:#3a2a10">|</span>
+    <span>URL : <span id="playerUrl" onclick="copyUrl()" title="Cliquer pour copier"></span></span>
+  </div>
   <div class="header-controls">
     <button class="calib-toggle" onclick="toggleCalib()">⚙ Calibration</button>
     <button class="btn" id="btnStart" disabled onclick="startGame()">▶ Démarrer</button>
@@ -276,77 +228,50 @@
 
 <div class="plateau">
 
-  <!-- ═══ BORD HAUT ═══ -->
+  <!-- BORD HAUT -->
   <div class="zone-top">
-
-    <!-- Bloc Énigmes -->
     <div class="top-enigmes">
       <span class="top-label">Énigmes</span>
-      <div class="card-slot" data-tip="Latitude|Révèle une coordonnée X.">
-        <span class="cs-icon">↔</span>
-        <span class="cs-label">Latitude</span>
-        <span class="cs-sub">vide</span>
-      </div>
-      <div class="card-slot" data-tip="Longitude|Révèle une coordonnée Y.">
-        <span class="cs-icon">↕</span>
-        <span class="cs-label">Longitude</span>
-        <span class="cs-sub">vide</span>
-      </div>
-      <div class="card-slot" data-tip="Code|Combinaison de déchiffrement.">
-        <span class="cs-icon">🔐</span>
-        <span class="cs-label">Code</span>
-        <span class="cs-sub">vide</span>
-      </div>
+      <div class="card-slot" data-tip="Latitude|Révèle une coordonnée X."><span class="cs-icon">↔</span><span class="cs-label">Latitude</span><span class="cs-sub">vide</span></div>
+      <div class="card-slot" data-tip="Longitude|Révèle une coordonnée Y."><span class="cs-icon">↕</span><span class="cs-label">Longitude</span><span class="cs-sub">vide</span></div>
+      <div class="card-slot" data-tip="Code|Combinaison de déchiffrement."><span class="cs-icon">🔐</span><span class="cs-label">Code</span><span class="cs-sub">vide</span></div>
     </div>
-
-    <!-- Bloc Avancement -->
     <div class="top-avancement" id="topAvancement">
       <span class="top-label">Avancement</span>
-      <!-- généré dynamiquement depuis la config -->
     </div>
-
   </div>
 
-  <!-- ═══ ÎLES GAUCHE ═══ -->
+  <!-- ÎLES GAUCHE -->
   <div class="zone-ile-gauche" id="ileGauche">
     <div class="ile-section-title">🏝 Îles</div>
-    <!-- généré depuis config -->
   </div>
 
-  <!-- ═══ CARTE DU MONDE ═══ -->
+  <!-- CARTE DU MONDE -->
   <div class="zone-carte" id="mapWrap">
     <div id="mapContainer">
       <img id="mapImg" src="/Map.jpg" alt="Carte" />
       <canvas id="hexCanvas"></canvas>
       <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
+
     <div class="sidebar" id="sidebar">
       <div class="panel" id="calibPanel">
         <h2>⚙ Calibration grille</h2>
-        <div class="slider-row"><label>Rayon (HEX_R) <span id="vR">21.70</span>px</label><input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()"></div>
-        <div class="slider-row"><label>Marge gauche (MARGIN_X) <span id="vMX">48</span>px</label><input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()"></div>
-        <div class="slider-row"><label>Marge haute (MARGIN_Y) <span id="vMY">44</span>px</label><input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()"></div>
-        <div class="slider-row"><label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label><input type="range" id="sCS" min="20" max="70" step="0.1" value="48.6" oninput="updateCalib()"></div>
-        <div class="slider-row"><label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label><input type="range" id="sRS" min="15" max="60" step="0.1" value="41.6" oninput="updateCalib()"></div>
-        <div class="slider-row"><label>Décalage rang impaire <span id="vOF">24.40</span>px</label><input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()"></div>
-        <div class="calib-code" id="calibCode"></div>
-        <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
-      </div>
-      <div class="panel">
-        <h2>Connexion joueur</h2>
-        <div class="url-box" id="playerUrl" onclick="copyUrl()">Chargement…</div>
-      </div>
-      <div class="panel">
-        <h2>Joueurs (<span id="playerCount">0</span>)</h2>
-        <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div></div>
-      </div>
-      <div class="panel">
-        <h2>Légende</h2>
-        <div class="legend">
-          <div class="legend-item"><div class="legend-swatch" style="background:rgba(74,238,204,.35);border:1px solid #4aedcc"></div> Case départ</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,200,50,.25);border:1px solid #ffc832"></div> Déplacement</div>
-          <div class="legend-item"><div class="legend-swatch" style="background:rgba(106,191,97,.2);border:1px solid #6abf61"></div> Tour actif</div>
+        <div class="calib-panel-inner" id="calibInner">
+          <div class="slider-row"><label>Rayon (HEX_R) <span id="vR">21.70</span>px</label><input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()"></div>
+          <div class="slider-row"><label>Marge gauche (MARGIN_X) <span id="vMX">48</span>px</label><input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()"></div>
+          <div class="slider-row"><label>Marge haute (MARGIN_Y) <span id="vMY">44</span>px</label><input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()"></div>
+          <div class="slider-row"><label>Espacement col (COL_SP) <span id="vCS">48.6</span>px</label><input type="range" id="sCS" min="20" max="80" step="0.1" value="48.6" oninput="updateCalib()"></div>
+          <div class="slider-row"><label>Espacement rang (ROW_SP) <span id="vRS">41.6</span>px</label><input type="range" id="sRS" min="20" max="70" step="0.1" value="41.6" oninput="updateCalib()"></div>
+          <div class="slider-row"><label>Décalage impair (ROW_OFFSET) <span id="vOF">24.4</span>px</label><input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()"></div>
+          <pre class="calib-code" id="calibCode"></pre>
+          <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
         </div>
+      </div>
+      <div class="panel">
+        <h2>👥 Joueurs (<span id="playerCountS">0</span>)</h2>
+        <div id="playerList"></div>
+        <div class="legend-row"><div style="width:10px;height:10px;border-radius:50%;background:rgba(106,191,97,.2);border:1px solid #6abf61"></div> Tour actif</div>
       </div>
       <div class="panel" style="flex:1">
         <h2>Journal</h2>
@@ -356,25 +281,26 @@
     <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">Joueurs &amp; Log</button>
   </div>
 
-  <!-- ═══ ÎLES DROITE ═══ -->
+  <!-- ÎLES DROITE -->
   <div class="zone-ile-droite" id="ileDroite">
     <div class="ile-section-title">🏝 Îles</div>
-    <!-- généré depuis config -->
   </div>
 
-</div><!-- fin .plateau -->
+</div>
 
 <script>
-// ─── Hex Grid Math ────────────────────────────────────────────────────────────
+// ─── Constantes grille ────────────────────────────────────────────────────────
 const COLS=25, ROWS=21, IMG_W=1288, IMG_H=952;
 let MARGIN_X=48, MARGIN_Y=44, COL_SP=48.6, ROW_SP=41.6, HEX_R=21.7, ROW_OFFSET=24.4;
 
-function hexCenter(q,r,s){ s=s||1; return { x:(MARGIN_X+q*COL_SP+(r%2===1?ROW_OFFSET:0))*s, y:(MARGIN_Y+r*ROW_SP)*s }; }
+function hexCenterImg(q,r){ return { x: MARGIN_X+q*COL_SP+(r%2===1?ROW_OFFSET:0), y: MARGIN_Y+r*ROW_SP }; }
+function hexCenter(q,r,s){ s=s||1; const c=hexCenterImg(q,r); return {x:c.x*s, y:c.y*s}; }
 function hexPoints(cx,cy,s){ s=s||1; const R=HEX_R*s,pts=[]; for(let i=0;i<6;i++){ const a=Math.PI/2+(Math.PI/3)*i; pts.push(`${cx+R*Math.cos(a)},${cy-R*Math.sin(a)}`); } return pts.join(' '); }
 
 // ─── Config & Socket ──────────────────────────────────────────────────────────
 const socket=io();
 let state={}, cfg={};
+let hoveredIleCoord=null;
 
 const playerUrl=`${location.protocol}//${location.hostname}:${location.port}/player`;
 document.getElementById('playerUrl').textContent=playerUrl;
@@ -384,28 +310,29 @@ socket.emit('master:join');
 socket.on('game:state',(s)=>{ state=s; renderUI(); renderMap(); });
 socket.on('config:updated',(cards)=>{ cfg=cards; renderIles(); renderAvancement(); });
 
-// Charger la config admin pour les îles et l'avancement
 fetch('/api/config').then(r=>r.json()).then(c=>{ cfg=c.cards||{}; renderIles(); renderAvancement(); }).catch(()=>{});
 
 // ─── Rendu Îles ───────────────────────────────────────────────────────────────
 function renderIles(){
-  const iles = cfg.iles || [];
-  const mid  = Math.ceil(iles.length/2);
-  const left  = iles.slice(0,mid);
-  const right = iles.slice(mid);
-  document.getElementById('ileGauche').innerHTML = `<div class="ile-section-title">🏝 Îles</div>` + left.map(ileCardHTML).join('');
-  document.getElementById('ileDroite').innerHTML = `<div class="ile-section-title">🏝 Îles</div>` + right.map(ileCardHTML).join('');
+  const iles=cfg.iles||[];
+  const mid=Math.ceil(iles.length/2);
+  document.getElementById('ileGauche').innerHTML=`<div class="ile-section-title">🏝 Îles</div>`+iles.slice(0,mid).map(ileCardHTML).join('');
+  document.getElementById('ileDroite').innerHTML=`<div class="ile-section-title">🏝 Îles</div>`+iles.slice(mid).map(ileCardHTML).join('');
+  bindIleHover();
 }
 
 function ileCardHTML(ile){
-  const nbObjets = ile.nb_objets || 3;
-  const slots = Array.from({length:nbObjets}).map(()=>`<div class="obj-slot">·</div>`).join('');
-  return `<div class="ile-card">
+  const nbObjets=ile.nb_objets||3;
+  const slots=Array.from({length:nbObjets}).map(()=>`<div class="obj-slot">·</div>`).join('');
+  const hasCoord=(ile.coord_q!=null && ile.coord_r!=null && ile.coord_q!=='' && ile.coord_r!=='');
+  const coordStr=hasCoord?`Q${ile.coord_q}  R${ile.coord_r}`:'— pas de coordonnée';
+  return `<div class="ile-card" data-coord-q="${hasCoord?ile.coord_q:''}" data-coord-r="${hasCoord?ile.coord_r:''}">
     <div class="ile-header">
       <span class="ile-icon">${ile.icon||'🏝'}</span>
       <div class="ile-info">
         <div class="ile-name">${ile.nom||'Île'}</div>
         <div class="ile-biome">${ile.biome||''}</div>
+        <div class="ile-coord ${hasCoord?'has-coord':''}">📍 ${coordStr}</div>
       </div>
     </div>
     <div class="ile-objets-label">Objets</div>
@@ -413,21 +340,31 @@ function ileCardHTML(ile){
   </div>`;
 }
 
-// ─── Rendu Avancement ─────────────────────────────────────────────────────────
+function bindIleHover(){
+  document.querySelectorAll('.ile-card').forEach(card=>{
+    card.addEventListener('mouseenter',()=>{
+      const q=card.dataset.coordQ, r=card.dataset.coordR;
+      if(q!==''&&r!==''){
+        hoveredIleCoord={q:parseInt(q),r:parseInt(r)};
+        renderMap();
+      }
+    });
+    card.addEventListener('mouseleave',()=>{ hoveredIleCoord=null; renderMap(); });
+  });
+}
+
+// ─── Avancement ───────────────────────────────────────────────────────────────
 function renderAvancement(){
-  const nb = cfg.avancement?.nb_cartes_temps || 6;
-  const container = document.getElementById('topAvancement');
-  let html = `<span class="top-label">Avancement</span>`;
+  const nb=cfg.avancement?.nb_cartes_temps||6;
+  const container=document.getElementById('topAvancement');
+  let html=`<span class="top-label">Avancement</span>`;
   for(let i=0;i<nb;i++){
-    if(i>0) html += `<span class="av-arrow">›</span>`;
-    html += `<div class="card-slot" data-tip="Temps ${i+1}|Carte d'avancement de partie.">
-      <span class="cs-icon">⏳</span>
-      <span class="cs-label">Temps ${i+1}</span>
-      <span class="cs-sub">vide</span>
+    if(i>0) html+=`<span class="av-arrow">›</span>`;
+    html+=`<div class="card-slot" data-tip="Temps ${i+1}|Carte d'avancement de partie.">
+      <span class="cs-icon">⏳</span><span class="cs-label">Temps ${i+1}</span><span class="cs-sub">vide</span>
     </div>`;
   }
-  container.innerHTML = html;
-  // Rebind tooltips
+  container.innerHTML=html;
   bindTooltips();
 }
 
@@ -437,14 +374,14 @@ function renderUI(){
   const labels={waiting:'En attente',picking:'Choix départ',playing:'En cours',ended:'Terminée'};
   badge.textContent=labels[state.status]||state.status;
   badge.className='badge '+state.status;
-
   const players=Object.entries(state.players||{});
   document.getElementById('playerCount').textContent=players.length;
+  document.getElementById('playerCountS').textContent=players.length;
   const list=document.getElementById('playerList');
   list.innerHTML=players.length
-    ? players.map(([id,p])=>{
+    ?players.map(([id,p])=>{
         const isActive=state.currentTurn===id;
-        const pos=p.position?`${p.position.q},${p.position.r}`:'–';
+        const pos=p.position?`Q${p.position.q} R${p.position.r}`:'–';
         return `<div class="player-row ${isActive?'active':''}">
           <div class="player-dot" style="background:${p.color}"></div>
           <span>${p.name}</span>
@@ -452,56 +389,120 @@ function renderUI(){
           <span class="player-pos">${pos}</span>
         </div>`;
       }).join('')
-    : `<div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div>`;
-
+    :`<div style="color:#6a5a3a;font-style:italic;font-size:.9rem">Aucun joueur…</div>`;
   document.getElementById('btnStart').disabled=players.length<1||state.status==='playing'||state.status==='picking';
   document.getElementById('logList').innerHTML=(state.log?.length?state.log:['Aucun événement.']).map(e=>`<li>${e}</li>`).join('');
 }
 
-// ─── Map Rendering ────────────────────────────────────────────────────────────
-function getScale(){ const img=document.getElementById('mapImg'); return img.clientWidth/IMG_W; }
+// ─── Map — scale basé sur l'image réelle (contain) ───────────────────────────
+function getScale(){
+  const img=document.getElementById('mapImg');
+  return img.clientWidth/IMG_W;
+}
+
+// Positionner l'overlay SVG exactement sur l'image (après contain)
+function syncOverlay(){
+  const img=document.getElementById('mapImg');
+  const wrap=document.getElementById('mapWrap');
+  const iRect=img.getBoundingClientRect();
+  const wRect=wrap.getBoundingClientRect();
+  const l=iRect.left-wRect.left, t=iRect.top-wRect.top;
+  const ov=document.getElementById('hexOverlay');
+  ov.style.left=l+'px'; ov.style.top=t+'px';
+  ov.style.width=iRect.width+'px'; ov.style.height=iRect.height+'px';
+  ov.setAttribute('width',iRect.width); ov.setAttribute('height',iRect.height);
+  ov.setAttribute('viewBox',`0 0 ${iRect.width} ${iRect.height}`);
+}
 
 function renderMap(){
-  const svg=document.getElementById('hexOverlay'), scale=getScale();
+  syncOverlay();
+  const scale=getScale();
+  const svg=document.getElementById('hexOverlay');
   let html='';
+
+  // Grille
   for(let r=0;r<ROWS;r++) for(let q=0;q<COLS;q++){
     const {x,y}=hexCenter(q,r,scale);
-    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}"/>`;
+    html+=`<polygon class="hex-cell" data-q="${q}" data-r="${r}" points="${hexPoints(x,y,scale)}"
+      fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}" style="cursor:crosshair"/>`;
   }
+
+  // Cases de départ
   if(state.status==='picking'&&state.pendingStartSlots)
     for(const {q,r} of state.pendingStartSlots){
       const {x,y}=hexCenter(q,r,scale);
-      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}"/>`;
+      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
+
+  // Options déplacement
   if(state.moveOptions?.length)
     for(const {q,r} of state.moveOptions){
       const {x,y}=hexCenter(q,r,scale);
-      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}"/>`;
+      html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
+
+  // Surbrillance île survolée (hover matcard)
+  if(hoveredIleCoord){
+    const {q,r}=hoveredIleCoord;
+    const {x,y}=hexCenter(q,r,scale);
+    html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(212,160,23,0.32)" stroke="#d4a017" stroke-width="${2.5*scale}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y-(HEX_R+6)*scale}" text-anchor="middle"
+      fill="#d4a017" font-family="monospace" font-size="${8*scale}" font-weight="bold"
+      style="pointer-events:none;text-shadow:0 0 4px #000">Q${q} R${r}</text>`;
+  }
+
+  // Joueurs
   for(const [id,p] of Object.entries(state.players||{})){
     if(!p.position) continue;
     const {x,y}=hexCenter(p.position.q,p.position.r,scale);
     const isActive=state.currentTurn===id, radius=9*scale;
-    if(isActive) html+=`<circle cx="${x}" cy="${y}" r="${radius+3*scale}" fill="none" stroke="${p.color}" stroke-width="${1.5*scale}" opacity="0.6"/>`;
-    html+=`<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}"/>`;
-    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*scale}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
+    if(isActive) html+=`<circle cx="${x}" cy="${y}" r="${radius+3*scale}" fill="none" stroke="${p.color}" stroke-width="${1.5*scale}" opacity="0.6" style="pointer-events:none"/>`;
+    html+=`<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}" style="pointer-events:none"/>`;
+    html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*scale}" font-weight="bold" style="pointer-events:none">${p.name[0].toUpperCase()}</text>`;
   }
+
+  // Dé
   if(state.diceRoll&&state.players[state.diceRoll.playerId]?.position){
-    const p=state.players[state.diceRoll.playerId], {x,y}=hexCenter(p.position.q,p.position.r,scale);
-    html+=`<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${11*scale*1.4}" filter="url(#shadow)">🎲${state.diceRoll.value}</text>`;
+    const p=state.players[state.diceRoll.playerId],{x,y}=hexCenter(p.position.q,p.position.r,scale);
+    html+=`<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${16*scale}" style="pointer-events:none">🎲${state.diceRoll.value}</text>`;
   }
+
   svg.innerHTML=`<defs><filter id="shadow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/></filter></defs>`+html;
+  bindHexHover();
+}
+
+// ─── Hover hex cells ──────────────────────────────────────────────────────────
+const hexTip=document.getElementById('hexTip');
+function bindHexHover(){
+  document.querySelectorAll('.hex-cell').forEach(cell=>{
+    cell.addEventListener('mouseenter',()=>{
+      hexTip.textContent=`Q${cell.dataset.q}  R${cell.dataset.r}`;
+      hexTip.classList.add('show');
+    });
+    cell.addEventListener('mousemove',e=>{
+      let x=e.clientX+14, y=e.clientY-32;
+      if(x+120>window.innerWidth) x=e.clientX-130;
+      hexTip.style.left=x+'px'; hexTip.style.top=y+'px';
+    });
+    cell.addEventListener('mouseleave',()=>hexTip.classList.remove('show'));
+  });
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function toggleSidebar(){
-  const sb=document.getElementById('sidebar'), btn=document.getElementById('sidebarToggle');
+  const sb=document.getElementById('sidebar'),btn=document.getElementById('sidebarToggle');
   sb.classList.toggle('open');
-  btn.style.right=sb.classList.contains('open')?'256px':'0';
+  btn.style.right=sb.classList.contains('open')?'260px':'0';
 }
 
-// ─── Calibration ─────────────────────────────────────────────────────────────
-function toggleCalib(){ const p=document.getElementById('calibPanel'); p.classList.toggle('open'); if(p.classList.contains('open')) updateCalibDisplay(); }
+// ─── Calibration ──────────────────────────────────────────────────────────────
+function toggleCalib(){
+  const p=document.getElementById('calibInner');
+  p.classList.toggle('open');
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarToggle').style.right='260px';
+  if(p.classList.contains('open')) updateCalibDisplay();
+}
 function updateCalib(){
   HEX_R=parseFloat(document.getElementById('sR').value);
   MARGIN_X=parseFloat(document.getElementById('sMX').value);
@@ -515,7 +516,7 @@ function updateCalib(){
   document.getElementById('vCS').textContent=COL_SP.toFixed(2);
   document.getElementById('vRS').textContent=ROW_SP.toFixed(2);
   document.getElementById('vOF').textContent=ROW_OFFSET.toFixed(2);
-  updateCalibDisplay(); syncCanvasSize(); renderMap();
+  updateCalibDisplay(); renderMap();
 }
 function updateCalibDisplay(){
   document.getElementById('calibCode').textContent=
@@ -526,28 +527,23 @@ function copyCalib(){
   navigator.clipboard.writeText(txt).then(()=>{ const b=document.querySelector('.calib-copy'); b.textContent='✓ Copié !'; setTimeout(()=>b.textContent='📋 Copier les constantes',1500); });
 }
 
-// ─── Controls ─────────────────────────────────────────────────────────────────
+// ─── Controls ────────────────────────────────────────────────────────────────
 function startGame(){ socket.emit('master:start'); }
 function resetGame(){ if(confirm('Réinitialiser la partie ?')) socket.emit('master:reset'); }
 
 // ─── Resize ───────────────────────────────────────────────────────────────────
 const mapImg=document.getElementById('mapImg');
-mapImg.addEventListener('load',()=>{ syncCanvasSize(); renderMap(); });
-window.addEventListener('resize',()=>{ syncCanvasSize(); renderMap(); });
-function syncCanvasSize(){
-  const img=document.getElementById('mapImg'), svg=document.getElementById('hexOverlay');
-  svg.setAttribute('width',img.clientWidth); svg.setAttribute('height',img.clientHeight);
-  svg.style.width=img.clientWidth+'px'; svg.style.height=img.clientHeight+'px';
-}
-if(mapImg.complete){ syncCanvasSize(); renderMap(); }
+mapImg.addEventListener('load',()=>renderMap());
+window.addEventListener('resize',()=>renderMap());
+if(mapImg.complete&&mapImg.naturalWidth>0) renderMap();
 
-// ─── Tooltip ──────────────────────────────────────────────────────────────────
+// ─── Tooltip data-tip ─────────────────────────────────────────────────────────
 const tip=document.getElementById('tooltip');
 function bindTooltips(){
   document.querySelectorAll('[data-tip]').forEach(el=>{
     if(el._tipBound) return; el._tipBound=true;
     el.addEventListener('mouseenter',()=>{ const[t,d]=el.dataset.tip.split('|'); tip.innerHTML=`<strong>${t}</strong>${d||''}`; tip.classList.add('show'); });
-    el.addEventListener('mousemove',e=>{ let x=e.clientX+12,y=e.clientY-8; if(x+210>window.innerWidth)x=e.clientX-215; if(y+70>window.innerHeight)y=e.clientY-65; tip.style.left=x+'px'; tip.style.top=y+'px'; });
+    el.addEventListener('mousemove',e=>{ let x=e.clientX+12,y=e.clientY-8; if(x+220>window.innerWidth)x=e.clientX-225; if(y+70>window.innerHeight)y=e.clientY-65; tip.style.left=x+'px'; tip.style.top=y+'px'; });
     el.addEventListener('mouseleave',()=>tip.classList.remove('show'));
   });
 }

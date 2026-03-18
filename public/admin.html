@@ -15,266 +15,153 @@
       --teal:    #4aedcc;
       --border:  rgba(184,134,11,.22);
       --surface: rgba(20,13,4,.96);
-      /* Tailles de texte — toutes augmentées */
       --fs-xs:   0.78rem;
       --fs-sm:   0.88rem;
       --fs-md:   1rem;
       --fs-lg:   1.1rem;
       --fs-xl:   1.25rem;
     }
+    html { font-size: 16px; }
+    body { background: var(--ink); color: var(--parch); font-family: 'Crimson Pro', Georgia, serif; font-size: var(--fs-md); line-height: 1.5; min-height: 100vh; }
 
-    html { font-size: 16px; }   /* base explicite */
-
-    body {
-      background: var(--ink); color: var(--parch);
-      font-family: 'Crimson Pro', Georgia, serif;
-      font-size: var(--fs-md); line-height: 1.5;
-      min-height: 100vh;
-    }
-
-    /* ── HEADER ── */
-    header {
-      background: rgba(8,5,1,.98); border-bottom: 2px solid var(--gold);
-      padding: 12px 28px; display: flex; align-items: center; gap: 16px;
-      position: sticky; top: 0; z-index: 50;
-    }
+    /* HEADER */
+    header { background: rgba(8,5,1,.98); border-bottom: 2px solid var(--gold); padding: 12px 28px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
     header h1 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); }
-    .back-btn {
-      margin-left: auto; padding: 7px 18px; border: 1px solid var(--border);
-      border-radius: 5px; background: transparent; color: #9a8a6a;
-      font-family: 'Crimson Pro', serif; font-size: var(--fs-sm);
-      cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s;
-    }
+    .back-btn { margin-left: auto; padding: 7px 18px; border: 1px solid var(--border); border-radius: 5px; background: transparent; color: #9a8a6a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s; }
     .back-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
-    /* ── LAYOUT ── */
+    /* LAYOUT */
     .page { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 54px); }
 
-    /* ── SIDENAV ── */
-    .sidenav {
-      background: rgba(5,3,1,.92); border-right: 1px solid var(--border);
-      padding: 18px 0; display: flex; flex-direction: column; gap: 2px;
-    }
-    .nav-group {
-      font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em;
-      color: #5a4a2a; padding: 12px 16px 4px;
-      font-family: 'Cinzel Decorative', serif;
-    }
-    .nav-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 16px; font-size: var(--fs-sm); color: #7a6a4a;
-      cursor: pointer; transition: background .12s, color .12s;
-      border-left: 3px solid transparent;
-    }
+    /* SIDENAV */
+    .sidenav { background: rgba(5,3,1,.92); border-right: 1px solid var(--border); padding: 18px 0; display: flex; flex-direction: column; gap: 2px; }
+    .nav-group { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em; color: #5a4a2a; padding: 12px 16px 4px; font-family: 'Cinzel Decorative', serif; }
+    .nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: var(--fs-sm); color: #7a6a4a; cursor: pointer; transition: background .12s, color .12s; border-left: 3px solid transparent; }
     .nav-item:hover { background: rgba(255,255,255,.03); color: var(--parch); }
     .nav-item.active { background: rgba(184,134,11,.08); color: var(--gold2); border-left-color: var(--gold2); }
-    .nav-badge {
-      margin-left: auto; font-size: var(--fs-xs); font-family: monospace;
-      background: rgba(184,134,11,.15); color: var(--gold);
-      padding: 2px 7px; border-radius: 8px;
-    }
+    .nav-badge { margin-left: auto; font-size: var(--fs-xs); font-family: monospace; background: rgba(184,134,11,.15); color: var(--gold); padding: 2px 7px; border-radius: 8px; }
+    /* Badge "soon" pour les sections à venir */
+    .nav-badge-soon { margin-left: auto; font-size: .65rem; font-family: 'Cinzel Decorative', serif; background: rgba(74,237,204,.08); color: rgba(74,237,204,.5); border: 1px solid rgba(74,237,204,.2); padding: 2px 7px; border-radius: 8px; letter-spacing: .04em; }
 
-    /* ── MAIN ── */
+    /* MAIN */
     main { padding: 28px 32px 110px; overflow-y: auto; }
     .tab-panel { display: none; animation: fadeIn .2s ease; }
     .tab-panel.active { display: block; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
 
-    /* ── SECTION HEADER ── */
+    /* SECTION HEADER */
     .section-head { margin-bottom: 22px; }
     .section-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xl); color: var(--gold2); margin-bottom: 6px; }
     .section-desc  { font-size: var(--fs-sm); color: #7a6a4a; font-style: italic; line-height: 1.6; }
 
-    /* ── SUBTYPE TABS ── */
+    /* SUBTYPE TABS */
     .subtype-tabs { display: flex; gap: 6px; margin-bottom: 22px; flex-wrap: wrap; }
-    .stab {
-      padding: 7px 20px; border-radius: 6px;
-      border: 1px solid var(--border); background: transparent;
-      color: #7a6a4a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm);
-      cursor: pointer; transition: all .13s;
-    }
+    .stab { padding: 7px 20px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: #7a6a4a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; transition: all .13s; }
     .stab:hover { border-color: var(--gold); color: var(--parch); }
     .stab.active { background: rgba(184,134,11,.12); border-color: var(--gold2); color: var(--gold2); }
 
-    /* ── EDITOR BLOCK ── */
-    .editor-block {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 10px; padding: 22px 24px; margin-bottom: 18px;
-    }
-    .editor-block h3 {
-      font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); color: var(--gold);
-      margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 8px;
-    }
+    /* EDITOR BLOCK */
+    .editor-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 18px; }
+    .editor-block h3 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); color: var(--gold); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 
-    /* ── COUNT ROW ── */
-    .count-row {
-      display: flex; align-items: center; gap: 12px;
-      background: rgba(184,134,11,.06); border: 1px solid rgba(184,134,11,.15);
-      border-radius: 8px; padding: 12px 16px; margin-bottom: 18px;
-    }
+    /* COUNT ROW */
+    .count-row { display: flex; align-items: center; gap: 12px; background: rgba(184,134,11,.06); border: 1px solid rgba(184,134,11,.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; }
     .count-row label { font-size: var(--fs-md); color: #9a8a6a; flex: 1; }
     .count-stepper { display: flex; align-items: center; gap: 8px; }
-    .count-stepper button {
-      width: 32px; height: 32px; border-radius: 6px;
-      border: 1px solid var(--border); background: rgba(0,0,0,.4);
-      color: var(--gold2); font-size: 1.2rem; cursor: pointer; transition: background .12s;
-    }
+    .count-stepper button { width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border); background: rgba(0,0,0,.4); color: var(--gold2); font-size: 1.2rem; cursor: pointer; transition: background .12s; }
     .count-stepper button:hover { background: rgba(184,134,11,.18); }
-    .count-stepper .count-val {
-      font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg);
-      color: var(--gold2); min-width: 32px; text-align: center;
-    }
+    .count-stepper .count-val { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); min-width: 32px; text-align: center; }
 
-    /* ── CARD LIST ── */
+    /* CARD LIST */
     .card-list { display: flex; flex-direction: column; gap: 10px; }
-
-    .card-entry {
-      background: rgba(0,0,0,.38); border: 1px solid rgba(184,134,11,.13);
-      border-radius: 8px; padding: 12px 16px; display: grid; gap: 10px;
-    }
-    .card-entry-header {
-      display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: #7a6a4a;
-    }
-    .card-num {
-      font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xs); color: var(--gold);
-      background: rgba(184,134,11,.1); border: 1px solid rgba(184,134,11,.22);
-      padding: 3px 9px; border-radius: 6px; flex-shrink: 0;
-    }
+    .card-entry { background: rgba(0,0,0,.38); border: 1px solid rgba(184,134,11,.13); border-radius: 8px; padding: 12px 16px; display: grid; gap: 10px; }
+    .card-entry-header { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: #7a6a4a; }
+    .card-num { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xs); color: var(--gold); background: rgba(184,134,11,.1); border: 1px solid rgba(184,134,11,.22); padding: 3px 9px; border-radius: 6px; flex-shrink: 0; }
     .card-entry-fields        { display: grid; grid-template-columns: 1fr 1fr;     gap: 10px; }
     .card-entry-fields.single { display: grid; grid-template-columns: 1fr;         gap: 10px; }
     .card-entry-fields.triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-
+    .card-entry-fields.quad   { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
     .entry-field { display: flex; flex-direction: column; gap: 4px; }
     .entry-field label { font-size: var(--fs-xs); color: #7a6a4a; }
-    .entry-field input[type=text],
-    .entry-field input[type=number],
-    .entry-field select,
-    .entry-field textarea {
-      padding: 8px 11px; background: rgba(0,0,0,.52); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--parch); font-family: 'Crimson Pro', serif;
-      font-size: var(--fs-md);
-    }
+    .entry-field input[type=text], .entry-field input[type=number], .entry-field select, .entry-field textarea { padding: 8px 11px; background: rgba(0,0,0,.52); border: 1px solid var(--border); border-radius: 6px; color: var(--parch); font-family: 'Crimson Pro', serif; font-size: var(--fs-md); }
     .entry-field textarea { resize: vertical; min-height: 55px; line-height: 1.5; }
-    .entry-field input:focus, .entry-field select:focus, .entry-field textarea:focus
-      { outline: none; border-color: var(--gold); }
+    .entry-field input:focus, .entry-field select:focus, .entry-field textarea:focus { outline: none; border-color: var(--gold); }
     .entry-field select option { background: #1a1000; }
 
-    /* ── TOGGLE ── */
+    /* Champ coordonnée teal */
+    .entry-field.coord input { border-color: rgba(74,237,204,.3); color: #4aedcc; }
+    .entry-field.coord label { color: rgba(74,237,204,.6); }
+    .entry-field.coord input:focus { border-color: #4aedcc; }
+
+    /* TOGGLE */
     .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: #7a6a4a; cursor: pointer; }
     .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-      position: absolute; inset: 0;
-      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
-      border-radius: 20px; transition: all .2s; cursor: pointer;
-    }
-    .toggle-slider::after {
-      content: ''; position: absolute; width: 13px; height: 13px; left: 3px; top: 3px;
-      border-radius: 50%; background: #4a3b20; transition: transform .2s, background .2s;
-    }
+    .toggle-slider { position: absolute; inset: 0; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); border-radius: 20px; transition: all .2s; cursor: pointer; }
+    .toggle-slider::after { content: ''; position: absolute; width: 13px; height: 13px; left: 3px; top: 3px; border-radius: 50%; background: #4a3b20; transition: transform .2s, background .2s; }
     .toggle input:checked + .toggle-slider { background: rgba(74,237,204,.22); border-color: var(--teal); }
     .toggle input:checked + .toggle-slider::after { transform: translateX(16px); background: var(--teal); }
 
-    /* ── RELIQUE CARD ── */
-    .relique-card {
-      background: var(--surface); border: 1px solid rgba(224,192,48,.3);
-      border-radius: 10px; padding: 18px 20px; margin-bottom: 14px;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-    .relique-card h4 {
-      font-family: 'Cinzel Decorative', serif; font-size: var(--fs-md); color: #e0c030;
-      display: flex; align-items: center; gap: 8px;
-    }
+    /* RELIQUE CARD */
+    .relique-card { background: var(--surface); border: 1px solid rgba(224,192,48,.3); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .relique-card h4 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-md); color: #e0c030; display: flex; align-items: center; gap: 8px; }
 
-    /* ── OVERVIEW ── */
+    /* OVERVIEW */
     .ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; margin-bottom: 28px; }
-    .ov-chip {
-      background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
-      padding: 14px 16px; cursor: pointer; transition: border-color .15s;
-    }
+    .ov-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 14px 16px; cursor: pointer; transition: border-color .15s; }
     .ov-chip:hover { border-color: var(--gold); }
     .ov-chip .ov-icon { font-size: 1.6rem; margin-bottom: 5px; }
     .ov-chip .ov-val  { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xl); color: var(--gold2); }
     .ov-chip .ov-lbl  { font-size: var(--fs-xs); color: #7a6a4a; text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
 
-    /* ── RULES ── */
+    /* RULES */
     .rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
     .rule-group { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 16px 18px; }
-    .rule-group h3 {
-      font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); color: var(--gold);
-      text-transform: uppercase; letter-spacing: .06em;
-      margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
-    }
+    .rule-group h3 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); color: var(--gold); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
     .rule-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
     .rule-field:last-child { margin-bottom: 0; }
     .rule-field label { font-size: var(--fs-sm); color: #7a6a4a; }
-    .rule-field input {
-      padding: 8px 11px; background: rgba(0,0,0,.48); border: 1px solid var(--border);
-      border-radius: 6px; color: var(--parch); font-family: 'Crimson Pro', serif; font-size: var(--fs-md);
-    }
+    .rule-field input { padding: 8px 11px; background: rgba(0,0,0,.48); border: 1px solid var(--border); border-radius: 6px; color: var(--parch); font-family: 'Crimson Pro', serif; font-size: var(--fs-md); }
     .rule-field input:focus { outline: none; border-color: var(--gold); }
 
-    /* ── BUTTONS ── */
-    .btn-add {
-      padding: 8px 18px; border-radius: 6px;
-      border: 1px dashed rgba(184,134,11,.35); background: transparent;
-      color: #9a8a6a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm);
-      cursor: pointer; transition: all .13s;
-    }
+    /* BUTTONS */
+    .btn-add { padding: 8px 18px; border-radius: 6px; border: 1px dashed rgba(184,134,11,.35); background: transparent; color: #9a8a6a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; transition: all .13s; }
     .btn-add:hover { border-color: var(--gold); color: var(--gold2); background: rgba(184,134,11,.07); }
-    .btn-remove {
-      padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(192,64,64,.3);
-      background: transparent; color: #a05050; font-size: var(--fs-xs);
-      cursor: pointer; font-family: 'Crimson Pro', serif; transition: all .13s; margin-left: auto;
-    }
+    .btn-remove { padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(192,64,64,.3); background: transparent; color: #a05050; font-size: var(--fs-xs); cursor: pointer; font-family: 'Crimson Pro', serif; transition: all .13s; margin-left: auto; }
     .btn-remove:hover { background: rgba(192,64,64,.12); color: #e06060; border-color: rgba(192,64,64,.6); }
 
-    /* ── SAVE BAR ── */
-    .save-bar {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      padding: 12px 32px; background: rgba(5,3,1,.98); border-top: 1px solid var(--border);
-      display: flex; align-items: center; gap: 14px; z-index: 40;
-      transform: translateY(100%); transition: transform .2s;
-    }
+    /* SAVE BAR */
+    .save-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 32px; background: rgba(5,3,1,.98); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 14px; z-index: 40; transform: translateY(100%); transition: transform .2s; }
     .save-bar.visible { transform: translateY(0); }
     .save-status { font-size: var(--fs-md); flex: 1; font-style: italic; }
     .save-status.dirty { color: var(--gold2); }
     .save-status.saved { color: #5aad52; }
     .save-status.error { color: #e05050; }
-    .btn-save {
-      padding: 9px 26px; border-radius: 6px; border: 1px solid var(--gold);
-      background: rgba(184,134,11,.14); color: var(--gold2);
-      font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); cursor: pointer;
-    }
+    .btn-save { padding: 9px 26px; border-radius: 6px; border: 1px solid var(--gold); background: rgba(184,134,11,.14); color: var(--gold2); font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); cursor: pointer; }
     .btn-save:hover { background: rgba(184,134,11,.28); }
     .btn-save:disabled { opacity: .5; cursor: not-allowed; }
-    .btn-discard {
-      padding: 9px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,.08);
-      background: transparent; color: #7a6a4a; font-family: 'Crimson Pro', serif;
-      font-size: var(--fs-sm); cursor: pointer;
-    }
+    .btn-discard { padding: 9px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,.08); background: transparent; color: #7a6a4a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; }
     .btn-discard:hover { color: var(--parch); }
 
-    /* ── LOADING OVERLAY ── */
-    #loadingOverlay {
-      position: fixed; inset: 0; background: rgba(5,3,1,.85);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200; font-family: 'Cinzel Decorative', serif;
-      font-size: var(--fs-lg); color: var(--gold2);
-    }
+    /* SECTION "À VENIR" */
+    .soon-block { background: var(--surface); border: 1px dashed rgba(74,237,204,.2); border-radius: 10px; padding: 48px 24px; text-align: center; opacity: .6; }
+    .soon-block .soon-icon { font-size: 3rem; margin-bottom: 14px; }
+    .soon-block .soon-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold); margin-bottom: 10px; }
+    .soon-block .soon-desc  { font-size: var(--fs-sm); color: #7a6a4a; font-style: italic; line-height: 1.7; max-width: 480px; margin: 0 auto; }
+
+    /* LOADING */
+    #loadingOverlay { position: fixed; inset: 0; background: rgba(5,3,1,.85); display: flex; align-items: center; justify-content: center; z-index: 200; font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); }
 
     @media (max-width: 640px) {
       .page { grid-template-columns: 1fr; }
       .sidenav { flex-direction: row; overflow-x: auto; padding: 6px 0; border-right: none; border-bottom: 1px solid var(--border); }
       .nav-group { display: none; }
-      .card-entry-fields, .card-entry-fields.triple { grid-template-columns: 1fr; }
+      .card-entry-fields, .card-entry-fields.triple, .card-entry-fields.quad { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── LOADING ── -->
 <div id="loadingOverlay">⏳ Chargement de la configuration…</div>
 
 <header>
@@ -284,33 +171,32 @@
 
 <div class="page">
 
-  <!-- ── SIDENAV ── -->
+  <!-- SIDENAV -->
   <nav class="sidenav">
     <div class="nav-group">Général</div>
-    <div class="nav-item active" data-tab="overview"         onclick="switchTab('overview')">        <span>📊</span> Vue d'ensemble </div>
+    <div class="nav-item active" data-tab="overview" onclick="switchTab('overview')"><span>📊</span> Vue d'ensemble</div>
     <div class="nav-group">Cartes</div>
-    <div class="nav-item" data-tab="parchemin"               onclick="switchTab('parchemin')">        <span>📜</span> Parchemins        <span class="nav-badge" id="nb-parchemin">–</span></div>
-    <div class="nav-item" data-tab="enigme"                  onclick="switchTab('enigme')">           <span>🔍</span> Énigmes           <span class="nav-badge" id="nb-enigme">–</span></div>
-    <div class="nav-item" data-tab="ancien_parchemin"        onclick="switchTab('ancien_parchemin')"> <span>🗺</span> Anciens parch.    <span class="nav-badge">3</span></div>
-    <div class="nav-item" data-tab="relique"                 onclick="switchTab('relique')">          <span>⭐</span> Reliques          <span class="nav-badge">3</span></div>
-    <div class="nav-item" data-tab="equipement"              onclick="switchTab('equipement')">       <span>⚙</span> Équipements       <span class="nav-badge" id="nb-equip">–</span></div>
-    <div class="nav-item" data-tab="action"                  onclick="switchTab('action')">           <span>⚔</span> Actions           <span class="nav-badge" id="nb-action">–</span></div>
-    <div class="nav-item" data-tab="atout"                   onclick="switchTab('atout')">            <span>💨</span> Atouts            <span class="nav-badge" id="nb-atout">–</span></div>
-    <div class="nav-item" data-tab="evenement"               onclick="switchTab('evenement')">        <span>⚡</span> Événements        <span class="nav-badge" id="nb-event">–</span></div>
-    <div class="nav-group">Config</div>
+    <div class="nav-item" data-tab="parchemin"        onclick="switchTab('parchemin')">       <span>📜</span> Parchemins        <span class="nav-badge" id="nb-parchemin">–</span></div>
+    <div class="nav-item" data-tab="enigme"           onclick="switchTab('enigme')">          <span>🔍</span> Énigmes           <span class="nav-badge" id="nb-enigme">–</span></div>
+    <div class="nav-item" data-tab="ancien_parchemin" onclick="switchTab('ancien_parchemin')"><span>🗺</span> Anciens parch.    <span class="nav-badge">3</span></div>
+    <div class="nav-item" data-tab="relique"          onclick="switchTab('relique')">         <span>⭐</span> Reliques          <span class="nav-badge">3</span></div>
+    <div class="nav-item" data-tab="equipement"       onclick="switchTab('equipement')">      <span>⚙</span> Équipements       <span class="nav-badge" id="nb-equip">–</span></div>
+    <div class="nav-item" data-tab="action"           onclick="switchTab('action')">          <span>⚔</span> Actions           <span class="nav-badge" id="nb-action">–</span></div>
+    <div class="nav-item" data-tab="atout"            onclick="switchTab('atout')">           <span>💨</span> Atouts            <span class="nav-badge" id="nb-atout">–</span></div>
+    <div class="nav-item" data-tab="evenement"        onclick="switchTab('evenement')">       <span>⚡</span> Événements        <span class="nav-badge" id="nb-event">–</span></div>
     <div class="nav-group">Plateau</div>
-    <div class="nav-item" data-tab="iles" onclick="switchTab('iles')">
-      <span>🏝</span> Îles <span class="nav-badge" id="nb-iles">–</span>
-    </div>
-    <div class="nav-item" data-tab="avancement" onclick="switchTab('avancement')">
-      <span>⏳</span> Avancement
-    </div>
-    <div class="nav-item" data-tab="rules"                   onclick="switchTab('rules')">            <span>📋</span> Règles </div>
+    <div class="nav-item" data-tab="iles"             onclick="switchTab('iles')">            <span>🏝</span> Îles              <span class="nav-badge" id="nb-iles">–</span></div>
+    <div class="nav-item" data-tab="avancement"       onclick="switchTab('avancement')">      <span>⏳</span> Avancement</div>
+    <div class="nav-group">Lieux</div>
+    <div class="nav-item" data-tab="port_commerce"    onclick="switchTab('port_commerce')">   <span>⚓</span> Ports de commerce <span class="nav-badge-soon">bientôt</span></div>
+    <div class="nav-item" data-tab="repaire_pirate"   onclick="switchTab('repaire_pirate')">  <span>💀</span> Repaires pirates  <span class="nav-badge-soon">bientôt</span></div>
+    <div class="nav-group">Config</div>
+    <div class="nav-item" data-tab="rules"            onclick="switchTab('rules')">           <span>📋</span> Règles</div>
   </nav>
 
   <main>
 
-    <!-- ── OVERVIEW ── -->
+    <!-- OVERVIEW -->
     <div class="tab-panel active" id="tab-overview">
       <div class="section-head">
         <div class="section-title">📊 Vue d'ensemble</div>
@@ -319,7 +205,7 @@
       <div class="ov-grid" id="ovGrid"></div>
     </div>
 
-    <!-- ── PARCHEMINS ── -->
+    <!-- PARCHEMINS -->
     <div class="tab-panel" id="tab-parchemin">
       <div class="section-head">
         <div class="section-title">📜 Parchemins</div>
@@ -346,9 +232,7 @@
       <div id="parchemin-vierge" style="display:none">
         <div class="editor-block">
           <h3>📄 Parchemins Vierges</h3>
-          <p style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic;margin-bottom:16px">
-            Les parchemins vierges n'ont aucune donnée propre. Définissez simplement combien en mettre dans le deck.
-          </p>
+          <p style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic;margin-bottom:16px">Les parchemins vierges n'ont aucune donnée propre. Définissez simplement combien en mettre dans le deck.</p>
           <div class="count-row">
             <label>Nombre de parchemins vierges</label>
             <div class="count-stepper">
@@ -361,7 +245,7 @@
       </div>
     </div>
 
-    <!-- ── ÉNIGMES ── -->
+    <!-- ÉNIGMES -->
     <div class="tab-panel" id="tab-enigme">
       <div class="section-head">
         <div class="section-title">🔍 Énigmes</div>
@@ -403,9 +287,7 @@
       <div id="enigme-code" style="display:none">
         <div class="editor-block">
           <h3>🔐 Cartes Code</h3>
-          <p style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic;margin-bottom:16px">
-            Chaque code est une formule de déchiffrement des coordonnées (ex : Latitude +2, Longitude −5).
-          </p>
+          <p style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic;margin-bottom:16px">Chaque code est une formule de déchiffrement des coordonnées (ex : Latitude +2, Longitude −5).</p>
           <div class="count-row">
             <label>Nombre de cartes Code</label>
             <div class="count-stepper">
@@ -419,7 +301,7 @@
       </div>
     </div>
 
-    <!-- ── ANCIENS PARCHEMINS ── -->
+    <!-- ANCIENS PARCHEMINS -->
     <div class="tab-panel" id="tab-ancien_parchemin">
       <div class="section-head">
         <div class="section-title">🗺 Anciens Parchemins</div>
@@ -431,7 +313,7 @@
       </div>
     </div>
 
-    <!-- ── RELIQUES ── -->
+    <!-- RELIQUES -->
     <div class="tab-panel" id="tab-relique">
       <div class="section-head">
         <div class="section-title">⭐ Reliques</div>
@@ -440,7 +322,7 @@
       <div id="reliques-container"></div>
     </div>
 
-    <!-- ── ÉQUIPEMENTS ── -->
+    <!-- ÉQUIPEMENTS -->
     <div class="tab-panel" id="tab-equipement">
       <div class="section-head">
         <div class="section-title">⚙ Équipements</div>
@@ -453,7 +335,7 @@
       </div>
     </div>
 
-    <!-- ── ACTIONS ── -->
+    <!-- ACTIONS -->
     <div class="tab-panel" id="tab-action">
       <div class="section-head">
         <div class="section-title">⚔ Actions</div>
@@ -479,7 +361,7 @@
       </div>
     </div>
 
-    <!-- ── ATOUTS ── -->
+    <!-- ATOUTS -->
     <div class="tab-panel" id="tab-atout">
       <div class="section-head">
         <div class="section-title">💨 Atouts</div>
@@ -492,7 +374,7 @@
       </div>
     </div>
 
-    <!-- ── ÉVÉNEMENTS ── -->
+    <!-- ÉVÉNEMENTS -->
     <div class="tab-panel" id="tab-evenement">
       <div class="section-head">
         <div class="section-title">⚡ Événements</div>
@@ -505,7 +387,7 @@
       </div>
     </div>
 
-    <!-- ── RÈGLES ── -->
+    <!-- RÈGLES -->
     <div class="tab-panel" id="tab-rules">
       <div class="section-head">
         <div class="section-title">📋 Règles</div>
@@ -548,11 +430,11 @@
       </div>
     </div>
 
-    <!-- ── ÎLES ── -->
+    <!-- ÎLES -->
     <div class="tab-panel" id="tab-iles">
       <div class="section-head">
         <div class="section-title">🏝 Îles</div>
-        <div class="section-desc">Îles affichées sur les bords du plateau. Chaque île a un nom, un biome, une icône et un nombre de slots objets (style cargaison).</div>
+        <div class="section-desc">Îles affichées sur les bords du plateau (mat-cards). Définissez le nom, l'ambiance, les slots objets et la coordonnée de la case sur la grille.</div>
       </div>
       <div class="editor-block">
         <h3>🏝 Liste des îles</h3>
@@ -568,7 +450,7 @@
       </div>
     </div>
 
-    <!-- ── AVANCEMENT ── -->
+    <!-- AVANCEMENT -->
     <div class="tab-panel" id="tab-avancement">
       <div class="section-head">
         <div class="section-title">⏳ Avancement</div>
@@ -583,10 +465,36 @@
       </div>
     </div>
 
+    <!-- PORT DE COMMERCE -->
+    <div class="tab-panel" id="tab-port_commerce">
+      <div class="section-head">
+        <div class="section-title">⚓ Ports de commerce</div>
+        <div class="section-desc">Cases spéciales du plateau permettant d'acheter des équipements, d'améliorer le navire ou d'échanger des ressources.</div>
+      </div>
+      <div class="soon-block">
+        <div class="soon-icon">⚓</div>
+        <div class="soon-title">Section à venir</div>
+        <div class="soon-desc">Les ports de commerce seront configurables ici : nom, position sur la grille (Q / R), catalogue de marchandises et tarifs en doublons.</div>
+      </div>
+    </div>
+
+    <!-- REPAIRE DE PIRATE -->
+    <div class="tab-panel" id="tab-repaire_pirate">
+      <div class="section-head">
+        <div class="section-title">💀 Repaires de pirates</div>
+        <div class="section-desc">Cases spéciales du plateau abritant des pirates hostiles ou des factions à rallier.</div>
+      </div>
+      <div class="soon-block">
+        <div class="soon-icon">💀</div>
+        <div class="soon-title">Section à venir</div>
+        <div class="soon-desc">Les repaires pirates seront configurables ici : nom, position sur la grille (Q / R), type (hostile / neutre / allié) et récompenses ou pénalités associées.</div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<!-- ── SAVE BAR ── -->
+<!-- SAVE BAR -->
 <div class="save-bar" id="saveBar">
   <span class="save-status dirty" id="saveStatus">⚠ Modifications non sauvegardées</span>
   <button class="btn-discard" onclick="discardChanges()">Annuler</button>
@@ -603,9 +511,8 @@ function uid() { return `c${++_uid}`; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PERSISTANCE — GET + POST /api/config
+// PERSISTANCE
 // ═══════════════════════════════════════════════════════════════════════════════
-
 async function loadConfig() {
   try {
     const res = await fetch('/api/config');
@@ -619,7 +526,6 @@ async function loadConfig() {
     document.getElementById('loadingOverlay').style.display = 'none';
   } catch (e) {
     document.getElementById('loadingOverlay').textContent = '✗ Erreur de chargement : ' + e.message;
-    console.error(e);
   }
 }
 
@@ -629,37 +535,23 @@ async function saveConfig() {
   btn.disabled = true;
   statusEl.textContent = '⏳ Sauvegarde en cours…';
   statusEl.className = 'save-status';
-
   try {
-    // Collecter nb_cartes_temps avant envoi
-    state.avancement = {
-      nb_cartes_temps: parseInt(document.getElementById('nb_cartes_temps')?.value) || 6
-    };
-
+    state.avancement = { nb_cartes_temps: parseInt(document.getElementById('nb_cartes_temps')?.value) || 6 };
     const body = { cards: state, rules: collectRules() };
-    const res = await fetch('/api/config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    const res = await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (!data.ok) throw new Error('Le serveur a refusé la sauvegarde');
-
     statusEl.textContent = '✓ Sauvegardé avec succès';
     statusEl.className = 'save-status saved';
     setTimeout(() => document.getElementById('saveBar').classList.remove('visible'), 2000);
   } catch (e) {
     statusEl.textContent = '✗ Erreur : ' + e.message;
     statusEl.className = 'save-status error';
-  } finally {
-    btn.disabled = false;
-  }
+  } finally { btn.disabled = false; }
 }
 
-function discardChanges() {
-  if (confirm('Annuler toutes les modifications non sauvegardées ?')) loadConfig();
-}
+function discardChanges() { if (confirm('Annuler toutes les modifications non sauvegardées ?')) loadConfig(); }
 
 function markDirty() {
   document.getElementById('saveBar').classList.add('visible');
@@ -669,9 +561,8 @@ function markDirty() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// RÈGLES — form ↔ object
+// RÈGLES
 // ═══════════════════════════════════════════════════════════════════════════════
-
 function applyRulesToForm(rules) {
   if (!rules) return;
   const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
@@ -691,15 +582,7 @@ function applyRulesToForm(rules) {
 function collectRules() {
   const n = id => parseInt(document.getElementById(id)?.value) || 0;
   return {
-    ship: {
-      statBonuses: {
-        hull:    [n('hull1'), n('hull2'), n('hull3')],
-        sails:   [n('sails1'), n('sails2'), n('sails3')],
-        cannons: [n('c1'), n('c2'), n('c3')],
-      },
-      cargo:     { maxSlots: n('cargo') },
-      equipment: { maxSlots: n('equip') },
-    },
+    ship: { statBonuses: { hull: [n('hull1'),n('hull2'),n('hull3')], sails: [n('sails1'),n('sails2'),n('sails3')], cannons: [n('c1'),n('c2'),n('c3')] }, cargo: { maxSlots: n('cargo') }, equipment: { maxSlots: n('equip') } },
     players:   { min: n('pmin'), max: n('pmax') },
     dice:      { faces: n('dfaces') },
     hand:      { maxCards: n('handmax') },
@@ -710,7 +593,6 @@ function collectRules() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // RENDERERS
 // ═══════════════════════════════════════════════════════════════════════════════
-
 function renderAll() {
   renderParcheminIle();
   renderParcheminVierge();
@@ -729,76 +611,62 @@ function renderAll() {
   updateOverview();
 }
 
-// ── Parchemin Île ─────────────────────────────────────────────────────────────
+// Parchemin Île
 function renderParcheminIle() {
   const arr = state.parchemin_ile || [];
   document.getElementById('cnt-parchemin_ile').textContent = arr.length;
   document.getElementById('list-parchemin_ile').innerHTML = arr.map((c,i) => `
     <div class="card-entry">
       <div class="card-entry-header">
-        <span class="card-num">Parchemin ${i+1}</span>
+        <span class="card-num">📜 Parchemin ${i+1}</span>
         <button class="btn-remove" onclick="removeFrom('parchemin_ile',${i})">✕ Supprimer</button>
       </div>
       <div class="card-entry-fields">
-        <div class="entry-field">
-          <label>Nom de l'île destination</label>
-          <input type="text" value="${esc(c.ile)}" placeholder="ex : Île aux Squelettes"
-            oninput="state.parchemin_ile[${i}].ile=this.value;markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Description (optionnel)</label>
-          <input type="text" value="${esc(c.description)}" placeholder="Texte affiché sur la carte…"
-            oninput="state.parchemin_ile[${i}].description=this.value;markDirty()">
-        </div>
+        <div class="entry-field"><label>Île de destination</label>
+          <input type="text" value="${esc(c.ile)}" placeholder="Nom de l'île…" oninput="state.parchemin_ile[${i}].ile=this.value;markDirty()"></div>
+        <div class="entry-field"><label>Description sur la carte</label>
+          <input type="text" value="${esc(c.description)}" placeholder="Texte de la carte…" oninput="state.parchemin_ile[${i}].description=this.value;markDirty()"></div>
       </div>
     </div>`).join('');
 }
 
+// Parchemin Vierge
 function renderParcheminVierge() {
-  document.getElementById('cnt-parchemin_vierge').textContent = state.parchemin_vierge?.count ?? 0;
+  const cnt = state.parchemin_vierge?.count ?? 0;
+  document.getElementById('cnt-parchemin_vierge').textContent = cnt;
 }
 
-// ── Énigme Latitude ───────────────────────────────────────────────────────────
+// Énigme Latitude
 function renderEnigmeLatitude() {
   const arr = state.enigme_latitude || [];
   document.getElementById('cnt-enigme_latitude').textContent = arr.length;
   document.getElementById('list-enigme_latitude').innerHTML = arr.map((c,i) => `
     <div class="card-entry">
-      <div class="card-entry-header">
-        <span class="card-num">Carte ${i+1}</span>
-        <button class="btn-remove" onclick="removeFrom('enigme_latitude',${i})">✕ Supprimer</button>
-      </div>
+      <div class="card-entry-header"><span class="card-num">Carte ${i+1}</span>
+        <button class="btn-remove" onclick="removeFrom('enigme_latitude',${i})">✕ Supprimer</button></div>
       <div class="card-entry-fields single">
-        <div class="entry-field">
-          <label>Coordonnée Latitude — colonne Q du plateau (0 à 24)</label>
-          <input type="number" min="0" max="24" value="${c.valeur||0}"
-            oninput="state.enigme_latitude[${i}].valeur=parseInt(this.value)||0;markDirty()">
-        </div>
+        <div class="entry-field"><label>Coordonnée Latitude — colonne Q (0 à 24)</label>
+          <input type="number" min="0" max="24" value="${c.valeur||0}" oninput="state.enigme_latitude[${i}].valeur=parseInt(this.value)||0;markDirty()"></div>
       </div>
     </div>`).join('');
 }
 
-// ── Énigme Longitude ──────────────────────────────────────────────────────────
+// Énigme Longitude
 function renderEnigmeLongitude() {
   const arr = state.enigme_longitude || [];
   document.getElementById('cnt-enigme_longitude').textContent = arr.length;
   document.getElementById('list-enigme_longitude').innerHTML = arr.map((c,i) => `
     <div class="card-entry">
-      <div class="card-entry-header">
-        <span class="card-num">Carte ${i+1}</span>
-        <button class="btn-remove" onclick="removeFrom('enigme_longitude',${i})">✕ Supprimer</button>
-      </div>
+      <div class="card-entry-header"><span class="card-num">Carte ${i+1}</span>
+        <button class="btn-remove" onclick="removeFrom('enigme_longitude',${i})">✕ Supprimer</button></div>
       <div class="card-entry-fields single">
-        <div class="entry-field">
-          <label>Coordonnée Longitude — rang R du plateau (0 à 20)</label>
-          <input type="number" min="0" max="20" value="${c.valeur||0}"
-            oninput="state.enigme_longitude[${i}].valeur=parseInt(this.value)||0;markDirty()">
-        </div>
+        <div class="entry-field"><label>Coordonnée Longitude — rang R (0 à 20)</label>
+          <input type="number" min="0" max="20" value="${c.valeur||0}" oninput="state.enigme_longitude[${i}].valeur=parseInt(this.value)||0;markDirty()"></div>
       </div>
     </div>`).join('');
 }
 
-// ── Énigme Code ───────────────────────────────────────────────────────────────
+// Énigme Code
 function renderEnigmeCode() {
   const arr = state.enigme_code || [];
   document.getElementById('cnt-enigme_code').textContent = arr.length;
@@ -807,52 +675,37 @@ function renderEnigmeCode() {
       <div class="card-entry-header">
         <span class="card-num">Code ${i+1}</span>
         <span style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic">
-          Lat ${(c.delta_lat||0)>=0?'+':''}${c.delta_lat||0} &nbsp;/&nbsp; Lon ${(c.delta_lon||0)>=0?'+':''}${c.delta_lon||0}
+          Lat ${(c.delta_lat||0)>=0?'+':''}${c.delta_lat||0} / Lon ${(c.delta_lon||0)>=0?'+':''}${c.delta_lon||0}
         </span>
         <button class="btn-remove" onclick="removeFrom('enigme_code',${i})">✕ Supprimer</button>
       </div>
       <div class="card-entry-fields triple">
-        <div class="entry-field">
-          <label>Δ Latitude</label>
-          <input type="number" min="-24" max="24" value="${c.delta_lat||0}"
-            oninput="state.enigme_code[${i}].delta_lat=parseInt(this.value)||0;renderEnigmeCode();markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Δ Longitude</label>
-          <input type="number" min="-20" max="20" value="${c.delta_lon||0}"
-            oninput="state.enigme_code[${i}].delta_lon=parseInt(this.value)||0;renderEnigmeCode();markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Description (optionnel)</label>
-          <input type="text" value="${esc(c.description)}" placeholder="ex : Cherche au nord-est…"
-            oninput="state.enigme_code[${i}].description=this.value;markDirty()">
-        </div>
+        <div class="entry-field"><label>Δ Latitude</label>
+          <input type="number" min="-24" max="24" value="${c.delta_lat||0}" oninput="state.enigme_code[${i}].delta_lat=parseInt(this.value)||0;renderEnigmeCode();markDirty()"></div>
+        <div class="entry-field"><label>Δ Longitude</label>
+          <input type="number" min="-20" max="20" value="${c.delta_lon||0}" oninput="state.enigme_code[${i}].delta_lon=parseInt(this.value)||0;renderEnigmeCode();markDirty()"></div>
+        <div class="entry-field"><label>Description (optionnel)</label>
+          <input type="text" value="${esc(c.description)}" placeholder="ex : Cherche au nord-est…" oninput="state.enigme_code[${i}].description=this.value;markDirty()"></div>
       </div>
     </div>`).join('');
 }
 
-// ── Anciens Parchemins ────────────────────────────────────────────────────────
+// Anciens Parchemins
 function renderAncienParchemin() {
   const arr = state.ancien_parchemin || [];
   document.getElementById('list-ancien_parchemin').innerHTML = arr.map((c,i) => `
     <div class="card-entry">
       <div class="card-entry-header"><span class="card-num">${esc(c.relique)}</span></div>
       <div class="card-entry-fields">
-        <div class="entry-field">
-          <label>Île de destination</label>
-          <input type="text" value="${esc(c.ile_destination)}" placeholder="Nom de l'île…"
-            oninput="state.ancien_parchemin[${i}].ile_destination=this.value;markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Description sur la carte</label>
-          <input type="text" value="${esc(c.description)}" placeholder="Texte de la carte…"
-            oninput="state.ancien_parchemin[${i}].description=this.value;markDirty()">
-        </div>
+        <div class="entry-field"><label>Île de destination</label>
+          <input type="text" value="${esc(c.ile_destination)}" placeholder="Nom de l'île…" oninput="state.ancien_parchemin[${i}].ile_destination=this.value;markDirty()"></div>
+        <div class="entry-field"><label>Description sur la carte</label>
+          <input type="text" value="${esc(c.description)}" placeholder="Texte de la carte…" oninput="state.ancien_parchemin[${i}].description=this.value;markDirty()"></div>
       </div>
     </div>`).join('');
 }
 
-// ── Reliques ──────────────────────────────────────────────────────────────────
+// Reliques
 function renderReliques() {
   const rel = state.reliques || {};
   const defs = [
@@ -862,33 +715,26 @@ function renderReliques() {
   ];
   document.getElementById('reliques-container').innerHTML = defs.map(d => {
     const r = rel[d.key] || {};
-    return `
-    <div class="relique-card">
+    return `<div class="relique-card">
       <h4>${d.icon} ${d.name}</h4>
       <div class="card-entry-fields">
-        <div class="entry-field">
-          <label>Événement annulé</label>
-          <input type="text" id="rel_${d.key}_event" value="${esc(r.event)}"
-            oninput="state.reliques.${d.key}.event=this.value;markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Description de l'effet</label>
-          <input type="text" id="rel_${d.key}_desc" value="${esc(r.desc)}"
-            oninput="state.reliques.${d.key}.desc=this.value;markDirty()">
-        </div>
+        <div class="entry-field"><label>Événement annulé</label>
+          <input type="text" value="${esc(r.event)}" oninput="state.reliques.${d.key}.event=this.value;markDirty()"></div>
+        <div class="entry-field"><label>Description de l'effet</label>
+          <input type="text" value="${esc(r.desc)}" oninput="state.reliques.${d.key}.desc=this.value;markDirty()"></div>
       </div>
       <label class="toggle-wrap">
         <span class="toggle">
-          <input type="checkbox" id="rel_${d.key}_en" ${r.enabled!==false?'checked':''}
-            onchange="state.reliques.${d.key}.enabled=this.checked;markDirty()">
+          <input type="checkbox" ${r.enabled!==false?'checked':''} onchange="state.reliques.${d.key}.enabled=this.checked;markDirty()">
           <span class="toggle-slider"></span>
         </span>
         Activée dans le jeu
       </label>
-    </div>`}).join('');
+    </div>`;
+  }).join('');
 }
 
-// ── Liste générique (équipements, actions, atouts) ────────────────────────────
+// Liste générique (équipements, actions, atouts)
 function renderSimpleList(key, icon, fields, labels) {
   const arr = state[key] || [];
   const listEl = document.getElementById(`list-${key}`);
@@ -899,8 +745,7 @@ function renderSimpleList(key, icon, fields, labels) {
         <span class="card-num">${icon} Carte ${i+1}</span>
         <label class="toggle-wrap" style="margin-left:8px">
           <span class="toggle">
-            <input type="checkbox" ${c.enabled!==false?'checked':''}
-              onchange="state['${key}'][${i}].enabled=this.checked;markDirty()">
+            <input type="checkbox" ${c.enabled!==false?'checked':''} onchange="state['${key}'][${i}].enabled=this.checked;markDirty()">
             <span class="toggle-slider"></span>
           </span>
           <span>${c.enabled!==false?'Active':'Inactive'}</span>
@@ -909,15 +754,11 @@ function renderSimpleList(key, icon, fields, labels) {
       </div>
       <div class="card-entry-fields">
         ${fields.map((f,fi) => `
-        <div class="entry-field">
-          <label>${labels[fi]}</label>
-          <input type="text" value="${esc(c[f])}" placeholder="${labels[fi]}…"
-            oninput="state['${key}'][${i}]['${f}']=this.value;markDirty()">
+        <div class="entry-field"><label>${labels[fi]}</label>
+          <input type="text" value="${esc(c[f])}" placeholder="${labels[fi]}…" oninput="state['${key}'][${i}]['${f}']=this.value;markDirty()">
         </div>`).join('')}
       </div>
     </div>`).join('');
-
-  // Update nav badge
   const nb = document.getElementById(`nb-${key.replace('action_offensive','action').replace('action_defensive','action').replace('_offensive','').replace('_defensive','')}`);
   if (nb && key === 'equipement') nb.textContent = arr.length;
   if (nb && key === 'atout')      nb.textContent = arr.length;
@@ -929,7 +770,7 @@ function updateActionBadge() {
   if (el) el.textContent = (state.action_offensive?.length||0) + (state.action_defensive?.length||0);
 }
 
-// ── Événements ────────────────────────────────────────────────────────────────
+// Événements
 function renderEvenement() {
   const arr = state.evenement || [];
   const relOptions = [
@@ -944,8 +785,7 @@ function renderEvenement() {
         <span class="card-num">⚡ Événement ${i+1}</span>
         <label class="toggle-wrap" style="margin-left:8px">
           <span class="toggle">
-            <input type="checkbox" ${c.enabled!==false?'checked':''}
-              onchange="state.evenement[${i}].enabled=this.checked;markDirty()">
+            <input type="checkbox" ${c.enabled!==false?'checked':''} onchange="state.evenement[${i}].enabled=this.checked;markDirty()">
             <span class="toggle-slider"></span>
           </span>
           <span>${c.enabled!==false?'Actif':'Inactif'}</span>
@@ -953,18 +793,11 @@ function renderEvenement() {
         <button class="btn-remove" onclick="removeFrom('evenement',${i})">✕</button>
       </div>
       <div class="card-entry-fields triple">
-        <div class="entry-field">
-          <label>Nom de l'événement</label>
-          <input type="text" value="${esc(c.nom)}"
-            oninput="state.evenement[${i}].nom=this.value;markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Description / effet</label>
-          <input type="text" value="${esc(c.description)}"
-            oninput="state.evenement[${i}].description=this.value;markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Annulé par la relique</label>
+        <div class="entry-field"><label>Nom de l'événement</label>
+          <input type="text" value="${esc(c.nom)}" oninput="state.evenement[${i}].nom=this.value;markDirty()"></div>
+        <div class="entry-field"><label>Description / effet</label>
+          <input type="text" value="${esc(c.description)}" oninput="state.evenement[${i}].description=this.value;markDirty()"></div>
+        <div class="entry-field"><label>Annulé par la relique</label>
           <select onchange="state.evenement[${i}].annule_relique=this.value;markDirty()">
             ${relOptions.map(r=>`<option value="${r.val}" ${c.annule_relique===r.val?'selected':''}>${r.label}</option>`).join('')}
           </select>
@@ -974,47 +807,117 @@ function renderEvenement() {
   document.getElementById('nb-event').textContent = arr.length;
 }
 
-// ── Overview ──────────────────────────────────────────────────────────────────
+// ── Îles (avec coordonnées Q/R) ───────────────────────────────────────────────
+function renderIles() {
+  const arr = state.iles || [];
+  document.getElementById('cnt-iles').textContent = arr.length;
+  document.getElementById('nb-iles').textContent  = arr.length;
+  document.getElementById('list-iles').innerHTML  = arr.map((c,i) => `
+    <div class="card-entry">
+      <div class="card-entry-header">
+        <span class="card-num">${c.icon||'🏝'} ${esc(c.nom)||'Île '+(i+1)}</span>
+        <button class="btn-remove" onclick="removeFrom('iles',${i})">✕ Supprimer</button>
+      </div>
+      <div class="card-entry-fields triple">
+        <div class="entry-field">
+          <label>Icône</label>
+          <input type="text" value="${esc(c.icon)}" placeholder="ex : 🏝"
+            oninput="state.iles[${i}].icon=this.value;renderIles();markDirty()">
+        </div>
+        <div class="entry-field">
+          <label>Nom de l'île</label>
+          <input type="text" value="${esc(c.nom)}" placeholder="ex : Île aux Squelettes"
+            oninput="state.iles[${i}].nom=this.value;renderIles();markDirty()">
+        </div>
+        <div class="entry-field">
+          <label>Biome / ambiance</label>
+          <input type="text" value="${esc(c.biome)}" placeholder="ex : Forêt tropicale hostile"
+            oninput="state.iles[${i}].biome=this.value;markDirty()">
+        </div>
+      </div>
+      <div class="card-entry-fields triple" style="margin-top:8px">
+        <div class="entry-field">
+          <label>Nombre de slots objets</label>
+          <input type="number" min="0" max="12" value="${c.nb_objets||3}"
+            oninput="state.iles[${i}].nb_objets=parseInt(this.value)||0;markDirty()">
+        </div>
+        <div class="entry-field coord">
+          <label>📍 Coordonnée Q (colonne 0–24)</label>
+          <input type="number" min="0" max="24"
+            value="${c.coord_q!=null&&c.coord_q!==''?c.coord_q:''}"
+            placeholder="—"
+            oninput="state.iles[${i}].coord_q=this.value!==''?parseInt(this.value):null;markDirty()">
+        </div>
+        <div class="entry-field coord">
+          <label>📍 Coordonnée R (rang 0–20)</label>
+          <input type="number" min="0" max="20"
+            value="${c.coord_r!=null&&c.coord_r!==''?c.coord_r:''}"
+            placeholder="—"
+            oninput="state.iles[${i}].coord_r=this.value!==''?parseInt(this.value):null;markDirty()">
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// Avancement
+function renderAvancement() {
+  const nb = state.avancement?.nb_cartes_temps ?? 6;
+  const el = document.getElementById('nb_cartes_temps');
+  if (el) el.value = nb;
+}
+
+// Overview
 function updateOverview() {
   const s = state;
   const types = [
-    { icon:'📜', lbl:'Parchemins',     n:(s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0), tab:'parchemin' },
-    { icon:'🔍', lbl:'Énigmes',         n:(s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0), tab:'enigme' },
-    { icon:'🗺',  lbl:'Anc. Parch.',    n:3, tab:'ancien_parchemin' },
-    { icon:'⭐', lbl:'Reliques',        n:3, tab:'relique' },
-    { icon:'⚙',  lbl:'Équipements',    n:s.equipement?.length||0, tab:'equipement' },
-    { icon:'⚔',  lbl:'Actions',        n:(s.action_offensive?.length||0)+(s.action_defensive?.length||0), tab:'action' },
-    { icon:'💨', lbl:'Atouts',          n:s.atout?.length||0, tab:'atout' },
-    { icon:'⚡', lbl:'Événements',      n:s.evenement?.length||0, tab:'evenement' },
+    { icon:'📜', lbl:'Parchemins',  n:(s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0), tab:'parchemin' },
+    { icon:'🔍', lbl:'Énigmes',     n:(s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0), tab:'enigme' },
+    { icon:'🗺',  lbl:'Anc. Parch.',n:3, tab:'ancien_parchemin' },
+    { icon:'⭐', lbl:'Reliques',    n:3, tab:'relique' },
+    { icon:'⚙',  lbl:'Équipements',n:s.equipement?.length||0, tab:'equipement' },
+    { icon:'⚔',  lbl:'Actions',    n:(s.action_offensive?.length||0)+(s.action_defensive?.length||0), tab:'action' },
+    { icon:'💨', lbl:'Atouts',      n:s.atout?.length||0, tab:'atout' },
+    { icon:'⚡', lbl:'Événements',  n:s.evenement?.length||0, tab:'evenement' },
+    { icon:'🏝', lbl:'Îles',        n:s.iles?.length||0, tab:'iles' },
   ];
   const total = types.reduce((acc,t)=>acc+t.n, 0);
-
   document.getElementById('ovGrid').innerHTML =
     `<div class="ov-chip" style="border-color:var(--gold);cursor:default">
-      <div class="ov-icon">🃏</div>
-      <div class="ov-val">${total}</div>
-      <div class="ov-lbl">Total cartes</div>
+      <div class="ov-icon">🃏</div><div class="ov-val">${total}</div><div class="ov-lbl">Total cartes</div>
     </div>` +
-    types.map(t=>`
-      <div class="ov-chip" onclick="switchTab('${t.tab}')">
-        <div class="ov-icon">${t.icon}</div>
-        <div class="ov-val">${t.n}</div>
-        <div class="ov-lbl">${t.lbl}</div>
-      </div>`).join('');
-
-  // Nav badges
-  document.getElementById('nb-parchemin').textContent  = (s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0);
-  document.getElementById('nb-enigme').textContent     = (s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0);
-  document.getElementById('nb-equip').textContent      = s.equipement?.length||0;
-  document.getElementById('nb-atout').textContent      = s.atout?.length||0;
-  document.getElementById('nb-event').textContent      = s.evenement?.length||0;
+    types.map(t=>`<div class="ov-chip" onclick="switchTab('${t.tab}')">
+      <div class="ov-icon">${t.icon}</div><div class="ov-val">${t.n}</div><div class="ov-lbl">${t.lbl}</div>
+    </div>`).join('');
+  document.getElementById('nb-parchemin').textContent = (s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0);
+  document.getElementById('nb-enigme').textContent    = (s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0);
+  document.getElementById('nb-equip').textContent     = s.equipement?.length||0;
+  document.getElementById('nb-atout').textContent     = s.atout?.length||0;
+  document.getElementById('nb-event').textContent     = s.evenement?.length||0;
+  document.getElementById('nb-iles').textContent      = s.iles?.length||0;
   updateActionBadge();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TABS & SUBTABS
+// ═══════════════════════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+}
+
+function showSubtab(parent, sub, btn) {
+  const panel = document.getElementById('tab-'+parent);
+  panel.querySelectorAll(`[id^="${parent}-"]`).forEach(el => el.style.display='none');
+  document.getElementById(`${parent}-${sub}`).style.display = 'block';
+  panel.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COUNT / ADD / REMOVE
 // ═══════════════════════════════════════════════════════════════════════════════
-
 function changeCount(key, delta) {
   if (key === 'parchemin_vierge') {
     state.parchemin_vierge = state.parchemin_vierge || { count: 0 };
@@ -1030,7 +933,7 @@ function changeCount(key, delta) {
       enigme_latitude:  { id:uid(), valeur:0 },
       enigme_longitude: { id:uid(), valeur:0 },
       enigme_code:      { id:uid(), delta_lat:0, delta_lon:0, description:'' },
-      iles: { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:3 },
+      iles:             { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:3, coord_q:null, coord_r:null },
     }[key] || null;
     if (newItem) arr.push(newItem);
   } else {
@@ -1067,84 +970,24 @@ function rerenderKey(key) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TABS & SUBTABS
+// DEFAULTS
 // ═══════════════════════════════════════════════════════════════════════════════
-
-function switchTab(tab) {
-  document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-}
-
-function showSubtab(parent, sub, btn) {
-  const panel = document.getElementById('tab-'+parent);
-  panel.querySelectorAll(`[id^="${parent}-"]`).forEach(el => el.style.display='none');
-  document.getElementById(`${parent}-${sub}`).style.display = 'block';
-  panel.querySelectorAll('.stab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-// ── Îles ──────────────────────────────────────────────────────────────────────
-function renderIles() {
-  const arr = state.iles || [];
-  document.getElementById('cnt-iles').textContent = arr.length;
-  document.getElementById('nb-iles').textContent  = arr.length;
-  document.getElementById('list-iles').innerHTML  = arr.map((c,i) => `
-    <div class="card-entry">
-      <div class="card-entry-header">
-        <span class="card-num">${c.icon||'🏝'} ${esc(c.nom)||'Île '+(i+1)}</span>
-        <button class="btn-remove" onclick="removeFrom('iles',${i})">✕ Supprimer</button>
-      </div>
-      <div class="card-entry-fields triple">
-        <div class="entry-field">
-          <label>Icône</label>
-          <input type="text" value="${esc(c.icon)}" placeholder="ex : 🏝"
-            oninput="state.iles[${i}].icon=this.value;renderIles();markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Nom de l'île</label>
-          <input type="text" value="${esc(c.nom)}" placeholder="ex : Île aux Squelettes"
-            oninput="state.iles[${i}].nom=this.value;renderIles();markDirty()">
-        </div>
-        <div class="entry-field">
-          <label>Biome / ambiance</label>
-          <input type="text" value="${esc(c.biome)}" placeholder="ex : Forêt tropicale hostile"
-            oninput="state.iles[${i}].biome=this.value;markDirty()">
-        </div>
-      </div>
-      <div class="card-entry-fields single" style="margin-top:8px">
-        <div class="entry-field">
-          <label>Nombre de slots objets</label>
-          <input type="number" min="0" max="12" value="${c.nb_objets||3}"
-            oninput="state.iles[${i}].nb_objets=parseInt(this.value)||0;markDirty()">
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function renderAvancement() {
-  const nb = state.avancement?.nb_cartes_temps ?? 6;
-  const el = document.getElementById('nb_cartes_temps');
-  if (el) el.value = nb;
-}
-
 function defaultIles() {
   return [
-    { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:3 },
-    { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:2 },
-    { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:4 },
-    { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:3 },
-    { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:2 },
-    { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:2 },
-    { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:3 },
-    { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:4 },
-    { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:3 },
-    { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:2 },
+    { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:3, coord_q:null, coord_r:null },
+    { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:2, coord_q:null, coord_r:null },
+    { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:4, coord_q:null, coord_r:null },
+    { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:3, coord_q:null, coord_r:null },
+    { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:2, coord_q:null, coord_r:null },
+    { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:2, coord_q:null, coord_r:null },
+    { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:3, coord_q:null, coord_r:null },
+    { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:4, coord_q:null, coord_r:null },
+    { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:3, coord_q:null, coord_r:null },
+    { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:2, coord_q:null, coord_r:null },
   ];
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// Init
 loadConfig();
 </script>
 </body>
