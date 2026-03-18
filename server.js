@@ -18,9 +18,7 @@ app.get("/player", (_, res) => res.sendFile(path.join(__dirname, "public", "play
 app.get("/admin",  (_, res) => res.sendFile(path.join(__dirname, "public", "admin.html")));
 
 // ─── Persistance ──────────────────────────────────────────────────────────────
-// Toute la config admin est sauvegardée dans data/config.json.
-// Ce fichier est créé automatiquement au premier lancement.
-const DATA_DIR  = path.join(__dirname, "data");
+const DATA_DIR    = path.join(__dirname, "data");
 const CONFIG_FILE = path.join(DATA_DIR, "config.json");
 
 function ensureDataDir() {
@@ -57,27 +55,26 @@ function saveConfig(cfg) {
 }
 
 // ─── Config runtime ───────────────────────────────────────────────────────────
-// On charge depuis le fichier si disponible, sinon on part des défauts.
 const savedConfig = loadConfig();
 
 let adminConfig = savedConfig || {
   cards: {
-    parchemin_ile:     Array.from({ length: 10 }, (_, i) => ({ id: `pi_${i}`, ile: `Île ${i + 1}`, description: "" })),
-    parchemin_vierge:  { count: 10 },
-    enigme_latitude:   Array.from({ length: 3 },  (_, i) => ({ id: `el_${i}`,  valeur: i + 1 })),
-    enigme_longitude:  Array.from({ length: 3 },  (_, i) => ({ id: `elo_${i}`, valeur: i + 1 })),
-    enigme_code:       Array.from({ length: 3 },  (_, i) => ({ id: `ec_${i}`,  delta_lat: 0, delta_lon: 0, description: "" })),
-    ancien_parchemin:  [
+    parchemin_ile:    Array.from({ length: 10 }, (_, i) => ({ id: `pi_${i}`, ile: `Île ${i + 1}`, description: "" })),
+    parchemin_vierge: { count: 10 },
+    enigme_latitude:  Array.from({ length: 3 },  (_, i) => ({ id: `el_${i}`,  valeur: i + 1 })),
+    enigme_longitude: Array.from({ length: 3 },  (_, i) => ({ id: `elo_${i}`, valeur: i + 1 })),
+    enigme_code:      Array.from({ length: 3 },  (_, i) => ({ id: `ec_${i}`,  delta_lat: 0, delta_lon: 0, description: "" })),
+    ancien_parchemin: [
       { id: "ap_poseidon", relique: "Totem de Poséidon", ile_destination: "", description: "" },
       { id: "ap_eole",     relique: "Totem d'Éole",      ile_destination: "", description: "" },
-      { id: "ap_zeus",     relique: "Totem de Zeus",      ile_destination: "", description: "" },
+      { id: "ap_zeus",     relique: "Totem de Zeus",     ile_destination: "", description: "" },
     ],
     reliques: {
       poseidon: { event: "Mer d'Huile",  desc: "Contrôle des mers. La carte Mer d'Huile n'a plus d'effet sur vous.",    enabled: true },
       eole:     { event: "Vent Violent", desc: "Contrôle des vents. La carte Vent Violent n'a plus d'effet sur vous.", enabled: true },
       zeus:     { event: "Orage",        desc: "Contrôle de la foudre. La carte Orage n'a plus d'effet sur vous.",     enabled: true },
     },
-    equipement:       [
+    equipement: [
       { id: "eq_0", nom: "Boulet et Poudre",  description: "Ressource de combat. Occupe 1 slot cargaison.",    enabled: true },
       { id: "eq_1", nom: "Planches et Clous", description: "Ressource de réparation. Occupe 1 slot cargaison.", enabled: true },
     ],
@@ -99,19 +96,53 @@ let adminConfig = savedConfig || {
       { id: "at_2", nom: "Trésor Caché",       description: "Gagne 3 doublons immédiatement.",               enabled: true },
     ],
     evenement: [
-      { id: "ev_0", nom: "Mer d'Huile",       description: "Tu ne peux pas te déplacer ce tour.",                          annule_relique: "relique_poseidon", enabled: true },
-      { id: "ev_1", nom: "Vent Violent",       description: "Tu te déplaces de 3 cases dans une direction aléatoire.",     annule_relique: "relique_eole",     enabled: true },
-      { id: "ev_2", nom: "Orage",              description: "Tu perds 1 point de coque.",                                  annule_relique: "relique_zeus",     enabled: true },
-      { id: "ev_3", nom: "Fortune de Mer",     description: "Tu trouves une épave à la dérive. Gagne 2 doublons.",         annule_relique: "",                 enabled: true },
-      { id: "ev_4", nom: "Attaque du Kraken",  description: "Passe ton prochain tour et perds 1 point de coque.",          annule_relique: "",                 enabled: true },
-      { id: "ev_5", nom: "Chant des Sirènes",  description: "Envoûté par les sirènes. Défausse une carte action au choix.", annule_relique: "",                enabled: true },
+      { id: "ev_0", nom: "Mer d'Huile",      description: "Tu ne peux pas te déplacer ce tour.",                           annule_relique: "relique_poseidon", enabled: true },
+      { id: "ev_1", nom: "Vent Violent",      description: "Tu te déplaces de 3 cases dans une direction aléatoire.",      annule_relique: "relique_eole",     enabled: true },
+      { id: "ev_2", nom: "Orage",             description: "Tu perds 1 point de coque.",                                   annule_relique: "relique_zeus",     enabled: true },
+      { id: "ev_3", nom: "Fortune de Mer",    description: "Tu trouves une épave à la dérive. Gagne 2 doublons.",          annule_relique: "",                 enabled: true },
+      { id: "ev_4", nom: "Attaque du Kraken", description: "Passe ton prochain tour et perds 1 point de coque.",           annule_relique: "",                 enabled: true },
+      { id: "ev_5", nom: "Chant des Sirènes", description: "Envoûté par les sirènes. Défausse une carte action au choix.", annule_relique: "",                 enabled: true },
     ],
+    // ── FIX : îles et avancement absents des defaults ─────────────────────────
+    iles: [
+      { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 3 },
+      { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 2 },
+      { id: "ile_2", nom: "Île Dorée",          biome: "Plages de sable fin", icon: "💰", nb_objets: 4 },
+      { id: "ile_3", nom: "Île des Brumes",     biome: "Marais mystérieux",   icon: "🌫", nb_objets: 3 },
+      { id: "ile_4", nom: "Île du Kraken",      biome: "Abysses redoutés",    icon: "🦑", nb_objets: 2 },
+      { id: "ile_5", nom: "Île Volcanique",     biome: "Terres ardentes",     icon: "🌋", nb_objets: 2 },
+      { id: "ile_6", nom: "Île des Naufragés",  biome: "Épaves et ruines",    icon: "⚓", nb_objets: 3 },
+      { id: "ile_7", nom: "Île des Épices",     biome: "Forêts aromatiques",  icon: "🌿", nb_objets: 4 },
+      { id: "ile_8", nom: "Île des Coraux",     biome: "Lagon turquoise",     icon: "🪸", nb_objets: 3 },
+      { id: "ile_9", nom: "Île Fantôme",        biome: "Brume perpétuelle",   icon: "👻", nb_objets: 2 },
+    ],
+    avancement: { nb_cartes_temps: 6 },
   },
   rules: JSON.parse(JSON.stringify(RULES)),
 };
 
+// ─── Garantir que les clés iles/avancement existent même sur un config.json ancien ──
+if (!adminConfig.cards.iles) {
+  adminConfig.cards.iles = [
+    { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 3 },
+    { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 2 },
+    { id: "ile_2", nom: "Île Dorée",          biome: "Plages de sable fin", icon: "💰", nb_objets: 4 },
+    { id: "ile_3", nom: "Île des Brumes",     biome: "Marais mystérieux",   icon: "🌫", nb_objets: 3 },
+    { id: "ile_4", nom: "Île du Kraken",      biome: "Abysses redoutés",    icon: "🦑", nb_objets: 2 },
+    { id: "ile_5", nom: "Île Volcanique",     biome: "Terres ardentes",     icon: "🌋", nb_objets: 2 },
+    { id: "ile_6", nom: "Île des Naufragés",  biome: "Épaves et ruines",    icon: "⚓", nb_objets: 3 },
+    { id: "ile_7", nom: "Île des Épices",     biome: "Forêts aromatiques",  icon: "🌿", nb_objets: 4 },
+    { id: "ile_8", nom: "Île des Coraux",     biome: "Lagon turquoise",     icon: "🪸", nb_objets: 3 },
+    { id: "ile_9", nom: "Île Fantôme",        biome: "Brume perpétuelle",   icon: "👻", nb_objets: 2 },
+  ];
+  console.log("  ✓ Clé 'iles' ajoutée au config existant.");
+}
+if (!adminConfig.cards.avancement) {
+  adminConfig.cards.avancement = { nb_cartes_temps: 6 };
+  console.log("  ✓ Clé 'avancement' ajoutée au config existant.");
+}
+
 // ─── Route REST : GET /api/config ─────────────────────────────────────────────
-// L'admin charge la config au démarrage via fetch (pas socket), plus fiable.
 app.get("/api/config", (_, res) => res.json(adminConfig));
 
 // ─── Route REST : POST /api/config ────────────────────────────────────────────
@@ -121,11 +152,14 @@ app.post("/api/config", (req, res) => {
   if (!incoming || typeof incoming !== "object") {
     return res.status(400).json({ ok: false, error: "Payload invalide" });
   }
-  // Merge
   if (incoming.cards) adminConfig.cards = incoming.cards;
   if (incoming.rules) adminConfig.rules = incoming.rules;
 
   const ok = saveConfig(adminConfig);
+
+  // ── FIX : notifier les masters du changement de config en temps réel ─────
+  io.to("master").emit("config:updated", adminConfig.cards);
+
   res.json({ ok });
 });
 
@@ -270,28 +304,31 @@ io.on("connection", (socket) => {
     gameState.diceRoll = { playerId: socket.id, value };
     const pos = gameState.players[socket.id].position;
     gameState.moveOptions = pos ? hexesInRange(pos.q, pos.r, value) : [];
-    addLog(`${gameState.players[socket.id].name} a lancé le dé : ${value} 🎲`);
+    addLog(`${gameState.players[socket.id].name} lance le dé : ${value}.`);
     broadcastState();
   });
 
   socket.on("player:move", ({ q, r }) => {
-    if (gameState.status !== "playing" || gameState.currentTurn !== socket.id || !gameState.diceRoll) return;
-    if (!gameState.moveOptions.some(h => h.q === q && h.r === r)) return;
+    if (gameState.status !== "playing" || gameState.currentTurn !== socket.id) return;
+    if (!gameState.diceRoll) return;
+    const valid = gameState.moveOptions.some(o => o.q === q && o.r === r);
+    if (!valid) return;
     gameState.players[socket.id].position = { q, r };
     gameState.players[socket.id].hasMoved = true;
-    gameState.moveOptions = []; gameState.diceRoll = null;
-    addLog(`${gameState.players[socket.id].name} s'est déplacé en (${q},${r}).`);
+    gameState.diceRoll = null;
+    gameState.moveOptions = [];
+    addLog(`${gameState.players[socket.id].name} se déplace en (${q},${r}).`);
     broadcastState();
   });
 
-  socket.on("player:endTurn", () => {
-    if (gameState.currentTurn !== socket.id || gameState.status !== "playing") return;
-    const name = gameState.players[socket.id]?.name;
-    gameState.players[socket.id].hasMoved = false;
-    gameState.diceRoll = null; gameState.moveOptions = [];
+  socket.on("master:nextTurn", () => {
+    if (gameState.status !== "playing") return;
     gameState.turnIndex = (gameState.turnIndex + 1) % gameState.turnOrder.length;
     gameState.currentTurn = gameState.turnOrder[gameState.turnIndex];
-    addLog(`${name} a terminé son tour. C'est au tour de ${gameState.players[gameState.currentTurn]?.name}.`);
+    for (const p of Object.values(gameState.players)) p.hasMoved = false;
+    gameState.diceRoll = null;
+    gameState.moveOptions = [];
+    addLog(`Tour suivant : ${gameState.players[gameState.currentTurn].name}.`);
     broadcastState();
   });
 
@@ -306,32 +343,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    const player = gameState.players[socket.id];
-    if (player) {
-      addLog(`${player.name} s'est déconnecté.`);
+    console.log(`Disconnected: ${socket.id}`);
+    if (gameState.players[socket.id]) {
+      addLog(`${gameState.players[socket.id].name} s'est déconnecté.`);
       delete gameState.players[socket.id];
-      gameState.turnOrder = gameState.turnOrder.filter(id => id !== socket.id);
-      if (gameState.turnOrder.length > 0) {
-        gameState.turnIndex = gameState.turnIndex % gameState.turnOrder.length;
-        gameState.currentTurn = gameState.turnOrder[gameState.turnIndex];
-      } else {
-        gameState.currentTurn = null;
-        if (["playing","picking"].includes(gameState.status)) {
-          gameState.status = "waiting";
-          addLog("Plus aucun joueur. Retour en attente.");
-        }
+      const idx = gameState.turnOrder.indexOf(socket.id);
+      if (idx !== -1) gameState.turnOrder.splice(idx, 1);
+      if (gameState.currentTurn === socket.id) {
+        gameState.turnIndex = gameState.turnIndex % Math.max(gameState.turnOrder.length, 1);
+        gameState.currentTurn = gameState.turnOrder[gameState.turnIndex] || null;
       }
-      gameState.diceRoll = null; gameState.moveOptions = [];
       broadcastState();
     }
-    console.log(`Disconnected: ${socket.id}`);
   });
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, () => {
-  console.log(`\n🎲 Serveur sur http://localhost:${PORT}`);
-  console.log(`   Master : http://localhost:${PORT}/master`);
-  console.log(`   Joueur : http://localhost:${PORT}/player`);
-  console.log(`   Admin  : http://localhost:${PORT}/admin\n`);
-});
+httpServer.listen(PORT, () => console.log(`\n🚀 Serveur démarré sur http://localhost:${PORT}\n`));

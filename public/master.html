@@ -382,9 +382,10 @@ function copyUrl(){ navigator.clipboard.writeText(playerUrl).then(()=>{ const el
 
 socket.emit('master:join');
 socket.on('game:state',(s)=>{ state=s; renderUI(); renderMap(); });
+socket.on('config:updated',(cards)=>{ cfg=cards; renderIles(); renderAvancement(); });
 
 // Charger la config admin pour les îles et l'avancement
-fetch('/api/config').then(r=>r.json()).then(c=>{ cfg=c; renderIles(); renderAvancement(); }).catch(()=>{});
+fetch('/api/config').then(r=>r.json()).then(c=>{ cfg=c.cards||{}; renderIles(); renderAvancement(); }).catch(()=>{});
 
 // ─── Rendu Îles ───────────────────────────────────────────────────────────────
 function renderIles(){
