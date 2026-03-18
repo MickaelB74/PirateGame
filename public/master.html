@@ -4,64 +4,69 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Maître de Jeu — Plateau</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --ink:   #1a1209;
-      --parch: #f5ead6;
-      --gold:  #b8860b;
-      --gold2: #d4a017;
-      --red:   #8b1a1a;
+      --ink:    #1a1209;
+      --parch:  #f5ead6;
+      --gold:   #b8860b;
+      --gold2:  #d4a017;
+      --teal:   #4aedcc;
+      --red:    #8b1a1a;
+      --border: rgba(184,134,11,.22);
     }
 
-    body {
+    html, body {
+      width: 100%; height: 100%;
       background: #0d0a06;
       color: var(--parch);
       font-family: 'Crimson Pro', Georgia, serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      overflow: hidden;
     }
 
+    /* ══════════════════════════════════════════
+       HEADER
+    ══════════════════════════════════════════ */
     header {
       background: var(--ink);
       border-bottom: 2px solid var(--gold);
-      padding: 12px 24px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
-      gap: 20px;
+      gap: 16px;
       flex-shrink: 0;
-      z-index: 10;
+      z-index: 20;
+      height: 50px;
     }
     header h1 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: var(--gold2);
       letter-spacing: .04em;
     }
     .badge {
-      font-size: .72rem;
-      padding: 3px 12px;
+      font-size: .68rem;
+      padding: 2px 10px;
       border-radius: 20px;
       border: 1px solid var(--gold);
       text-transform: uppercase;
       letter-spacing: .1em;
     }
     .badge.waiting { color: var(--gold2); border-color: var(--gold); }
-    .badge.picking { color: #4aedcc; border-color: #4aedcc; }
-    .badge.playing { color: #6abf61; border-color: #6abf61; }
+    .badge.picking  { color: #4aedcc; border-color: #4aedcc; }
+    .badge.playing  { color: #6abf61; border-color: #6abf61; }
 
-    .header-controls { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+    .header-controls { margin-left: auto; display: flex; gap: 8px; align-items: center; }
     .btn {
-      padding: 7px 16px;
+      padding: 6px 14px;
       border-radius: 4px;
       border: 1px solid var(--gold);
       background: transparent;
       color: var(--gold2);
       font-family: 'Crimson Pro', serif;
-      font-size: .9rem;
+      font-size: .85rem;
       cursor: pointer;
       transition: background .15s;
     }
@@ -70,22 +75,210 @@
     .btn-danger { border-color: #e07070; color: #e07070; }
     .btn-danger:hover { background: rgba(224,112,112,.12) !important; }
 
-    /* Layout */
-    .layout {
-      display: flex;
-      flex: 1;
-      overflow: hidden;
+    /* ══════════════════════════════════════════
+       GRILLE PRINCIPALE DU PLATEAU
+       header=50px → reste = calc(100vh - 50px)
+    ══════════════════════════════════════════ */
+    .plateau {
+      display: grid;
+      grid-template-columns: 200px 1fr 200px;
+      grid-template-rows: 80px 1fr 95px;
+      width: 100vw;
+      height: calc(100vh - 50px);
     }
 
-    /* Map area */
-    .map-wrap {
-      flex: 1;
+    /* ══════════════════════════════════════════
+       BORD HAUT — ÉNIGMES (span 3 colonnes)
+    ══════════════════════════════════════════ */
+    .zone-enigmes {
+      grid-column: 1 / 4;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(180deg, rgba(8,5,1,.98), rgba(13,9,5,.90));
+      border-bottom: 1px solid var(--border);
+      padding: 0 12px;
       position: relative;
-      overflow: auto;
+    }
+    .zone-enigmes::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 50%;
+      transform: translateX(-50%);
+      width: 260px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold2), transparent);
+    }
+
+    .enigmes-label {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .55rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      white-space: nowrap;
+      margin-right: 4px;
+      opacity: .65;
+    }
+
+    .enigme-slot {
+      width: 50px;
+      height: 64px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: rgba(255,255,255,.03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s;
+      flex-shrink: 0;
+    }
+    .enigme-slot:hover {
+      border-color: var(--gold2);
+      background: rgba(184,134,11,.1);
+      transform: translateY(-2px);
+    }
+    .enigme-slot.revealed {
+      border-color: rgba(74,237,204,.5);
+      background: rgba(74,237,204,.08);
+    }
+    .enigme-slot .s-icon { font-size: 1.1rem; }
+    .enigme-slot .s-label {
+      font-size: .47rem;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: #7a6a4a;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .enigme-slot.revealed .s-label { color: var(--teal); opacity: .85; }
+
+    .e-sep {
+      width: 1px; height: 36px;
+      background: var(--border);
+      margin: 0 3px;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+       BORDS LATÉRAUX — ÎLES (mat card)
+    ══════════════════════════════════════════ */
+    .zone-ile-gauche,
+    .zone-ile-droite {
+      grid-row: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: 6px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: linear-gradient(180deg, rgba(10,7,3,.95), rgba(15,10,5,.98));
+      scrollbar-width: thin;
+      scrollbar-color: var(--gold) transparent;
+    }
+    .zone-ile-gauche { grid-column: 1; border-right: 1px solid var(--border); }
+    .zone-ile-droite { grid-column: 3; border-left:  1px solid var(--border); }
+
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(184,134,11,.3); border-radius: 2px; }
+
+    .ile-section-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .5rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      padding: 3px 2px 2px;
+      border-bottom: 1px solid rgba(184,134,11,.12);
+      margin-bottom: 2px;
+      text-align: center;
+    }
+
+    /* ── Mat Card île ── */
+    .ile-card {
+      background: rgba(26,18,9,.92);
+      border: 1px solid rgba(184,134,11,.12);
+      border-radius: 5px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .ile-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 2px; height: 100%;
+      background: var(--gold2);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .ile-card:hover { border-color: var(--border); box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    .ile-card:hover::before { opacity: 1; }
+
+    .ile-card-header { display: flex; align-items: center; gap: 5px; }
+    .ile-icon { font-size: 1rem; flex-shrink: 0; }
+    .ile-name {
+      font-family: 'Cinzel', serif;
+      font-size: .6rem;
+      font-weight: 600;
+      color: #e8d4a8;
+      line-height: 1.25;
+    }
+
+    .ile-traits { display: flex; flex-wrap: wrap; gap: 2px; }
+    .trait-pill {
+      font-size: .43rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 1px 4px;
+      border-radius: 8px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .trait-pill.danger   { color: #e07070; border-color: rgba(224,112,112,.3); background: rgba(224,112,112,.07); }
+    .trait-pill.commerce { color: #d4a017; border-color: rgba(212,160,23,.3);  background: rgba(212,160,23,.07); }
+    .trait-pill.mystere  { color: #9a7aed; border-color: rgba(154,122,237,.3); background: rgba(154,122,237,.07); }
+    .trait-pill.neutre   { color: #7a9a7a; border-color: rgba(122,154,122,.3); background: rgba(122,154,122,.07); }
+    .trait-pill.relique  { color: var(--teal); border-color: rgba(74,237,204,.3); background: rgba(74,237,204,.07); }
+
+    .ile-slots { display: flex; gap: 3px; }
+    .ile-slot {
+      flex: 1;
+      height: 26px;
+      border: 1px dashed rgba(184,134,11,.18);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .5rem;
+      color: #4a3a1a;
+      transition: border-color .2s, background .2s;
+      cursor: pointer;
+    }
+    .ile-slot:hover { border-color: var(--gold); background: rgba(184,134,11,.07); color: var(--gold2); }
+    .ile-slot.filled { border-style: solid; border-color: rgba(184,134,11,.35); background: rgba(184,134,11,.06); font-size: .85rem; }
+
+    /* ══════════════════════════════════════════
+       CENTRE — CARTE DU MONDE
+    ══════════════════════════════════════════ */
+    .zone-carte {
+      grid-column: 2;
+      grid-row: 2;
+      position: relative;
+      overflow: hidden;
+      background: #0d0a06;
       display: flex;
       align-items: flex-start;
       justify-content: flex-start;
-      background: #0d0a06;
     }
 
     #mapContainer {
@@ -105,178 +298,256 @@
     #hexCanvas {
       position: absolute;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       pointer-events: none;
     }
 
     #hexOverlay {
       position: absolute;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       pointer-events: none;
     }
 
-    /* Sidebar */
-    .sidebar {
-      width: 280px;
+    /* ══════════════════════════════════════════
+       BORD BAS — AVANCEMENT (span 3 colonnes)
+    ══════════════════════════════════════════ */
+    .zone-avancement {
+      grid-column: 1 / 4;
+      grid-row: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: linear-gradient(0deg, rgba(8,5,1,.98), rgba(13,9,5,.90));
+      border-top: 1px solid var(--border);
+      padding: 0 16px;
+      position: relative;
+    }
+    .zone-avancement::after {
+      content: '';
+      position: absolute;
+      top: -1px; left: 50%;
+      transform: translateX(-50%);
+      width: 260px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold2), transparent);
+    }
+
+    .av-label {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: .55rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      white-space: nowrap;
+      opacity: .65;
+      margin-right: 4px;
+    }
+
+    .av-card {
+      width: 58px;
+      height: 76px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: rgba(255,255,255,.03);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
       flex-shrink: 0;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s;
+    }
+    .av-card:hover {
+      border-color: var(--gold2);
+      background: rgba(184,134,11,.08);
+      transform: translateY(-2px);
+    }
+    .av-card.active {
+      border-color: rgba(106,191,97,.5);
+      background: rgba(106,191,97,.08);
+      box-shadow: 0 0 10px rgba(106,191,97,.15);
+    }
+    .av-card.done {
+      border-color: rgba(74,237,204,.25);
+      background: rgba(74,237,204,.04);
+      opacity: .55;
+    }
+    .av-card .av-icon { font-size: 1.3rem; }
+    .av-card .av-lbl {
+      font-size: .44rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #7a6a4a;
+      text-align: center;
+      line-height: 1.2;
+      padding: 0 3px;
+    }
+    .av-card.active .av-lbl { color: #6abf61; }
+    .av-card.done   .av-lbl { color: var(--teal); }
+
+    .av-arrow { color: rgba(184,134,11,.3); font-size: .75rem; flex-shrink: 0; }
+    .av-sep   { width: 1px; height: 45px; background: var(--border); margin: 0 6px; flex-shrink: 0; }
+
+    .tour-box {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      margin: 0 8px;
+    }
+    .tour-num {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem; font-weight: 600;
+      color: var(--gold2); line-height: 1;
+    }
+    .tour-sub {
+      font-size: .48rem; text-transform: uppercase;
+      letter-spacing: .1em; color: #5a4a2a;
+    }
+
+    /* ══════════════════════════════════════════
+       SIDEBAR (Joueurs + Log) en overlay sur
+       la carte, collée à droite — comme avant
+    ══════════════════════════════════════════ */
+    .sidebar {
+      position: absolute;
+      right: 0; top: 0;
+      width: 240px; height: 100%;
       background: rgba(26,18,9,.95);
-      border-left: 1px solid rgba(184,134,11,.25);
+      border-left: 1px solid rgba(184,134,11,.2);
       display: flex;
       flex-direction: column;
       overflow-y: auto;
-      padding: 16px;
-      gap: 14px;
+      padding: 12px;
+      gap: 10px;
+      z-index: 15;
+      transform: translateX(100%);
+      transition: transform .25s ease;
     }
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-toggle {
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      background: rgba(26,18,9,.9);
+      border: 1px solid var(--border);
+      border-right: none;
+      color: var(--gold2);
+      font-size: .7rem;
+      padding: 8px 5px;
+      cursor: pointer;
+      border-radius: 4px 0 0 4px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      letter-spacing: .1em;
+      font-family: 'Cinzel', serif;
+      z-index: 16;
+      transition: background .2s;
+    }
+    .sidebar-toggle:hover { background: rgba(40,25,10,.95); }
 
     .panel {
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(184,134,11,.2);
-      border-radius: 8px;
-      padding: 14px;
+      border-radius: 6px;
+      padding: 10px 12px;
     }
     .panel h2 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: .75rem;
+      font-size: .68rem;
       color: var(--gold);
       text-transform: uppercase;
       letter-spacing: .06em;
-      margin-bottom: 10px;
-      padding-bottom: 7px;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
       border-bottom: 1px solid rgba(184,134,11,.2);
     }
-
     .player-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 8px;
-      border-radius: 5px;
-      font-size: .9rem;
-      margin-bottom: 5px;
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 7px; border-radius: 4px;
+      font-size: .85rem; margin-bottom: 4px;
       background: rgba(255,255,255,.03);
     }
     .player-row.active { background: rgba(106,191,97,.1); border: 1px solid rgba(106,191,97,.3); }
-    .player-dot {
-      width: 11px; height: 11px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .player-pos {
-      margin-left: auto;
-      font-size: .72rem;
-      color: #6a5a3a;
-      font-family: monospace;
-    }
-    .turn-tag {
-      font-size: .65rem;
-      padding: 2px 6px;
-      background: #2d5a27;
-      color: #d4f5d0;
-      border-radius: 8px;
-    }
+    .player-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .player-pos { margin-left: auto; font-size: .68rem; color: #6a5a3a; font-family: monospace; }
+    .turn-tag { font-size: .6rem; padding: 1px 5px; background: #2d5a27; color: #d4f5d0; border-radius: 6px; }
 
-    #logList { list-style: none; max-height: 260px; overflow-y: auto; }
-    #logList li {
-      font-size: .78rem;
-      color: #8a7a5e;
-      padding: 4px 0;
-      border-bottom: 1px solid rgba(255,255,255,.04);
-      line-height: 1.4;
-    }
+    #logList { list-style: none; max-height: 220px; overflow-y: auto; }
+    #logList li { font-size: .74rem; color: #8a7a5e; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.04); line-height: 1.4; }
     #logList li:first-child { color: var(--parch); }
 
     .url-box {
-      background: rgba(0,0,0,.4);
-      color: var(--gold2);
-      padding: 8px 10px;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: .78rem;
-      word-break: break-all;
-      cursor: pointer;
+      background: rgba(0,0,0,.4); color: var(--gold2);
+      padding: 7px 9px; border-radius: 4px;
+      font-family: monospace; font-size: .72rem;
+      word-break: break-all; cursor: pointer;
       border: 1px solid rgba(184,134,11,.3);
     }
 
-    /* Legend */
-    .legend { display: flex; flex-wrap: wrap; gap: 6px; }
-    .legend-item { display: flex; align-items: center; gap: 4px; font-size: .75rem; color: #8a7a5e; }
-    .legend-swatch { width: 12px; height: 12px; border-radius: 2px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 5px; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: .7rem; color: #8a7a5e; }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
 
-    /* Calibration panel */
+    /* ══════════════════════════════════════════
+       CALIBRATION (panel dans la sidebar)
+    ══════════════════════════════════════════ */
     #calibPanel { display: none; }
     #calibPanel.open { display: block; }
 
     .calib-toggle {
       background: rgba(74,238,204,.1);
       border: 1px solid rgba(74,238,204,.4);
-      color: #4aedcc;
-      font-family: 'Crimson Pro', serif;
-      font-size: .82rem;
-      padding: 5px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background .15s;
+      color: #4aedcc; font-family: 'Crimson Pro', serif;
+      font-size: .78rem; padding: 4px 10px;
+      border-radius: 4px; cursor: pointer; transition: background .15s;
     }
     .calib-toggle:hover { background: rgba(74,238,204,.2); }
 
-    .slider-row {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      margin-bottom: 10px;
-    }
-    .slider-row label {
-      display: flex;
-      justify-content: space-between;
-      font-size: .75rem;
-      color: var(--gold);
-      letter-spacing: .04em;
-    }
-    .slider-row label span {
-      color: #4aedcc;
-      font-family: monospace;
-      font-size: .8rem;
-    }
-    .slider-row input[type=range] {
-      width: 100%;
-      accent-color: #4aedcc;
-      cursor: pointer;
-      height: 4px;
-    }
+    .slider-row { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+    .slider-row label { display: flex; justify-content: space-between; font-size: .7rem; color: var(--gold); letter-spacing: .03em; }
+    .slider-row label span { color: #4aedcc; font-family: monospace; font-size: .75rem; }
+    .slider-row input[type=range] { width: 100%; accent-color: #4aedcc; cursor: pointer; height: 3px; }
 
     .calib-copy {
-      width: 100%;
-      margin-top: 8px;
-      padding: 7px;
-      background: rgba(74,238,204,.15);
-      border: 1px solid rgba(74,238,204,.5);
-      color: #4aedcc;
-      font-family: 'Crimson Pro', serif;
-      font-size: .82rem;
-      border-radius: 4px;
-      cursor: pointer;
+      width: 100%; margin-top: 6px; padding: 6px;
+      background: rgba(74,238,204,.15); border: 1px solid rgba(74,238,204,.5);
+      color: #4aedcc; font-family: 'Crimson Pro', serif;
+      font-size: .75rem; border-radius: 4px; cursor: pointer;
     }
     .calib-copy:hover { background: rgba(74,238,204,.25); }
-
     .calib-code {
-      background: rgba(0,0,0,.5);
-      border: 1px solid rgba(74,238,204,.2);
-      border-radius: 4px;
-      padding: 8px;
-      font-family: monospace;
-      font-size: .7rem;
-      color: #4aedcc;
-      white-space: pre;
-      margin-top: 8px;
-      line-height: 1.6;
+      background: rgba(0,0,0,.5); border: 1px solid rgba(74,238,204,.2);
+      border-radius: 4px; padding: 6px; font-family: monospace;
+      font-size: .65rem; color: #4aedcc; white-space: pre; margin-top: 6px; line-height: 1.6;
     }
+
+    /* ══════════════════════════════════════════
+       TOOLTIP
+    ══════════════════════════════════════════ */
+    #tooltip {
+      position: fixed;
+      background: rgba(8,5,1,.97);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: .74rem;
+      color: #e8d4a8;
+      max-width: 180px;
+      pointer-events: none;
+      z-index: 100;
+      display: none;
+      line-height: 1.5;
+    }
+    #tooltip.show { display: block; }
+    #tooltip strong { color: var(--gold2); font-family: 'Cinzel', serif; font-size: .68rem; display: block; margin-bottom: 2px; }
   </style>
 </head>
 <body>
 
+<div id="tooltip"></div>
+
+<!-- ════════════════════════════════════ HEADER ══ -->
 <header>
   <h1>⚓ Maître de Jeu</h1>
   <span id="statusBadge" class="badge waiting">En attente</span>
@@ -287,94 +558,274 @@
   </div>
 </header>
 
-<div class="layout">
-  <div class="map-wrap" id="mapWrap">
+<!-- ════════════════════════════════════ PLATEAU ══ -->
+<div class="plateau">
+
+  <!-- ── BORD HAUT : ÉNIGMES ── -->
+  <div class="zone-enigmes">
+    <span class="enigmes-label">Énigmes</span>
+
+    <div class="enigme-slot" data-tip="Latitude I|Révèle une coordonnée sur l'axe des abscisses." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">↔</span><span class="s-label">Lat. I</span>
+    </div>
+    <div class="enigme-slot" data-tip="Latitude II|Révèle une coordonnée sur l'axe des abscisses." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">↔</span><span class="s-label">Lat. II</span>
+    </div>
+    <div class="enigme-slot" data-tip="Latitude III|Révèle une coordonnée sur l'axe des abscisses." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">↔</span><span class="s-label">Lat. III</span>
+    </div>
+
+    <div class="e-sep"></div>
+
+    <div class="enigme-slot" data-tip="Longitude I|Révèle une coordonnée sur l'axe des ordonnées." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">↕</span><span class="s-label">Lon. I</span>
+    </div>
+    <div class="enigme-slot" data-tip="Longitude II|Révèle une coordonnée sur l'axe des ordonnées." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">↕</span><span class="s-label">Lon. II</span>
+    </div>
+    <div class="enigme-slot" data-tip="Longitude III|Révèle une coordonnée sur l'axe des ordonnées." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">↕</span><span class="s-label">Lon. III</span>
+    </div>
+
+    <div class="e-sep"></div>
+
+    <div class="enigme-slot" data-tip="Code I|Combinaison de déchiffrement des coordonnées." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">🔐</span><span class="s-label">Code I</span>
+    </div>
+    <div class="enigme-slot" data-tip="Code II|Combinaison de déchiffrement des coordonnées." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">🔐</span><span class="s-label">Code II</span>
+    </div>
+    <div class="enigme-slot" data-tip="Code III|Combinaison de déchiffrement des coordonnées." onclick="this.classList.toggle('revealed')">
+      <span class="s-icon">🔐</span><span class="s-label">Code III</span>
+    </div>
+  </div>
+
+  <!-- ── BORD GAUCHE : ÎLES OUEST ── -->
+  <div class="zone-ile-gauche">
+    <div class="ile-section-title">⛵ Îles — Ouest</div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">💀</span><span class="ile-name">Île aux Squelettes</span></div>
+      <div class="ile-traits"><span class="trait-pill danger">Danger</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot" data-tip="Objet|Emplacement carte objet">🎁</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">🌫</span><span class="ile-name">Île des Brumes</span></div>
+      <div class="ile-traits"><span class="trait-pill mystere">Mystère</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot filled" data-tip="Parchemin des Brumes|Route vers l'Île des Brumes.">📜</div>
+        <div class="ile-slot" data-tip="Objet|Emplacement carte objet">🎁</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">⚓</span><span class="ile-name">Île des Naufragés</span></div>
+      <div class="ile-traits"><span class="trait-pill commerce">Commerce</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot" data-tip="Objet|Emplacement carte objet">🎁</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">🦑</span><span class="ile-name">Île du Kraken</span></div>
+      <div class="ile-traits"><span class="trait-pill danger">Danger ++</span><span class="trait-pill relique">Relique</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot filled" data-tip="Totem de Poséidon|Contrôle des mers.">🔱</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">🌋</span><span class="ile-name">Île Volcanique</span></div>
+      <div class="ile-traits"><span class="trait-pill danger">Danger</span><span class="trait-pill relique">Relique</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot" data-tip="Objet|Emplacement carte objet">🎁</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CENTRE : CARTE DU MONDE + SIDEBAR ── -->
+  <div class="zone-carte" id="mapWrap">
     <div id="mapContainer">
       <img id="mapImg" src="/Map.jpg" alt="Carte" />
       <canvas id="hexCanvas"></canvas>
       <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
+
+    <!-- Sidebar flottante sur la carte -->
+    <div class="sidebar" id="sidebar">
+      <div class="panel" id="calibPanel">
+        <h2>⚙ Calibration grille</h2>
+        <div class="slider-row">
+          <label>Rayon (HEX_R) <span id="vR">21.70</span>px</label>
+          <input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()">
+        </div>
+        <div class="slider-row">
+          <label>Marge gauche (MARGIN_X) <span id="vMX">48</span>px</label>
+          <input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()">
+        </div>
+        <div class="slider-row">
+          <label>Marge haute (MARGIN_Y) <span id="vMY">44</span>px</label>
+          <input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()">
+        </div>
+        <div class="slider-row">
+          <label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label>
+          <input type="range" id="sCS" min="20" max="70" step="0.1" value="48.6" oninput="updateCalib()">
+        </div>
+        <div class="slider-row">
+          <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
+          <input type="range" id="sRS" min="15" max="60" step="0.1" value="41.6" oninput="updateCalib()">
+        </div>
+        <div class="slider-row">
+          <label>Décalage rang impaire <span id="vOF">24.40</span>px</label>
+          <input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()">
+        </div>
+        <div class="calib-code" id="calibCode"></div>
+        <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
+      </div>
+
+      <div class="panel">
+        <h2>Connexion joueur</h2>
+        <div class="url-box" id="playerUrl" onclick="copyUrl()">Chargement…</div>
+      </div>
+
+      <div class="panel">
+        <h2>Joueurs (<span id="playerCount">0</span>)</h2>
+        <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.82rem">Aucun joueur…</div></div>
+      </div>
+
+      <div class="panel">
+        <h2>Légende</h2>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-swatch" style="background:rgba(74,238,204,.35);border:1px solid #4aedcc"></div> Case départ</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,200,50,.25);border:1px solid #ffc832"></div> Déplacement</div>
+          <div class="legend-item"><div class="legend-swatch" style="background:rgba(106,191,97,.2);border:1px solid #6abf61"></div> Tour actif</div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1">
+        <h2>Journal</h2>
+        <ul id="logList"><li>En attente…</li></ul>
+      </div>
+    </div>
+
+    <!-- Bouton pour ouvrir/fermer la sidebar -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">Joueurs &amp; Log</button>
   </div>
 
-  <div class="sidebar">
-    <div class="panel" id="calibPanel">
-      <h2>⚙ Calibration grille</h2>
+  <!-- ── BORD DROIT : ÎLES EST ── -->
+  <div class="zone-ile-droite">
+    <div class="ile-section-title">⛵ Îles — Est</div>
 
-      <div class="slider-row">
-        <label>Rayon (HEX_R) <span id="vR">21.70</span>px</label>
-        <input type="range" id="sR" min="10" max="50" step="0.1" value="21.7" oninput="updateCalib()">
-      </div>
-      <div class="slider-row">
-        <label>Marge gauche (MARGIN_X) <span id="vMX">38</span>px</label>
-        <input type="range" id="sMX" min="0" max="100" step="0.5" value="48" oninput="updateCalib()">
-      </div>
-      <div class="slider-row">
-        <label>Marge haute (MARGIN_Y) <span id="vMY">38</span>px</label>
-        <input type="range" id="sMY" min="0" max="100" step="0.5" value="44" oninput="updateCalib()">
-      </div>
-      <div class="slider-row">
-        <label>Espacement col (COL_SP) <span id="vCS">48.60</span>px</label>
-        <input type="range" id="sCS" min="20" max="70" step="0.1" value="48.6" oninput="updateCalib()">
-      </div>
-      <div class="slider-row">
-        <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
-        <input type="range" id="sRS" min="15" max="60" step="0.1" value="41.6" oninput="updateCalib()">
-      </div>
-      <div class="slider-row">
-        <label>Décalage rang impaire (offset) <span id="vOF">24.40</span>px</label>
-        <input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4" oninput="updateCalib()">
-      </div>
-
-      <div class="calib-code" id="calibCode"></div>
-      <button class="calib-copy" onclick="copyCalib()">📋 Copier les constantes</button>
-    </div>
-
-    <div class="panel">
-      <h2>Connexion joueur</h2>
-      <div class="url-box" id="playerUrl" onclick="copyUrl()">Chargement…</div>
-    </div>
-
-    <div class="panel">
-      <h2>Joueurs (<span id="playerCount">0</span>)</h2>
-      <div id="playerList"><div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div></div>
-    </div>
-
-    <div class="panel">
-      <h2>Légende</h2>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-swatch" style="background:rgba(74,238,204,.35);border:1px solid #4aedcc"></div> Case départ</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:rgba(255,200,50,.25);border:1px solid #ffc832"></div> Déplacement</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:rgba(106,191,97,.2);border:1px solid #6abf61"></div> Tour actif</div>
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">⛈</span><span class="ile-name">Île des Tempêtes</span></div>
+      <div class="ile-traits"><span class="trait-pill danger">Danger</span><span class="trait-pill mystere">Événement</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot" data-tip="Objet|Emplacement carte objet">🎁</div>
       </div>
     </div>
 
-    <div class="panel" style="flex:1">
-      <h2>Journal</h2>
-      <ul id="logList"><li>En attente…</li></ul>
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">💰</span><span class="ile-name">Île Dorée</span></div>
+      <div class="ile-traits"><span class="trait-pill commerce">Commerce ++</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot filled" data-tip="Parchemin de l'Île Dorée|Route vers l'Île Dorée.">📜</div>
+        <div class="ile-slot filled" data-tip="Trésor Caché|Gagne 3 doublons immédiatement.">💰</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">👻</span><span class="ile-name">Île Fantôme</span></div>
+      <div class="ile-traits"><span class="trait-pill mystere">Mystère</span><span class="trait-pill relique">Relique</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot filled" data-tip="Totem de Zeus|Contrôle de la foudre.">⚡</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">🌿</span><span class="ile-name">Île des Épices</span></div>
+      <div class="ile-traits"><span class="trait-pill commerce">Commerce</span><span class="trait-pill neutre">Neutre</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot" data-tip="Objet|Emplacement carte objet">🎁</div>
+      </div>
+    </div>
+
+    <div class="ile-card">
+      <div class="ile-card-header"><span class="ile-icon">🪸</span><span class="ile-name">Île des Coraux</span></div>
+      <div class="ile-traits"><span class="trait-pill neutre">Neutre</span><span class="trait-pill relique">Relique</span></div>
+      <div class="ile-slots">
+        <div class="ile-slot" data-tip="Parchemin|Emplacement carte parchemin">📜</div>
+        <div class="ile-slot filled" data-tip="Totem d'Éole|Contrôle des vents.">💨</div>
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- ── BORD BAS : AVANCEMENT ── -->
+  <div class="zone-avancement">
+    <span class="av-label">Avancement</span>
+
+    <div class="av-card done"   data-tip="Embarquement|Positions de départ choisies.">
+      <span class="av-icon">⚓</span><span class="av-lbl">Embarque&shy;ment</span>
+    </div>
+    <span class="av-arrow">›</span>
+    <div class="av-card done"   data-tip="Distribution|Parchemins distribués aux joueurs.">
+      <span class="av-icon">📜</span><span class="av-lbl">Distribu&shy;tion</span>
+    </div>
+    <span class="av-arrow">›</span>
+    <div class="av-card active" data-tip="Exploration|Les joueurs naviguent vers les îles.">
+      <span class="av-icon">🧭</span><span class="av-lbl">Explora&shy;tion</span>
+    </div>
+    <span class="av-arrow">›</span>
+    <div class="av-card"        data-tip="Déchiffrement|Les énigmes de coordonnées sont révélées.">
+      <span class="av-icon">🔍</span><span class="av-lbl">Déchiffre&shy;ment</span>
+    </div>
+    <span class="av-arrow">›</span>
+    <div class="av-card"        data-tip="Reliques|Chasse aux Totems anciens.">
+      <span class="av-icon">🔱</span><span class="av-lbl">Reliques</span>
+    </div>
+    <span class="av-arrow">›</span>
+    <div class="av-card"        data-tip="Confrontation|Combat final pour la maîtrise des mers.">
+      <span class="av-icon">⚔</span><span class="av-lbl">Confron&shy;tation</span>
+    </div>
+    <span class="av-arrow">›</span>
+    <div class="av-card"        data-tip="Victoire|Le maître des mers est couronné.">
+      <span class="av-icon">🏆</span><span class="av-lbl">Victoire</span>
+    </div>
+
+    <div class="av-sep"></div>
+
+    <div class="tour-box">
+      <span class="tour-num" id="tourNum">1</span>
+      <span class="tour-sub">Tour en cours</span>
+    </div>
+  </div>
+
+</div><!-- fin .plateau -->
 
 <script>
 // ─── Hex Grid Math (POINTY-TOP, odd-r offset RIGHT) ──────────────────────────
 const COLS = 25, ROWS = 21;
 const IMG_W = 1288, IMG_H = 952;
 
-// Live calibration values (updated by sliders)
-let MARGIN_X = 48.0;
-let MARGIN_Y = 44.0;
-let COL_SP   = 48.600;
-let ROW_SP   = 41.600;
-let HEX_R    = 21.700;
+let MARGIN_X   = 48.0;
+let MARGIN_Y   = 44.0;
+let COL_SP     = 48.600;
+let ROW_SP     = 41.600;
+let HEX_R      = 21.700;
 let ROW_OFFSET = 24.400;
 
 const START_POSITIONS = [
-  { q: 0,  r: 0  },
-  { q: 12, r: 0  },
-  { q: 24, r: 0  },
-  { q: 24, r: 20 },
-  { q: 12, r: 20 },
-  { q: 0,  r: 20 },
+  { q: 0,  r: 0  }, { q: 12, r: 0  }, { q: 24, r: 0  },
+  { q: 24, r: 20 }, { q: 12, r: 20 }, { q: 0,  r: 20 },
 ];
 
 function hexCenter(q, r, scale) {
@@ -399,7 +850,6 @@ function hexPoints(cx, cy, scale) {
 // ─── State & Socket ───────────────────────────────────────────────────────────
 const socket = io();
 let state = {};
-let imgScale = 1;
 
 const playerUrl = `${location.protocol}//${location.hostname}:${location.port}/player`;
 document.getElementById("playerUrl").textContent = playerUrl;
@@ -421,7 +871,7 @@ socket.on("game:state", (s) => {
   renderMap();
 });
 
-// ─── UI Sidebar ───────────────────────────────────────────────────────────────
+// ─── UI ───────────────────────────────────────────────────────────────────────
 function renderUI() {
   // Badge
   const badge = document.getElementById("statusBadge");
@@ -429,12 +879,17 @@ function renderUI() {
   badge.textContent = labels[state.status] || state.status;
   badge.className = "badge " + state.status;
 
+  // Tour counter
+  if (state.turnIndex !== undefined) {
+    document.getElementById("tourNum").textContent = Math.floor(state.turnIndex / Math.max(1, Object.keys(state.players || {}).length)) + 1;
+  }
+
   // Players
   const players = Object.entries(state.players || {});
   document.getElementById("playerCount").textContent = players.length;
   const list = document.getElementById("playerList");
   if (!players.length) {
-    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.85rem">Aucun joueur…</div>`;
+    list.innerHTML = `<div style="color:#6a5a3a;font-style:italic;font-size:.8rem">Aucun joueur…</div>`;
   } else {
     list.innerHTML = players.map(([id, p]) => {
       const isActive = state.currentTurn === id;
@@ -453,9 +908,9 @@ function renderUI() {
     players.length < 1 || state.status === "playing" || state.status === "picking";
 
   // Log
-  const logList = document.getElementById("logList");
-  logList.innerHTML = (state.log?.length ? state.log : ["Aucun événement."])
-    .map(e => `<li>${e}</li>`).join("");
+  document.getElementById("logList").innerHTML =
+    (state.log?.length ? state.log : ["Aucun événement."])
+      .map(e => `<li>${e}</li>`).join("");
 }
 
 // ─── Map Rendering ────────────────────────────────────────────────────────────
@@ -465,70 +920,63 @@ function getScale() {
 }
 
 function renderMap() {
-  const svg = document.getElementById("hexOverlay");
+  const svg   = document.getElementById("hexOverlay");
   const scale = getScale();
+  let html    = "";
 
-  let html = "";
-
-  // Draw all hex cells lightly
   for (let r = 0; r < ROWS; r++) {
     for (let q = 0; q < COLS; q++) {
       const { x, y } = hexCenter(q, r, scale);
-      const pts = hexPoints(x, y, scale);
-      html += `<polygon points="${pts}" fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}"/>`;
+      html += `<polygon points="${hexPoints(x, y, scale)}" fill="transparent" stroke="rgba(184,134,11,0.08)" stroke-width="${scale}"/>`;
     }
   }
 
-  // Highlight start slots (during picking phase)
   if (state.status === "picking" && state.pendingStartSlots) {
     for (const { q, r } of state.pendingStartSlots) {
       const { x, y } = hexCenter(q, r, scale);
-      const pts = hexPoints(x, y, scale);
-      html += `<polygon points="${pts}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}"/>`;
+      html += `<polygon points="${hexPoints(x, y, scale)}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}"/>`;
     }
   }
 
-  // Highlight move options
   if (state.moveOptions?.length) {
     for (const { q, r } of state.moveOptions) {
       const { x, y } = hexCenter(q, r, scale);
-      const pts = hexPoints(x, y, scale);
-      html += `<polygon points="${pts}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}"/>`;
+      html += `<polygon points="${hexPoints(x, y, scale)}" fill="rgba(255,200,50,0.22)" stroke="#ffc832" stroke-width="${1.5*scale}"/>`;
     }
   }
 
-  // Draw player tokens
-  const players = Object.entries(state.players || {});
-  for (const [id, p] of players) {
+  for (const [id, p] of Object.entries(state.players || {})) {
     if (!p.position) continue;
-    const { q, r } = p.position;
-    const { x, y } = hexCenter(q, r, scale);
-    const isActive = state.currentTurn === id;
-    const radius = 9 * scale;
-    if (isActive) {
+    const { x, y } = hexCenter(p.position.q, p.position.r, scale);
+    const isActive  = state.currentTurn === id;
+    const radius    = 9 * scale;
+    if (isActive)
       html += `<circle cx="${x}" cy="${y}" r="${radius+3*scale}" fill="none" stroke="${p.color}" stroke-width="${1.5*scale}" opacity="0.6"/>`;
-    }
     html += `<circle cx="${x}" cy="${y}" r="${radius}" fill="${p.color}" stroke="#1a1209" stroke-width="${scale}"/>`;
-    const fs = 7 * scale;
-    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${fs}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
+    html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*scale}" font-weight="bold">${p.name[0].toUpperCase()}</text>`;
   }
 
-  // Dice roll display: show value near current player
   if (state.diceRoll && state.players[state.diceRoll.playerId]?.position) {
-    const p = state.players[state.diceRoll.playerId];
+    const p       = state.players[state.diceRoll.playerId];
     const { x, y } = hexCenter(p.position.q, p.position.r, scale);
-    const fs = 11 * scale;
-    html += `<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${fs*1.4}" filter="url(#shadow)">🎲${state.diceRoll.value}</text>`;
+    html += `<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${11*scale*1.4}" filter="url(#shadow)">🎲${state.diceRoll.value}</text>`;
   }
 
   svg.innerHTML = `<defs><filter id="shadow"><feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="#000" flood-opacity="0.8"/></filter></defs>` + html;
 }
 
-// ─── Calibration ──────────────────────────────────────────────────────────────
+// ─── Sidebar toggle ───────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sb  = document.getElementById("sidebar");
+  const btn = document.getElementById("sidebarToggle");
+  sb.classList.toggle("open");
+  btn.style.right = sb.classList.contains("open") ? "240px" : "0";
+}
+
+// ─── Calibration ─────────────────────────────────────────────────────────────
 function toggleCalib() {
-  const panel = document.getElementById("calibPanel");
-  panel.classList.toggle("open");
-  if (panel.classList.contains("open")) updateCalibDisplay();
+  document.getElementById("calibPanel").classList.toggle("open");
+  if (document.getElementById("calibPanel").classList.contains("open")) updateCalibDisplay();
 }
 
 function updateCalib() {
@@ -538,14 +986,12 @@ function updateCalib() {
   COL_SP     = parseFloat(document.getElementById("sCS").value);
   ROW_SP     = parseFloat(document.getElementById("sRS").value);
   ROW_OFFSET = parseFloat(document.getElementById("sOF").value);
-
-  document.getElementById("vR").textContent  = HEX_R.toFixed(2);
-  document.getElementById("vMX").textContent = MARGIN_X.toFixed(1);
-  document.getElementById("vMY").textContent = MARGIN_Y.toFixed(1);
-  document.getElementById("vCS").textContent = COL_SP.toFixed(2);
-  document.getElementById("vRS").textContent = ROW_SP.toFixed(2);
-  document.getElementById("vOF").textContent = ROW_OFFSET.toFixed(2);
-
+  document.getElementById("vR").textContent   = HEX_R.toFixed(2);
+  document.getElementById("vMX").textContent  = MARGIN_X.toFixed(1);
+  document.getElementById("vMY").textContent  = MARGIN_Y.toFixed(1);
+  document.getElementById("vCS").textContent  = COL_SP.toFixed(2);
+  document.getElementById("vRS").textContent  = ROW_SP.toFixed(2);
+  document.getElementById("vOF").textContent  = ROW_OFFSET.toFixed(2);
   updateCalibDisplay();
   syncCanvasSize();
   renderMap();
@@ -576,38 +1022,45 @@ const ROW_OFFSET = ${ROW_OFFSET.toFixed(3)};`;
   });
 }
 
-// Init calibration display
-updateCalibDisplay();
-
 // ─── Controls ─────────────────────────────────────────────────────────────────
 function startGame() { socket.emit("master:start"); }
 function resetGame() { if (confirm("Réinitialiser la partie ?")) socket.emit("master:reset"); }
 
-// ─── Resize handling ──────────────────────────────────────────────────────────
+// ─── Resize ───────────────────────────────────────────────────────────────────
 const mapImg = document.getElementById("mapImg");
-mapImg.addEventListener("load", () => {
-  syncCanvasSize();
-  renderMap();
-});
-window.addEventListener("resize", () => {
-  syncCanvasSize();
-  renderMap();
-});
+mapImg.addEventListener("load",  () => { syncCanvasSize(); renderMap(); });
+window.addEventListener("resize", () => { syncCanvasSize(); renderMap(); });
 
 function syncCanvasSize() {
   const img = document.getElementById("mapImg");
   const svg = document.getElementById("hexOverlay");
-  svg.setAttribute("width", img.clientWidth);
+  svg.setAttribute("width",  img.clientWidth);
   svg.setAttribute("height", img.clientHeight);
-  svg.style.width = img.clientWidth + "px";
+  svg.style.width  = img.clientWidth  + "px";
   svg.style.height = img.clientHeight + "px";
 }
+if (mapImg.complete) { syncCanvasSize(); renderMap(); }
 
-// Init if image already loaded
-if (mapImg.complete) {
-  syncCanvasSize();
-  renderMap();
-}
+// ─── Tooltip ──────────────────────────────────────────────────────────────────
+const tip = document.getElementById("tooltip");
+document.querySelectorAll("[data-tip]").forEach(el => {
+  el.addEventListener("mouseenter", () => {
+    const [title, desc] = el.dataset.tip.split("|");
+    tip.innerHTML = `<strong>${title}</strong>${desc || ""}`;
+    tip.classList.add("show");
+  });
+  el.addEventListener("mousemove", e => {
+    let x = e.clientX + 12, y = e.clientY - 8;
+    if (x + 190 > window.innerWidth)  x = e.clientX - 195;
+    if (y + 70  > window.innerHeight) y = e.clientY - 65;
+    tip.style.left = x + "px";
+    tip.style.top  = y + "px";
+  });
+  el.addEventListener("mouseleave", () => tip.classList.remove("show"));
+});
+
+// Init calibration display
+updateCalibDisplay();
 </script>
 </body>
 </html>
