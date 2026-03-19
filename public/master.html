@@ -64,7 +64,7 @@
       border-right:1px solid var(--border); flex-shrink:0;
       height:100%;
     }
-    .top-label { font-family:'Cinzel Decorative',serif; font-size:.72rem; color:var(--gold); text-transform:uppercase; letter-spacing:.14em; white-space:nowrap; opacity:.7; margin-right:4px; }
+    .top-label { font-family:'Cinzel Decorative',serif; font-size:.82rem; color:var(--gold); text-transform:uppercase; letter-spacing:.14em; white-space:nowrap; opacity:.7; margin-right:4px; }
 
     .card-slot {
       width:68px; height:80px; border:1px dashed rgba(184,134,11,.3); border-radius:6px;
@@ -73,8 +73,8 @@
       gap:3px; flex-shrink:0; cursor:default; position:relative;
     }
     .card-slot .cs-icon  { font-size:1.5rem; }
-    .card-slot .cs-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; color:#8a7a5a; text-align:center; line-height:1.2; padding:0 3px; }
-    .card-slot .cs-sub   { font-size:.55rem; color:#5a4a2a; text-align:center; }
+    .card-slot .cs-label { font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:#8a7a5a; text-align:center; line-height:1.2; padding:0 3px; }
+    .card-slot .cs-sub   { font-size:.76rem; color:#6a5a3a; text-align:center; }
 
     /* Bloc avancement */
     .top-avancement {
@@ -128,16 +128,16 @@
     .ile-biome { font-size:.88rem; color:#9a8a6e; font-style:italic; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     .ile-coords { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
-    .ile-coord-tag { font-family:monospace; font-size:.7rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:2px 6px; }
+    .ile-coord-tag { font-family:monospace; font-size:.82rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:2px 6px; }
     .ile-coord-tag.has-coord { color:#4aedcc; opacity:.9; background:rgba(74,237,204,.12); border-color:rgba(74,237,204,.35); }
 
-    .ile-objets-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#5a4a2a; padding-top:2px; }
+    .ile-objets-label { font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:#6a5a3a; padding-top:2px; }
     .ile-objets-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(26px,1fr)); gap:3px; }
     .obj-slot {
       aspect-ratio:1; border:1px dashed rgba(184,134,11,.2); border-radius:3px;
       background:rgba(255,255,255,.02);
       display:flex; align-items:center; justify-content:center;
-      font-size:.72rem; color:#3a2a10; cursor:default; transition:border-color .15s;
+      font-size:.82rem; color:#3a2a10; cursor:default; transition:border-color .15s;
     }
     .obj-slot:hover { border-color:rgba(184,134,11,.4); }
 
@@ -150,14 +150,14 @@
       border:1px solid rgba(184,134,11,.12);
     }
     .ile-parchemin-label {
-      font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#6a5a30;
+      font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:#8a7a50;
       white-space:nowrap; flex-shrink:0;
     }
 
     /* La "carte parchemin" flip */
     .parch-card-scene {
-      flex:1; height:56px;
-      perspective:400px;
+      flex:1; height:72px;
+      perspective:500px;
     }
     .parch-card-inner {
       width:100%; height:100%;
@@ -173,7 +173,7 @@
       position:absolute; inset:0;
       backface-visibility:hidden;
       -webkit-backface-visibility:hidden;
-      border-radius:6px;
+      border-radius:7px;
       display:flex; align-items:center; justify-content:center;
       overflow:hidden;
     }
@@ -181,43 +181,46 @@
     .parch-back-face {
       background:linear-gradient(135deg, rgba(101,72,24,.9) 0%, rgba(60,40,12,.95) 100%);
       border:1px solid rgba(184,134,11,.45);
-      flex-direction:column; gap:3px;
+      flex-direction:row; gap:8px;
     }
     .parch-back-face:hover {
       border-color:rgba(212,160,23,.75);
       background:linear-gradient(135deg, rgba(120,86,28,.9) 0%, rgba(75,50,15,.95) 100%);
     }
-    .parch-scroll-svg { width:36px; height:36px; opacity:.85; }
+    .parch-scroll-svg { width:44px; height:44px; opacity:.9; flex-shrink:0; }
+    .parch-back-text { display:flex; flex-direction:column; gap:2px; }
+    .parch-back-title {
+      font-family:'Cinzel',serif; font-size:.85rem; color:rgba(212,160,23,.8); letter-spacing:.04em;
+    }
     .parch-back-hint {
-      font-size:.6rem; color:rgba(212,160,23,.55); letter-spacing:.06em;
-      text-transform:uppercase; font-family:'Cinzel',serif;
+      font-size:.8rem; color:rgba(212,160,23,.45); font-style:italic;
     }
     /* Face : contenu révélé */
     .parch-front-face {
       transform:rotateY(180deg);
-      flex-direction:column; gap:4px;
-      padding:6px 10px;
+      flex-direction:row; gap:10px;
+      padding:8px 12px;
     }
     .parch-front-face.type-ile {
-      background:linear-gradient(135deg, rgba(101,72,10,.92) 0%, rgba(60,44,8,.96) 100%);
+      background:linear-gradient(135deg, rgba(101,72,10,.95) 0%, rgba(60,44,8,.98) 100%);
       border:1px solid rgba(212,160,23,.6);
     }
     .parch-front-face.type-vierge {
-      background:linear-gradient(135deg, rgba(50,42,28,.92) 0%, rgba(30,24,12,.96) 100%);
+      background:linear-gradient(135deg, rgba(50,42,28,.95) 0%, rgba(30,24,12,.98) 100%);
       border:1px solid rgba(120,110,80,.4);
     }
-    .parch-front-icon { font-size:1.3rem; line-height:1; }
+    .parch-front-icon { font-size:1.8rem; line-height:1; flex-shrink:0; }
+    .parch-front-info { display:flex; flex-direction:column; gap:3px; min-width:0; }
     .parch-front-type {
-      font-family:'Cinzel',serif; font-size:.6rem; text-transform:uppercase;
-      letter-spacing:.09em; opacity:.6;
+      font-family:'Cinzel',serif; font-size:.78rem; text-transform:uppercase;
+      letter-spacing:.09em; opacity:.55; color:var(--parch);
     }
     .parch-front-ile {
-      font-family:'Cinzel',serif; font-size:.78rem; color:var(--gold2);
-      text-align:center; line-height:1.25;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+      font-family:'Cinzel',serif; font-size:.9rem; color:var(--gold2);
+      line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     }
     .parch-front-vierge {
-      font-size:.82rem; color:#8a7a5a; font-style:italic;
+      font-size:.9rem; color:#9a8a6a; font-style:italic;
     }
 
     /* CENTRE : CARTE DU MONDE */
@@ -290,7 +293,7 @@
 
     /* Coordonnées multiples sur la mat-card */
     .ile-coords { display:flex; flex-wrap:wrap; gap:3px; margin-top:3px; }
-    .ile-coord-tag { font-family:monospace; font-size:.6rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:1px 5px; }
+    .ile-coord-tag { font-family:monospace; font-size:.78rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:1px 5px; }
     .ile-coord-tag.has-coord { color:#4aedcc; opacity:.9; background:rgba(74,237,204,.12); border-color:rgba(74,237,204,.35); }
 
     /* Tooltip hex */
@@ -309,7 +312,7 @@
       background:rgba(184,134,11,.1);
     }
     .card-slot.enigme-filled .cs-icon { font-size:1.1rem; }
-    .card-slot.enigme-filled .cs-sub  { color:#4aedcc; font-size:.5rem; }
+    .card-slot.enigme-filled .cs-sub  { color:#4aedcc; font-size:.76rem; }
 
     /* ── Popup Mise en Place ── */
     #setupOverlay {
@@ -339,7 +342,7 @@
       font-family:'Cinzel Decorative',serif; font-size:1rem; color:var(--gold2); flex:1;
     }
     .setup-header .setup-step-badge {
-      font-size:.68rem; font-family:'Cinzel',serif; letter-spacing:.08em;
+      font-size:.82rem; font-family:'Cinzel',serif; letter-spacing:.08em;
       padding:3px 10px; border-radius:10px;
       background:rgba(184,134,11,.12); border:1px solid rgba(184,134,11,.3); color:var(--gold);
     }
@@ -359,14 +362,14 @@
       border-color:rgba(90,173,82,.3); background:rgba(45,90,39,.06);
     }
     .setup-section-title {
-      font-family:'Cinzel',serif; font-size:.82rem; color:var(--gold);
+      font-family:'Cinzel',serif; font-size:.98rem; color:var(--gold);
       margin-bottom:10px; display:flex; align-items:center; gap:7px;
     }
     .setup-section-title .step-num {
-      width:20px; height:20px; border-radius:50%;
+      width:22px; height:22px; border-radius:50%;
       background:rgba(184,134,11,.18); border:1px solid rgba(184,134,11,.35);
       display:flex; align-items:center; justify-content:center;
-      font-size:.65rem; color:var(--gold2); flex-shrink:0;
+      font-size:.78rem; color:var(--gold2); flex-shrink:0;
     }
     .setup-section.done .step-num {
       background:rgba(90,173,82,.25); border-color:#6abf61; color:#6abf61;
@@ -379,8 +382,8 @@
       display:flex; flex-wrap:wrap; gap:7px; min-height:40px;
     }
     .setup-card-chip {
-      display:flex; align-items:center; gap:5px;
-      padding:4px 10px; border-radius:6px; font-size:.75rem;
+      display:flex; align-items:center; gap:6px;
+      padding:5px 12px; border-radius:6px; font-size:.9rem;
       border:1px solid rgba(184,134,11,.25); background:rgba(0,0,0,.4);
       color:#c4a96a; font-family:'Crimson Pro',serif;
       opacity:0; transform:translateY(6px);
@@ -392,7 +395,6 @@
     .setup-card-chip.type-lat     { border-color:rgba(74,237,204,.4); color:#4aedcc; background:rgba(74,237,204,.08); }
     .setup-card-chip.type-lon     { border-color:rgba(74,150,237,.4); color:#4ab0ed; background:rgba(74,150,237,.08); }
     .setup-card-chip.type-code    { border-color:rgba(180,80,230,.4); color:#c06eed; background:rgba(140,50,190,.08); }
-    .setup-card-chip.type-temps   { border-color:rgba(255,200,50,.3); color:#ffc832; background:rgba(255,200,50,.06); }
 
     /* Attribution île → parchemin */
     .setup-attribution-list {
@@ -400,15 +402,15 @@
     }
     .setup-attrib-row {
       display:flex; align-items:center; gap:8px;
-      font-size:.78rem; color:#8a7a5e;
-      padding:4px 8px; border-radius:5px;
+      font-size:.92rem; color:#8a7a5e;
+      padding:5px 10px; border-radius:5px;
       background:rgba(255,255,255,.02);
       opacity:0; transform:translateX(-8px);
       transition:opacity .3s, transform .3s;
     }
     .setup-attrib-row.show { opacity:1; transform:translateX(0); }
-    .setup-attrib-row .attrib-ile  { font-family:'Cinzel',serif; font-size:.75rem; color:#c4a96a; flex:1; }
-    .setup-attrib-row .attrib-parch { font-size:.72rem; }
+    .setup-attrib-row .attrib-ile  { font-family:'Cinzel',serif; font-size:.88rem; color:#c4a96a; flex:1; }
+    .setup-attrib-row .attrib-parch { font-size:.86rem; }
     .setup-attrib-row .attrib-parch.ile-type    { color:var(--gold2); }
     .setup-attrib-row .attrib-parch.vierge-type { color:#7a6a4a; }
 
@@ -530,7 +532,7 @@
   <div class="setup-modal">
     <div class="setup-header">
       <h2>⚓ Mise en place de la partie</h2>
-      <span class="setup-step-badge" id="setupStepBadge">Étape 1 / 3</span>
+      <span class="setup-step-badge" id="setupStepBadge">Étape 1 / 2</span>
     </div>
     <div class="setup-body" id="setupBody">
 
@@ -540,12 +542,12 @@
           <span class="step-num">1</span>
           📜 Distribution des Parchemins
         </div>
-        <p style="font-size:.8rem;color:#7a6a4a;margin-bottom:10px;font-style:italic">
+        <p style="font-size:.85rem;color:#7a6a4a;margin-bottom:10px;font-style:italic">
           3 parchemins île sélectionnés au hasard, complétés par des parchemins vierges. Distribués face cachée sur chaque île.
         </p>
-        <div style="font-size:.72rem;color:#5a4a2a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">Cartes tirées</div>
+        <div style="font-size:.8rem;color:#6a5a3a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">Cartes tirées</div>
         <div class="setup-cards-grid" id="setupParchCards"></div>
-        <div style="font-size:.72rem;color:#5a4a2a;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.08em;">Attribution</div>
+        <div style="font-size:.8rem;color:#6a5a3a;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.08em;">Attribution</div>
         <div class="setup-attribution-list" id="setupParchAttrib"></div>
       </div>
 
@@ -555,27 +557,15 @@
           <span class="step-num">2</span>
           🔍 Dépôt des Énigmes
         </div>
-        <p style="font-size:.8rem;color:#7a6a4a;margin-bottom:10px;font-style:italic">
+        <p style="font-size:.85rem;color:#7a6a4a;margin-bottom:10px;font-style:italic">
           1 carte Latitude, 1 Longitude, 1 Code tirées au hasard. Placées face cachée sur les emplacements dédiés.
         </p>
         <div class="setup-cards-grid" id="setupEnigmeCards"></div>
       </div>
 
-      <!-- Étape 3 : Cartes Temps -->
-      <div class="setup-section" id="setupSec3">
-        <div class="setup-section-title">
-          <span class="step-num">3</span>
-          ⏳ Cartes Temps
-        </div>
-        <p style="font-size:.8rem;color:#7a6a4a;margin-bottom:10px;font-style:italic">
-          Les cartes Temps sont préparées pour la barre d'avancement.
-        </p>
-        <div class="setup-cards-grid" id="setupTempsCards"></div>
-      </div>
-
     </div>
     <div class="setup-footer">
-      <div class="setup-progress"><div class="setup-progress-bar" id="setupProgressBar" style="width:33%"></div></div>
+      <div class="setup-progress"><div class="setup-progress-bar" id="setupProgressBar" style="width:50%"></div></div>
       <button class="setup-btn-next" id="setupBtnNext" onclick="setupNextStep()">Étape suivante →</button>
       <button class="setup-btn-close" id="setupBtnClose" onclick="closeSetup()">✓ Commencer la partie</button>
     </div>
@@ -617,25 +607,19 @@ function renderIles(){
   bindIleHover();
 }
 
-// SVG parchemin enroulé (dos de la carte)
-const SCROLL_SVG = `<svg class="parch-scroll-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- corps du parchemin -->
-  <rect x="10" y="14" width="44" height="36" rx="3" fill="#c8922a" opacity=".85"/>
-  <rect x="12" y="16" width="40" height="32" rx="2" fill="#e8c06a" opacity=".6"/>
-  <!-- rouleau haut -->
-  <rect x="7" y="10" width="50" height="9" rx="4" fill="#b07820" opacity=".9"/>
-  <rect x="10" y="11" width="44" height="7" rx="3" fill="#d4a030" opacity=".7"/>
-  <!-- rouleau bas -->
-  <rect x="7" y="45" width="50" height="9" rx="4" fill="#b07820" opacity=".9"/>
-  <rect x="10" y="46" width="44" height="7" rx="3" fill="#d4a030" opacity=".7"/>
-  <!-- lignes de texte -->
-  <line x1="18" y1="24" x2="46" y2="24" stroke="#7a5010" stroke-width="1.5" opacity=".5"/>
-  <line x1="18" y1="30" x2="46" y2="30" stroke="#7a5010" stroke-width="1.5" opacity=".5"/>
-  <line x1="18" y1="36" x2="38" y2="36" stroke="#7a5010" stroke-width="1.5" opacity=".5"/>
-  <!-- sceau -->
-  <circle cx="32" cy="32" r="6" fill="#c8400a" opacity=".7"/>
-  <circle cx="32" cy="32" r="4" fill="#e05010" opacity=".6"/>
-  <text x="32" y="35" text-anchor="middle" font-size="5" fill="#fff" opacity=".8" font-family="serif">⚓</text>
+// SVG parchemin enroulé (dos de la carte) — plus grand, plus visible
+const SCROLL_SVG = `<svg class="parch-scroll-svg" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="12" width="40" height="32" rx="3" fill="#c8922a" opacity=".85"/>
+  <rect x="10" y="14" width="36" height="28" rx="2" fill="#e8c06a" opacity=".55"/>
+  <rect x="5" y="8"  width="46" height="8"  rx="4" fill="#a06818" opacity=".95"/>
+  <rect x="8" y="9"  width="40" height="6"  rx="3" fill="#cc9030" opacity=".7"/>
+  <rect x="5" y="40" width="46" height="8"  rx="4" fill="#a06818" opacity=".95"/>
+  <rect x="8" y="41" width="40" height="6"  rx="3" fill="#cc9030" opacity=".7"/>
+  <line x1="15" y1="22" x2="41" y2="22" stroke="#7a5010" stroke-width="1.5" opacity=".45"/>
+  <line x1="15" y1="28" x2="41" y2="28" stroke="#7a5010" stroke-width="1.5" opacity=".45"/>
+  <line x1="15" y1="34" x2="33" y2="34" stroke="#7a5010" stroke-width="1.5" opacity=".45"/>
+  <circle cx="28" cy="28" r="6" fill="#aa3008" opacity=".75"/>
+  <circle cx="28" cy="28" r="4" fill="#cc4810" opacity=".65"/>
 </svg>`;
 
 function ileCardHTML(ile){
@@ -648,7 +632,7 @@ function ileCardHTML(ile){
     ? cases.map(c=>`<span class="ile-coord-tag has-coord">Q${c.q} R${c.r}</span>`).join('')
     : `<span class="ile-coord-tag">— aucune coord</span>`;
 
-  // Emplacement parchemin avec flip card SVG
+  // Parchemin flip card
   const pSlot = state.setup?.parcheminsParIle?.[ile.id];
   let parchHTML = '';
 
@@ -659,10 +643,15 @@ function ileCardHTML(ile){
 
     const frontContent = isIle
       ? `<span class="parch-front-icon">📜</span>
-         <span class="parch-front-type">Parchemin Île</span>
-         <span class="parch-front-ile">${card.ile||'?'}</span>`
+         <div class="parch-front-info">
+           <span class="parch-front-type">Parchemin Île</span>
+           <span class="parch-front-ile">${card.ile||'?'}</span>
+         </div>`
       : `<span class="parch-front-icon">📄</span>
-         <span class="parch-front-vierge">Vierge</span>`;
+         <div class="parch-front-info">
+           <span class="parch-front-type">Parchemin</span>
+           <span class="parch-front-vierge">Vierge</span>
+         </div>`;
 
     parchHTML = `<div class="ile-parchemin-wrap">
       <span class="ile-parchemin-label">Parchemin</span>
@@ -670,7 +659,10 @@ function ileCardHTML(ile){
         <div class="parch-card-inner" onclick="toggleParcheminVisibility('${ile.id}')">
           <div class="parch-card-face parch-back-face">
             ${SCROLL_SVG}
-            <span class="parch-back-hint">révéler</span>
+            <div class="parch-back-text">
+              <span class="parch-back-title">Parchemin</span>
+              <span class="parch-back-hint">cliquer pour ouvrir</span>
+            </div>
           </div>
           <div class="parch-card-face parch-front-face ${isIle?'type-ile':'type-vierge'}">
             ${frontContent}
@@ -679,12 +671,12 @@ function ileCardHTML(ile){
       </div>
     </div>`;
   } else {
-    // Pas encore de setup — slot vide
-    parchHTML = `<div class="ile-parchemin-wrap">
+    // Pas de setup — slot fantôme vide
+    parchHTML = `<div class="ile-parchemin-wrap" style="opacity:.25">
       <span class="ile-parchemin-label">Parchemin</span>
       <div class="parch-card-scene">
         <div class="parch-card-inner" style="cursor:default">
-          <div class="parch-card-face parch-back-face" style="opacity:.3;cursor:default">
+          <div class="parch-card-face parch-back-face" style="pointer-events:none">
             ${SCROLL_SVG}
           </div>
         </div>
@@ -1057,19 +1049,19 @@ function setupNextStep(){
 function renderSetupStep(setup, step){
   if(!setup) return;
   const iles = cfg.iles || [];
-  const total = 3; // 3 étapes
+  const total = 2; // 2 étapes
 
-  // Mettre à jour badge et progress
+  // Badge et progress
   document.getElementById('setupStepBadge').textContent = `Étape ${step+1} / ${total}`;
   document.getElementById('setupProgressBar').style.width = `${((step+1)/total)*100}%`;
 
   // Activer les sections
-  ['setupSec1','setupSec2','setupSec3'].forEach((id, i) => {
+  ['setupSec1','setupSec2'].forEach((id, i) => {
     const el = document.getElementById(id);
+    if(!el) return;
     el.classList.remove('active','done');
     if(i < step) el.classList.add('done');
     else if(i === step) el.classList.add('active');
-    // Remplacer le numéro par ✓ si done (géré via CSS .done .step-num::after)
     const numEl = el.querySelector('.step-num');
     if(numEl) numEl.textContent = i < step ? '' : (i+1);
   });
@@ -1087,18 +1079,15 @@ function renderSetupStep(setup, step){
 
   // ── Étape 1 : Parchemins ──
   if(step === 0){
-    // Cartes tirées (toutes, dans l'ordre du deck mélangé)
     const cardsGrid = document.getElementById('setupParchCards');
     cardsGrid.innerHTML = '';
     const attribList = document.getElementById('setupParchAttrib');
     attribList.innerHTML = '';
 
-    // Collecter toutes les cartes attribuées
     const allAssigned = (setup.ileOrder||[]).map(ileId => ({
       ileId, ...setup.parcheminsParIle[ileId]
     }));
 
-    // Afficher les chips de type (3 île + N vierge)
     const counts = { ile: 0, vierge: 0 };
     allAssigned.forEach(a => { if(a.card) counts[a.card.type]=(counts[a.card.type]||0)+1; });
     const summaryChips = [
@@ -1113,7 +1102,6 @@ function renderSetupStep(setup, step){
       setTimeout(()=>chip.classList.add('show'), 80*i);
     });
 
-    // Attribution île → parchemin
     allAssigned.forEach((a, i) => {
       const ile = iles.find(il=>il.id===a.ileId);
       if(!ile || !a.card) return;
@@ -1146,24 +1134,10 @@ function renderSetupStep(setup, step){
       if(!card) return;
       const chip = document.createElement('div');
       chip.className = `setup-card-chip ${d.typeClass}`;
-      chip.innerHTML = `<span>${d.icon}</span><span>${d.label}</span><span style="opacity:.5;font-size:.68rem;margin-left:4px">${d.valLabel(card)}</span>`;
+      chip.innerHTML = `<span>${d.icon}</span><span>${d.label}</span><span style="opacity:.5;font-size:.75rem;margin-left:4px">${d.valLabel(card)}</span>`;
       grid.appendChild(chip);
       setTimeout(()=>chip.classList.add('show'), 80*i);
     });
-  }
-
-  // ── Étape 3 : Cartes Temps ──
-  if(step === 2){
-    const grid = document.getElementById('setupTempsCards');
-    grid.innerHTML = '';
-    const nb = setup.cardsTemps?.length || 0;
-    for(let i=0;i<nb;i++){
-      const chip = document.createElement('div');
-      chip.className = 'setup-card-chip type-temps';
-      chip.innerHTML = `<span>⏳</span><span>Temps ${i+1}</span>`;
-      grid.appendChild(chip);
-      setTimeout(()=>chip.classList.add('show'), 60*i);
-    }
   }
 }
 
