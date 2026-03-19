@@ -554,7 +554,7 @@
 </div>
 
 <!-- ── POPUP PARCHEMIN ─────────────────────────────────────────────────────── -->
-<div id="parchPopupOverlay" onclick="closeParchPopup(event)">
+<div id="parchPopupOverlay" onclick="if(event.target===this) closeParchPopup()">
   <div class="parch-popup">
     <button class="parch-popup-close" onclick="closeParchPopup()">✕</button>
     <div class="parch-popup-ile-name" id="parchPopupIleName"></div>
@@ -631,7 +631,15 @@ document.getElementById('playerUrl').textContent=playerUrl;
 function copyUrl(){ navigator.clipboard.writeText(playerUrl).then(()=>{ const el=document.getElementById('playerUrl'); const o=el.textContent; el.textContent='✓ Copié !'; setTimeout(()=>el.textContent=o,1500); }); }
 
 socket.emit('master:join');
-socket.on('game:state',(s)=>{ state=s; renderUI(); renderMap(); renderEnigmeSlots(); });
+socket.on('game:state',(s)=>{
+  const hadSetup = !!state.setup;
+  state=s;
+  renderUI();
+  renderMap();
+  renderEnigmeSlots();
+  // Re-rendre les îles quand le setup apparaît (pour afficher les slots parchemin)
+  if(s.setup && !hadSetup) renderIles();
+});
 // FIX: config:updated reçu dès la connexion, plus besoin de sauvegarder dans admin pour voir les îles
 socket.on('config:updated',(cards)=>{ cfg=cards; renderIles(); renderAvancement(); renderEnigmeSlots(); });
 
@@ -719,10 +727,7 @@ function openParchPopup(ileId){
   document.getElementById('parchPopupOverlay').classList.add('show');
 }
 
-function closeParchPopup(e){
-  // Ferme si clic sur l'overlay lui-même (pas sur la popup)
-  if(e && e.target !== document.getElementById('parchPopupOverlay') && e.type !== 'click') return;
-  if(e && e.currentTarget === document.getElementById('parchPopupOverlay') && e.target !== e.currentTarget) return;
+function closeParchPopup(){
   document.getElementById('parchPopupOverlay').classList.remove('show');
 }
 
