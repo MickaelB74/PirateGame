@@ -231,6 +231,14 @@ function getObstaclesArray() {
 }
 
 // ─── Obstacles depuis la config ───────────────────────────────────────────────
+// Cases de tempête — infranchissables ET inatteignables (jamais destinations valides)
+const TEMPETE_CELLS = new Set([
+  '11,9','12,9','13,9',
+  '11,10','12,10','13,10','14,10',
+  '11,11','12,11','13,11',
+  '12,12','13,12'
+]);
+
 // Retourne un Set de clés "q,r" des cases bloquées (îles, ports, repaires).
 // Une case bloquée peut être une DESTINATION valide mais pas un point de TRANSIT.
 function getBlockedCells() {
@@ -302,6 +310,11 @@ function hexesInRange(q, r, range) {
       if (occupiedByOther) continue;
 
       const isBlocked = blocked.has(key);
+      const isTempete = TEMPETE_CELLS.has(key);
+      
+      // Cases de tempête : ni traversées, ni destinations
+      if (isTempete) continue;
+      
       queue.push({ ...n, dist: dist + 1, blockedHere: isBlocked });
     }
   }

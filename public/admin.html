@@ -40,7 +40,6 @@
     .nav-item:hover { background: rgba(255,255,255,.03); color: var(--parch); }
     .nav-item.active { background: rgba(184,134,11,.08); color: var(--gold2); border-left-color: var(--gold2); }
     .nav-badge { margin-left: auto; font-size: var(--fs-xs); font-family: monospace; background: rgba(184,134,11,.15); color: var(--gold); padding: 2px 7px; border-radius: 8px; }
-    /* Badge "soon" pour les sections à venir */
     .nav-badge-soon { margin-left: auto; font-size: .65rem; font-family: 'Cinzel Decorative', serif; background: rgba(74,237,204,.08); color: rgba(74,237,204,.5); border: 1px solid rgba(74,237,204,.2); padding: 2px 7px; border-radius: 8px; letter-spacing: .04em; }
 
     /* MAIN */
@@ -159,6 +158,18 @@
     .case-block input:focus { outline: none; border-color: #4aedcc; }
     .case-block .case-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xs); color: rgba(74,237,204,.5); grid-column: 1/-1; margin-bottom: 2px; }
 
+    /* ILE SELECT — dropdown style */
+    .ile-select-wrap { position: relative; }
+    .ile-select-wrap select { width: 100%; padding: 8px 11px; background: rgba(0,0,0,.52); border: 1px solid rgba(74,237,204,.3); border-radius: 6px; color: #4aedcc; font-family: 'Crimson Pro', serif; font-size: var(--fs-md); cursor: pointer; }
+    .ile-select-wrap select:focus { outline: none; border-color: #4aedcc; }
+    .ile-select-wrap select option { background: #1a1000; color: var(--parch); }
+
+    /* TEMPÊTE — style special */
+    .tempete-card { background: rgba(74,237,204,.04); border: 1px solid rgba(74,237,204,.2); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
+    .tempete-card h4 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-md); color: #4aedcc; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .tempete-cases { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tempete-case-tag { font-family: monospace; font-size: .7rem; color: rgba(74,237,204,.7); background: rgba(74,237,204,.08); border: 1px solid rgba(74,237,204,.2); border-radius: 4px; padding: 3px 8px; }
+
     @media (max-width: 640px) {
       .page { grid-template-columns: 1fr; }
       .sidenav { flex-direction: row; overflow-x: auto; padding: 6px 0; border-right: none; border-bottom: 1px solid var(--border); }
@@ -198,6 +209,7 @@
     <div class="nav-item" data-tab="port_commerce"    onclick="switchTab('port_commerce')">   <span>⚓</span> Ports de commerce <span class="nav-badge" id="nb-ports">–</span></div>
     <div class="nav-item" data-tab="repaire_pirate"   onclick="switchTab('repaire_pirate')">  <span>💀</span> Repaires pirates  <span class="nav-badge" id="nb-repaires">–</span></div>
     <div class="nav-item" data-tab="epave"             onclick="switchTab('epave')">            <span>🚢</span> Épaves            <span class="nav-badge" id="nb-epaves">–</span></div>
+    <div class="nav-item" data-tab="tempete"          onclick="switchTab('tempete')">         <span>🌀</span> Tempête           </div>
     <div class="nav-group">Config</div>
     <div class="nav-item" data-tab="rules"            onclick="switchTab('rules')">           <span>📋</span> Règles</div>
   </nav>
@@ -217,7 +229,7 @@
     <div class="tab-panel" id="tab-parchemin">
       <div class="section-head">
         <div class="section-title">📜 Parchemins</div>
-        <div class="section-desc">Parchemins conduisant à une île précise, et parchemins vierges sans destination.</div>
+        <div class="section-desc">Parchemins conduisant à une île précise (sélectionnez parmi les îles configurées), et parchemins vierges sans destination.</div>
       </div>
       <div class="subtype-tabs">
         <button class="stab active" onclick="showSubtab('parchemin','ile',this)">🏝 Île (destination)</button>
@@ -313,7 +325,7 @@
     <div class="tab-panel" id="tab-ancien_parchemin">
       <div class="section-head">
         <div class="section-title">🗺 Anciens Parchemins</div>
-        <div class="section-desc">3 cartes rares. Chacune révèle la route secrète menant à l'île d'une ancienne relique.</div>
+        <div class="section-desc">3 cartes rares. Chacune révèle la route secrète menant à l'île d'une ancienne relique. Sélectionnez la destination parmi les îles existantes.</div>
       </div>
       <div class="editor-block">
         <h3>🗺 Définition des routes</h3>
@@ -499,7 +511,6 @@
       </div>
     </div>
 
-
     <!-- ÉPAVES -->
     <div class="tab-panel" id="tab-epave">
       <div class="section-head">
@@ -510,6 +521,32 @@
         <h3>🚢 Liste des épaves</h3>
         <div class="card-list" id="list-epaves"></div>
         <button class="btn-add" onclick="addLieu('epaves')" style="margin-top:14px">+ Ajouter une épave</button>
+      </div>
+    </div>
+
+    <!-- TEMPÊTE -->
+    <div class="tab-panel" id="tab-tempete">
+      <div class="section-head">
+        <div class="section-title">🌀 Zone Tempête</div>
+        <div class="section-desc">Zone permanente infranchissable et inatteignable. Les cases de tempête bloquent tout déplacement et ne peuvent jamais être ciblées.</div>
+      </div>
+      <div class="tempete-card">
+        <h4>🌀 Zone de tempête permanente</h4>
+        <p style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic;margin-bottom:12px">
+          Ces cases sont définitivement bloquées — ni traversées, ni ciblées par aucun joueur.
+          La zone est fixe et ne peut pas être modifiée ici ; elle est gérée directement dans le serveur.
+        </p>
+        <div style="font-size:var(--fs-xs);color:rgba(74,237,204,.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">Cases de tempête actives</div>
+        <div class="tempete-cases" id="tempeteCases"></div>
+      </div>
+      <div class="editor-block" style="margin-top:14px">
+        <h3>ℹ️ Information</h3>
+        <p style="font-size:var(--fs-sm);color:#7a6a4a;line-height:1.7">
+          La zone de tempête est définie dans <code style="color:#4aedcc;background:rgba(74,237,204,.08);padding:1px 5px;border-radius:3px">server.js</code> comme un ensemble de cases bloquées supplémentaires.
+          Ces cases sont invisibles aux joueurs mais bloquent tout pathfinding (BFS). Elles apparaissent en violet sur le plateau du maître de jeu.
+          <br><br>
+          Cases actuelles : Q11R9, Q12R9, Q13R9, Q11R10, Q12R10, Q13R10, Q14R10, Q11R11, Q12R11, Q13R11, Q12R12, Q13R12.
+        </p>
       </div>
     </div>
 
@@ -532,6 +569,39 @@ let _uid  = 1000;
 function uid() { return `c${++_uid}`; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
+// ── Îles par défaut avec leurs coordonnées pré-remplies ───────────────────────
+const ILES_DEFAUT = [
+  { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:6, cases:[{q:11,r:1},{q:12,r:2}] },
+  { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:6, cases:[{q:21,r:4},{q:22,r:4}] },
+  { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:6, cases:[{q:5,r:7}] },
+  { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:6, cases:[{q:17,r:8}] },
+  { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:6, cases:[{q:2,r:14}] },
+  { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:6, cases:[{q:8,r:13},{q:9,r:13},{q:9,r:14}] },
+  { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:6, cases:[{q:16,r:15}] },
+  { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:6, cases:[{q:22,r:14}] },
+  { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:6, cases:[{q:5,r:20},{q:5,r:21}] },
+  { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:6, cases:[{q:20,r:21}] },
+];
+
+// Cases de tempête — infranchissables et inatteignables
+const TEMPETE_CASES = [
+  {q:11,r:9},{q:12,r:9},{q:13,r:9},
+  {q:11,r:10},{q:12,r:10},{q:13,r:10},{q:14,r:10},
+  {q:11,r:11},{q:12,r:11},{q:13,r:11},
+  {q:12,r:12},{q:13,r:12}
+];
+
+// Helper: liste des noms d'îles pour les selects
+function getIleOptions(selectedNom) {
+  const iles = state.iles || ILES_DEFAUT;
+  const opts = iles.map(ile => {
+    const nom = ile.nom || 'Île';
+    const sel = selectedNom === nom ? 'selected' : '';
+    return `<option value="${esc(nom)}" ${sel}>${esc(ile.icon||'🏝')} ${esc(nom)}</option>`;
+  }).join('');
+  return `<option value="">— Aucune —</option>` + opts;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PERSISTANCE
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -541,11 +611,11 @@ async function loadConfig() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const cfg = await res.json();
     state = cfg.cards;
-    if (!state.iles)       state.iles       = defaultIles();
+    if (!state.iles || !state.iles.length) state.iles = defaultIles();
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
-    if (!state.ports)      state.ports      = [];
-    if (!state.repaires)   state.repaires   = [];
-    if (!state.epaves)     state.epaves     = [];
+    if (!state.ports)      state.ports      = defaultPorts();
+    if (!state.repaires)   state.repaires   = defaultRepaires();
+    if (!state.epaves)     state.epaves     = defaultEpaves();
     // Migration : ancien format coord_q/coord_r → cases[]
     state.iles = state.iles.map(ile => {
       if (!ile.cases) {
@@ -555,6 +625,8 @@ async function loadConfig() {
         const { coord_q, coord_r, ...rest } = ile;
         return { ...rest, cases };
       }
+      // S'assurer que nb_objets est à 6 si pas défini
+      if (!ile.nb_objets) ile.nb_objets = 6;
       return ile;
     });
     applyRulesToForm(cfg.rules);
@@ -647,10 +719,11 @@ function renderAll() {
   renderLieux('ports');
   renderLieux('repaires');
   renderLieux('epaves');
+  renderTempete();
   updateOverview();
 }
 
-// Parchemin Île
+// Parchemin Île — avec sélecteur d'île
 function renderParcheminIle() {
   const arr = state.parchemin_ile || [];
   document.getElementById('cnt-parchemin_ile').textContent = arr.length;
@@ -661,8 +734,14 @@ function renderParcheminIle() {
         <button class="btn-remove" onclick="removeFrom('parchemin_ile',${i})">✕ Supprimer</button>
       </div>
       <div class="card-entry-fields">
-        <div class="entry-field"><label>Île de destination</label>
-          <input type="text" value="${esc(c.ile)}" placeholder="Nom de l'île…" oninput="state.parchemin_ile[${i}].ile=this.value;markDirty()"></div>
+        <div class="entry-field">
+          <label>Île de destination</label>
+          <div class="ile-select-wrap">
+            <select onchange="state.parchemin_ile[${i}].ile=this.value;markDirty()">
+              ${getIleOptions(c.ile)}
+            </select>
+          </div>
+        </div>
         <div class="entry-field"><label>Description sur la carte</label>
           <input type="text" value="${esc(c.description)}" placeholder="Texte de la carte…" oninput="state.parchemin_ile[${i}].description=this.value;markDirty()"></div>
       </div>
@@ -729,15 +808,21 @@ function renderEnigmeCode() {
     </div>`).join('');
 }
 
-// Anciens Parchemins
+// Anciens Parchemins — avec sélecteur d'île
 function renderAncienParchemin() {
   const arr = state.ancien_parchemin || [];
   document.getElementById('list-ancien_parchemin').innerHTML = arr.map((c,i) => `
     <div class="card-entry">
       <div class="card-entry-header"><span class="card-num">${esc(c.relique)}</span></div>
       <div class="card-entry-fields">
-        <div class="entry-field"><label>Île de destination</label>
-          <input type="text" value="${esc(c.ile_destination)}" placeholder="Nom de l'île…" oninput="state.ancien_parchemin[${i}].ile_destination=this.value;markDirty()"></div>
+        <div class="entry-field">
+          <label>Île de destination</label>
+          <div class="ile-select-wrap">
+            <select onchange="state.ancien_parchemin[${i}].ile_destination=this.value;markDirty()">
+              ${getIleOptions(c.ile_destination)}
+            </select>
+          </div>
+        </div>
         <div class="entry-field"><label>Description sur la carte</label>
           <input type="text" value="${esc(c.description)}" placeholder="Texte de la carte…" oninput="state.ancien_parchemin[${i}].description=this.value;markDirty()"></div>
       </div>
@@ -798,9 +883,6 @@ function renderSimpleList(key, icon, fields, labels) {
         </div>`).join('')}
       </div>
     </div>`).join('');
-  const nb = document.getElementById(`nb-${key.replace('action_offensive','action').replace('action_defensive','action').replace('_offensive','').replace('_defensive','')}`);
-  if (nb && key === 'equipement') nb.textContent = arr.length;
-  if (nb && key === 'atout')      nb.textContent = arr.length;
   updateActionBadge();
 }
 
@@ -884,7 +966,7 @@ function renderIles() {
       </div>
       <div class="card-entry-fields" style="grid-template-columns:1fr 1fr;margin-top:4px">
         <div class="entry-field"><label>Nombre de slots objets</label>
-          <input type="number" min="0" max="12" value="${ile.nb_objets||3}"
+          <input type="number" min="0" max="12" value="${ile.nb_objets!=null?ile.nb_objets:6}"
             oninput="state.iles[${i}].nb_objets=parseInt(this.value)||0;markDirty()"></div>
         <div class="entry-field"><label>Taille (cases occupées)</label>
           <select onchange="setIleTaille(${i},parseInt(this.value))">
@@ -896,9 +978,12 @@ function renderIles() {
       <div style="margin-top:8px">${casesHTML}</div>
     </div>`;
   }).join('');
+
+  // Rafraîchir aussi les selects d'îles dans parchemins et anciens parchemins
+  renderParcheminIle();
+  renderAncienParchemin();
 }
 
-// setIleTaille / setCaseCoord
 function setIleTaille(i, taille) {
   const ile = state.iles[i];
   if (!ile.cases) ile.cases = [];
@@ -913,10 +998,11 @@ function setCaseCoord(i, ci, axis, val) {
   markDirty();
 }
 
-// Lieux (ports / repaires)
+// Lieux (ports / repaires / épaves)
 function renderLieux(key) {
   const arr = state[key] || [];
-  const icon = key === 'ports' ? '⚓' : '💀';
+  const icons = { ports:'⚓', repaires:'💀', epaves:'🚢' };
+  const icon = icons[key] || '📍';
   const listEl = document.getElementById(`list-${key}`);
   if (!listEl) return;
   listEl.innerHTML = arr.map((lieu, i) => `
@@ -937,9 +1023,12 @@ function renderLieux(key) {
             oninput="state['${key}'][${i}].coord_r=this.value!==''?parseInt(this.value):null;markDirty()"></div>
       </div>
     </div>`).join('');
-  const badge = document.getElementById(key==='ports'?'nb-ports':'nb-repaires');
+
+  const badgeIds = { ports:'nb-ports', repaires:'nb-repaires', epaves:'nb-epaves' };
+  const badge = document.getElementById(badgeIds[key]);
   if (badge) badge.textContent = arr.length;
 }
+
 function addLieu(key) {
   state[key] = state[key] || [];
   state[key].push({id:uid(), nom:'', coord_q:null, coord_r:null});
@@ -948,6 +1037,15 @@ function addLieu(key) {
 function removeLieu(key, i) {
   state[key].splice(i, 1);
   renderLieux(key); markDirty(); updateOverview();
+}
+
+// Tempête — affichage des cases fixes
+function renderTempete() {
+  const el = document.getElementById('tempeteCases');
+  if (!el) return;
+  el.innerHTML = TEMPETE_CASES.map(c =>
+    `<span class="tempete-case-tag">Q${c.q} R${c.r}</span>`
+  ).join('');
 }
 
 // Avancement
@@ -970,6 +1068,10 @@ function updateOverview() {
     { icon:'💨', lbl:'Atouts',      n:s.atout?.length||0, tab:'atout' },
     { icon:'⚡', lbl:'Événements',  n:s.evenement?.length||0, tab:'evenement' },
     { icon:'🏝', lbl:'Îles',        n:s.iles?.length||0, tab:'iles' },
+    { icon:'⚓', lbl:'Ports',        n:s.ports?.length||0, tab:'port_commerce' },
+    { icon:'💀', lbl:'Repaires',     n:s.repaires?.length||0, tab:'repaire_pirate' },
+    { icon:'🚢', lbl:'Épaves',       n:s.epaves?.length||0, tab:'epave' },
+    { icon:'🌀', lbl:'Tempête',      n:TEMPETE_CASES.length, tab:'tempete' },
   ];
   const total = types.reduce((acc,t)=>acc+t.n, 0);
   document.getElementById('ovGrid').innerHTML =
@@ -1025,12 +1127,13 @@ function changeCount(key, delta) {
   const arr = state[key];
   if (!arr) return;
   if (delta > 0) {
+    const defaultIle = (state.iles && state.iles[0]) ? state.iles[0].nom : '';
     const newItem = {
-      parchemin_ile:    { id:uid(), ile:'', description:'' },
+      parchemin_ile:    { id:uid(), ile:defaultIle, description:'' },
       enigme_latitude:  { id:uid(), valeur:0 },
       enigme_longitude: { id:uid(), valeur:0 },
       enigme_code:      { id:uid(), delta_lat:0, delta_lon:0, description:'' },
-      iles:             { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:3, cases:[{q:null,r:null}] },
+      iles:             { id:uid(), nom:'', biome:'', icon:'🏝', nb_objets:6, cases:[{q:null,r:null}] },
     }[key] || null;
     if (newItem) arr.push(newItem);
   } else {
@@ -1070,17 +1173,37 @@ function rerenderKey(key) {
 // DEFAULTS
 // ═══════════════════════════════════════════════════════════════════════════════
 function defaultIles() {
+  return JSON.parse(JSON.stringify(ILES_DEFAUT));
+}
+
+function defaultPorts() {
   return [
-    { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:3, cases:[{q:null,r:null}] },
-    { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:2, cases:[{q:null,r:null}] },
-    { id:'ile_2', nom:'Île Dorée',          biome:'Plages de sable fin', icon:'💰', nb_objets:4, cases:[{q:null,r:null}] },
-    { id:'ile_3', nom:'Île des Brumes',     biome:'Marais mystérieux',   icon:'🌫', nb_objets:3, cases:[{q:null,r:null}] },
-    { id:'ile_4', nom:'Île du Kraken',      biome:'Abysses redoutés',    icon:'🦑', nb_objets:2, cases:[{q:null,r:null}] },
-    { id:'ile_5', nom:'Île Volcanique',     biome:'Terres ardentes',     icon:'🌋', nb_objets:2, cases:[{q:null,r:null}] },
-    { id:'ile_6', nom:'Île des Naufragés',  biome:'Épaves et ruines',    icon:'⚓', nb_objets:3, cases:[{q:null,r:null}] },
-    { id:'ile_7', nom:'Île des Épices',     biome:'Forêts aromatiques',  icon:'🌿', nb_objets:4, cases:[{q:null,r:null}] },
-    { id:'ile_8', nom:'Île des Coraux',     biome:'Lagon turquoise',     icon:'🪸', nb_objets:3, cases:[{q:null,r:null}] },
-    { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:2, cases:[{q:null,r:null}] },
+    { id:'port_0', nom:'Port de la Tortue',      coord_q:4,  coord_r:3  },
+    { id:'port_1', nom:'Port du Roi des Mers',   coord_q:12, coord_r:5  },
+    { id:'port_2', nom:'Port de l\'Orient',      coord_q:23, coord_r:10 },
+    { id:'port_3', nom:'Port des Caraïbes',      coord_q:16, coord_r:18 },
+    { id:'port_4', nom:'Port du Couchant',        coord_q:4,  coord_r:13 },
+  ];
+}
+
+function defaultRepaires() {
+  return [
+    { id:'rep_0', nom:'Repaire de la Grotte Noire', coord_q:1,  coord_r:6  },
+    { id:'rep_1', nom:'Repaire du Cap des Traîtres', coord_q:23, coord_r:2  },
+    { id:'rep_2', nom:'Repaire de la Baie Maudite',  coord_q:7,  coord_r:20 },
+    { id:'rep_3', nom:'Repaire du Rocher du Diable', coord_q:23, coord_r:18 },
+  ];
+}
+
+function defaultEpaves() {
+  return [
+    { id:'ep_0', nom:'Épave du Santa Fortuna',   coord_q:1,  coord_r:1  },
+    { id:'ep_1', nom:'Épave du Corsaire Noir',   coord_q:18, coord_r:2  },
+    { id:'ep_2', nom:'Épave du Brise-Lame',      coord_q:8,  coord_r:9  },
+    { id:'ep_3', nom:'Épave du Pélican d\'Or',   coord_q:20, coord_r:12 },
+    { id:'ep_4', nom:'Épave du Sanctuaire',      coord_q:2,  coord_r:19 },
+    { id:'ep_5', nom:'Épave du Dragon des Mers', coord_q:11, coord_r:17 },
+    { id:'ep_6', nom:'Épave du Vieux Jacques',   coord_q:22, coord_r:21 },
   ];
 }
 
