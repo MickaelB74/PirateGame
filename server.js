@@ -321,6 +321,71 @@ function hexesInRange(q, r, range) {
   return result;
 }
 
+// ─── Mise en place : tirage des cartes au démarrage ───────────────────────────
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildSetup() {
+  const cards = adminConfig.cards;
+  const iles  = (cards.iles || []).filter(ile =>
+    (ile.cases||[]).some(c => c.q != null && c.r != null) ||
+    (ile.coord_q != null && ile.coord_r != null)
+  );
+  const nbIles = iles.length;
+
+  // ── 1. Deck parchemins : 3 île (aléatoires parmi ceux configurés) + reste vierge ──
+  const parcheminIlePool = shuffleArray(cards.parchemin_ile || []);
+  // On prend exactement 3 parchemins île (ou moins s'il y en a moins)
+  const nbIleCards = Math.min(3, parcheminIlePool.length);
+  const selectedIle = parcheminIlePool.slice(0, nbIleCards);
+
+  // Compléter jusqu'à nbIles avec des parchemins vierges
+  const nbVierge = Math.max(0, nbIles - nbIleCards);
+  const viergeCards = Array.from({ length: nbVierge }, (_, i) => ({
+    id: `vierge_setup_${i}`, type: 'vierge', nom: 'Parchemin Vierge', icon: '📄',
+  }));
+
+  // Deck de nbIles cartes mélangées
+  const deckParchemins = shuffleArray([
+    ...selectedIle.map(c => ({ ...c, type: 'ile' })),
+    ...viergeCards,
+  ]);
+
+  // Attribution : 1 carte par île (face cachée)
+  const parcheminsParIle = {};
+  iles.forEach((ile, i) => {
+    parcheminsParIle[ile.id] = {
+      card:    deckParchemins[i] || null,
+      visible: false, // face cachée
+    };
+  });
+
+  // ── 2. Énigmes : 1 latitude + 1 longitude + 1 code (tirés aléatoirement) ──
+  const latPool  = shuffleArray(cards.enigme_latitude  || []);
+  const lonPool  = shuffleArray(cards.enigme_longitude || []);
+  const codePool = shuffleArray(cards.enigme_code      || []);
+
+  const enigmes = {
+    latitude:  latPool[0]  ? { ...latPool[0],  type: 'latitude',  visible: false } : null,
+    longitude: lonPool[0]  ? { ...lonPool[0],  type: 'longitude', visible: false } : null,
+    code:      codePool[0] ? { ...codePool[0], type: 'code',      visible: false } : null,
+  };
+
+  // ── 3. Cartes Temps : autant que d'emplacements ──
+  const nbTemps = cards.avancement?.nb_cartes_temps || 6;
+  const cardsTemps = Array.from({ length: nbTemps }, (_, i) => ({
+    id: `temps_${i}`, index: i + 1, visible: false,
+  }));
+
+  return { parcheminsParIle, enigmes, cardsTemps, ileOrder: iles.map(ile => ile.id) };
+}
+
 // ─── Game State ───────────────────────────────────────────────────────────────
 function makePlayer(name, color) {
   const r = adminConfig.rules.resources || {};
@@ -349,6 +414,7 @@ let gameState = {
   status: "waiting", players: {}, currentTurn: null,
   turnOrder: [], turnIndex: 0, log: [],
   pendingStartSlots: [], diceRoll: null, moveOptions: [],
+  setup: null, // résultat de buildSetup() au démarrage
 };
 
 function broadcastState() {
@@ -399,7 +465,9 @@ io.on("connection", (socket) => {
     gameState.pendingStartSlots = [...START_POSITIONS];
     gameState.diceRoll = null;
     gameState.moveOptions = [];
-    addLog(`Partie démarrée ! ${gameState.players[playerIds[0]].name} choisit sa case de départ.`);
+    // ── Mise en place : tirage des cartes ──
+    gameState.setup = buildSetup();
+    addLog(`Partie démarrée ! Mise en place effectuée. ${gameState.players[playerIds[0]].name} choisit sa case de départ.`);
     broadcastState();
   });
 
@@ -474,6 +542,7 @@ io.on("connection", (socket) => {
       status: "waiting", players: {}, currentTurn: null,
       turnOrder: [], turnIndex: 0, log: [],
       pendingStartSlots: [], diceRoll: null, moveOptions: [],
+      setup: null,
     };
     addLog("Partie réinitialisée.");
     broadcastState();
