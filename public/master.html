@@ -141,86 +141,112 @@
     }
     .obj-slot:hover { border-color:rgba(184,134,11,.4); }
 
-    /* ── PARCHEMIN SUR LA ILE-CARD ── */
-    .ile-parchemin-wrap {
-      display:flex; align-items:center; gap:10px;
-      padding:8px 10px; margin:0 -2px;
-      border-radius:7px;
-      background:rgba(184,134,11,.05);
-      border:1px solid rgba(184,134,11,.12);
+    /* ── PARCHEMIN : SLOT COMPACT DANS LA ILE-CARD ── */
+    .ile-parch-row {
+      display:flex; align-items:center; gap:5px;
     }
-    .ile-parchemin-label {
-      font-size:.82rem; text-transform:uppercase; letter-spacing:.08em; color:#8a7a50;
-      white-space:nowrap; flex-shrink:0;
+    .ile-parch-label {
+      font-size:.82rem; text-transform:uppercase; letter-spacing:.08em;
+      color:#6a5a3a; white-space:nowrap; flex-shrink:0;
     }
-
-    /* La "carte parchemin" flip */
-    .parch-card-scene {
-      flex:1; height:72px;
-      perspective:500px;
+    /* Slot carré compact, même taille que les obj-slots */
+    .parch-slot {
+      width:28px; height:28px;
+      border:1px dashed rgba(184,134,11,.25); border-radius:3px;
+      background:rgba(255,255,255,.02);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.88rem; color:#3a2a10; flex-shrink:0;
+      transition:border-color .15s, background .15s;
+      cursor:default;
     }
-    .parch-card-inner {
-      width:100%; height:100%;
-      position:relative;
-      transform-style:preserve-3d;
-      transition:transform .55s cubic-bezier(.4,0,.2,1);
+    /* Slot avec carte posée face cachée — même look que .card-slot enigme-filled */
+    .parch-slot.has-card {
+      border-style:solid; border-color:rgba(184,134,11,.5);
+      background:rgba(101,72,24,.4);
       cursor:pointer;
     }
-    .parch-card-scene.revealed .parch-card-inner {
-      transform:rotateY(180deg);
+    .parch-slot.has-card:hover {
+      border-color:rgba(212,160,23,.85);
+      background:rgba(120,86,28,.6);
     }
-    .parch-card-face {
-      position:absolute; inset:0;
-      backface-visibility:hidden;
-      -webkit-backface-visibility:hidden;
-      border-radius:7px;
+
+    /* ── POPUP PARCHEMIN ── */
+    #parchPopupOverlay {
+      position:fixed; inset:0; z-index:400;
+      background:rgba(5,3,1,.75); backdrop-filter:blur(4px);
       display:flex; align-items:center; justify-content:center;
-      overflow:hidden;
+      opacity:0; pointer-events:none;
+      transition:opacity .2s;
     }
-    /* Dos : parchemin enroulé */
-    .parch-back-face {
-      background:linear-gradient(135deg, rgba(101,72,24,.9) 0%, rgba(60,40,12,.95) 100%);
-      border:1px solid rgba(184,134,11,.45);
-      flex-direction:row; gap:8px;
+    #parchPopupOverlay.show { opacity:1; pointer-events:all; }
+    .parch-popup {
+      background:rgba(18,11,3,.98);
+      border:1px solid rgba(184,134,11,.4);
+      border-radius:14px;
+      padding:28px 32px 24px;
+      display:flex; flex-direction:column; align-items:center; gap:16px;
+      box-shadow:0 24px 70px rgba(0,0,0,.85);
+      position:relative; min-width:280px;
     }
-    .parch-back-face:hover {
-      border-color:rgba(212,160,23,.75);
-      background:linear-gradient(135deg, rgba(120,86,28,.9) 0%, rgba(75,50,15,.95) 100%);
+    .parch-popup-close {
+      position:absolute; top:12px; right:16px;
+      background:none; border:none; color:#5a4a2a;
+      font-size:1.1rem; cursor:pointer; line-height:1;
+      transition:color .15s;
     }
-    .parch-scroll-svg { width:44px; height:44px; opacity:.9; flex-shrink:0; }
-    .parch-back-text { display:flex; flex-direction:column; gap:2px; }
-    .parch-back-title {
-      font-family:'Cinzel',serif; font-size:.85rem; color:rgba(212,160,23,.8); letter-spacing:.04em;
+    .parch-popup-close:hover { color:var(--gold2); }
+    .parch-popup-ile-name {
+      font-family:'Cinzel',serif; font-size:.85rem; color:#8a7a5a;
+      letter-spacing:.06em; text-align:center;
     }
-    .parch-back-hint {
-      font-size:.8rem; color:rgba(212,160,23,.45); font-style:italic;
+    /* Le parchemin visuel dans la popup */
+    .parch-popup-scroll {
+      width:180px; position:relative;
+      display:flex; flex-direction:column; align-items:stretch;
     }
-    /* Face : contenu révélé */
-    .parch-front-face {
-      transform:rotateY(180deg);
-      flex-direction:row; gap:10px;
-      padding:8px 12px;
+    .parch-popup-rouleau {
+      height:16px; border-radius:4px;
+      background:linear-gradient(90deg,#6a3e08,#b07020,#6a3e08);
+      box-shadow:0 3px 8px rgba(0,0,0,.5);
+      flex-shrink:0;
     }
-    .parch-front-face.type-ile {
-      background:linear-gradient(135deg, rgba(101,72,10,.95) 0%, rgba(60,44,8,.98) 100%);
-      border:1px solid rgba(212,160,23,.6);
+    .parch-popup-body {
+      background:linear-gradient(170deg,#eedda0 0%,#e0c870 60%,#d0b450 100%);
+      padding:16px 20px;
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      min-height:120px; position:relative;
     }
-    .parch-front-face.type-vierge {
-      background:linear-gradient(135deg, rgba(50,42,28,.95) 0%, rgba(30,24,12,.98) 100%);
-      border:1px solid rgba(120,110,80,.4);
+    /* lignes décoratives */
+    .parch-popup-body::before {
+      content:'';
+      position:absolute; left:16px; right:16px; top:16px; bottom:16px;
+      background:repeating-linear-gradient(
+        180deg, transparent 0px, transparent 14px,
+        rgba(101,72,10,.15) 14px, rgba(101,72,10,.15) 15px
+      );
+      pointer-events:none;
     }
-    .parch-front-icon { font-size:1.8rem; line-height:1; flex-shrink:0; }
-    .parch-front-info { display:flex; flex-direction:column; gap:3px; min-width:0; }
-    .parch-front-type {
-      font-family:'Cinzel',serif; font-size:.78rem; text-transform:uppercase;
-      letter-spacing:.09em; opacity:.55; color:var(--parch);
+    .parch-popup-icon { font-size:2rem; line-height:1; position:relative; z-index:1; }
+    .parch-popup-type {
+      font-family:'Cinzel',serif; font-size:.76rem; color:#7a5010;
+      text-transform:uppercase; letter-spacing:.1em; opacity:.7;
+      position:relative; z-index:1;
     }
-    .parch-front-ile {
-      font-family:'Cinzel',serif; font-size:.9rem; color:var(--gold2);
-      line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    .parch-popup-dest {
+      font-family:'Cinzel',serif; font-size:1.05rem; color:#2a1400;
+      text-align:center; line-height:1.3; font-weight:700;
+      position:relative; z-index:1;
     }
-    .parch-front-vierge {
-      font-size:.9rem; color:#9a8a6a; font-style:italic;
+    .parch-popup-vierge {
+      font-size:.95rem; color:#7a6030; font-style:italic;
+      text-align:center; position:relative; z-index:1;
+    }
+    .parch-popup-seal {
+      width:28px; height:28px; border-radius:50%;
+      background:radial-gradient(circle at 38% 32%,#d03808,#7a1804);
+      box-shadow:0 2px 6px rgba(0,0,0,.5);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.8rem; position:relative; z-index:1; margin-top:4px;
     }
 
     /* CENTRE : CARTE DU MONDE */
@@ -527,6 +553,19 @@
 
 </div>
 
+<!-- ── POPUP PARCHEMIN ─────────────────────────────────────────────────────── -->
+<div id="parchPopupOverlay" onclick="closeParchPopup(event)">
+  <div class="parch-popup">
+    <button class="parch-popup-close" onclick="closeParchPopup()">✕</button>
+    <div class="parch-popup-ile-name" id="parchPopupIleName"></div>
+    <div class="parch-popup-scroll" id="parchPopupScroll">
+      <div class="parch-popup-rouleau"></div>
+      <div class="parch-popup-body" id="parchPopupBody"></div>
+      <div class="parch-popup-rouleau"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ── POPUP MISE EN PLACE ─────────────────────────────────────────────────── -->
 <div id="setupOverlay">
   <div class="setup-modal">
@@ -607,21 +646,6 @@ function renderIles(){
   bindIleHover();
 }
 
-// SVG parchemin enroulé (dos de la carte) — plus grand, plus visible
-const SCROLL_SVG = `<svg class="parch-scroll-svg" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="12" width="40" height="32" rx="3" fill="#c8922a" opacity=".85"/>
-  <rect x="10" y="14" width="36" height="28" rx="2" fill="#e8c06a" opacity=".55"/>
-  <rect x="5" y="8"  width="46" height="8"  rx="4" fill="#a06818" opacity=".95"/>
-  <rect x="8" y="9"  width="40" height="6"  rx="3" fill="#cc9030" opacity=".7"/>
-  <rect x="5" y="40" width="46" height="8"  rx="4" fill="#a06818" opacity=".95"/>
-  <rect x="8" y="41" width="40" height="6"  rx="3" fill="#cc9030" opacity=".7"/>
-  <line x1="15" y1="22" x2="41" y2="22" stroke="#7a5010" stroke-width="1.5" opacity=".45"/>
-  <line x1="15" y1="28" x2="41" y2="28" stroke="#7a5010" stroke-width="1.5" opacity=".45"/>
-  <line x1="15" y1="34" x2="33" y2="34" stroke="#7a5010" stroke-width="1.5" opacity=".45"/>
-  <circle cx="28" cy="28" r="6" fill="#aa3008" opacity=".75"/>
-  <circle cx="28" cy="28" r="4" fill="#cc4810" opacity=".65"/>
-</svg>`;
-
 function ileCardHTML(ile){
   const nbObjets=ile.nb_objets||6;
   const slots=Array.from({length:nbObjets}).map(()=>`<div class="obj-slot">·</div>`).join('');
@@ -632,55 +656,22 @@ function ileCardHTML(ile){
     ? cases.map(c=>`<span class="ile-coord-tag has-coord">Q${c.q} R${c.r}</span>`).join('')
     : `<span class="ile-coord-tag">— aucune coord</span>`;
 
-  // Parchemin flip card
+  // Slot parchemin compact (comme un obj-slot)
   const pSlot = state.setup?.parcheminsParIle?.[ile.id];
-  let parchHTML = '';
-
-  if(pSlot){
-    const revealed = pSlot.visible;
-    const card     = pSlot.card;
-    const isIle    = card?.type === 'ile';
-
-    const frontContent = isIle
-      ? `<span class="parch-front-icon">📜</span>
-         <div class="parch-front-info">
-           <span class="parch-front-type">Parchemin Île</span>
-           <span class="parch-front-ile">${card.ile||'?'}</span>
-         </div>`
-      : `<span class="parch-front-icon">📄</span>
-         <div class="parch-front-info">
-           <span class="parch-front-type">Parchemin</span>
-           <span class="parch-front-vierge">Vierge</span>
-         </div>`;
-
-    parchHTML = `<div class="ile-parchemin-wrap">
-      <span class="ile-parchemin-label">Parchemin</span>
-      <div class="parch-card-scene ${revealed?'revealed':''}" id="parch-scene-${ile.id}">
-        <div class="parch-card-inner" onclick="toggleParcheminVisibility('${ile.id}')">
-          <div class="parch-card-face parch-back-face">
-            ${SCROLL_SVG}
-            <div class="parch-back-text">
-              <span class="parch-back-title">Parchemin</span>
-              <span class="parch-back-hint">cliquer pour ouvrir</span>
-            </div>
-          </div>
-          <div class="parch-card-face parch-front-face ${isIle?'type-ile':'type-vierge'}">
-            ${frontContent}
-          </div>
-        </div>
-      </div>
+  let parchSlotHTML = '';
+  if(pSlot) {
+    // Carte posée face cachée → slot brun cliquable
+    parchSlotHTML = `<div class="ile-parch-row">
+      <span class="ile-parch-label">Parchemin</span>
+      <div class="parch-slot has-card"
+           title="Cliquer pour révéler"
+           onclick="openParchPopup('${ile.id}')">📜</div>
     </div>`;
   } else {
-    // Pas de setup — slot fantôme vide
-    parchHTML = `<div class="ile-parchemin-wrap" style="opacity:.25">
-      <span class="ile-parchemin-label">Parchemin</span>
-      <div class="parch-card-scene">
-        <div class="parch-card-inner" style="cursor:default">
-          <div class="parch-card-face parch-back-face" style="pointer-events:none">
-            ${SCROLL_SVG}
-          </div>
-        </div>
-      </div>
+    // Pas encore de setup → slot vide discret
+    parchSlotHTML = `<div class="ile-parch-row">
+      <span class="ile-parch-label">Parchemin</span>
+      <div class="parch-slot" title="Aucune carte">·</div>
     </div>`;
   }
 
@@ -693,11 +684,49 @@ function ileCardHTML(ile){
         <div class="ile-coords">${coordsHTML}</div>
       </div>
     </div>
-    ${parchHTML}
+    ${parchSlotHTML}
     <div class="ile-objets-label">Objets</div>
     <div class="ile-objets-grid">${slots}</div>
   </div>`;
 }
+
+// ─── Popup parchemin ──────────────────────────────────────────────────────────
+function openParchPopup(ileId){
+  const pSlot = state.setup?.parcheminsParIle?.[ileId];
+  if(!pSlot) return;
+  const ile  = (cfg.iles||[]).find(il=>il.id===ileId);
+  const card = pSlot.card;
+
+  // Nom de l'île propriétaire
+  document.getElementById('parchPopupIleName').textContent = ile ? `${ile.icon||'🏝'} ${ile.nom}` : '';
+
+  // Corps du parchemin
+  const body = document.getElementById('parchPopupBody');
+  if(card?.type === 'ile') {
+    body.innerHTML = `
+      <span class="parch-popup-icon">📜</span>
+      <span class="parch-popup-type">Parchemin Île</span>
+      <span class="parch-popup-dest">${card.ile||'?'}</span>
+      <div class="parch-popup-seal">⚓</div>`;
+  } else {
+    body.innerHTML = `
+      <span class="parch-popup-icon">📄</span>
+      <span class="parch-popup-type">Parchemin</span>
+      <span class="parch-popup-vierge">Vierge — aucune destination</span>
+      <div class="parch-popup-seal" style="background:radial-gradient(circle at 38% 32%,#555,#222)">·</div>`;
+  }
+
+  document.getElementById('parchPopupOverlay').classList.add('show');
+}
+
+function closeParchPopup(e){
+  // Ferme si clic sur l'overlay lui-même (pas sur la popup)
+  if(e && e.target !== document.getElementById('parchPopupOverlay') && e.type !== 'click') return;
+  if(e && e.currentTarget === document.getElementById('parchPopupOverlay') && e.target !== e.currentTarget) return;
+  document.getElementById('parchPopupOverlay').classList.remove('show');
+}
+
+function toggleParcheminVisibility(ileId){ openParchPopup(ileId); }
 
 function bindIleHover(){
   document.querySelectorAll('.ile-card').forEach(card=>{
