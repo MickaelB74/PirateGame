@@ -37,7 +37,7 @@
     /* PLATEAU */
     .plateau {
       display:grid;
-      grid-template-columns:220px 1fr 220px;
+      grid-template-columns:300px 1fr 300px;
       grid-template-rows:88px 1fr;
       width:100vw;
       height:calc(100vh - 50px);
@@ -58,25 +58,25 @@
       width:300px; height:1px; background:linear-gradient(90deg,transparent,var(--gold2),transparent);
     }
 
-    /* Bloc énigmes — séparé du bloc avancement par un divider */
+    /* Bloc énigmes */
     .top-enigmes {
       display:flex; align-items:center; gap:8px; padding:0 20px;
       border-right:1px solid var(--border); flex-shrink:0;
       height:100%;
     }
-    .top-label { font-family:'Cinzel Decorative',serif; font-size:.65rem; color:var(--gold); text-transform:uppercase; letter-spacing:.14em; white-space:nowrap; opacity:.7; margin-right:4px; }
+    .top-label { font-family:'Cinzel Decorative',serif; font-size:.72rem; color:var(--gold); text-transform:uppercase; letter-spacing:.14em; white-space:nowrap; opacity:.7; margin-right:4px; }
 
     .card-slot {
-      width:62px; height:78px; border:1px dashed rgba(184,134,11,.3); border-radius:6px;
+      width:68px; height:80px; border:1px dashed rgba(184,134,11,.3); border-radius:6px;
       background:rgba(255,255,255,.025);
       display:flex; flex-direction:column; align-items:center; justify-content:center;
       gap:3px; flex-shrink:0; cursor:default; position:relative;
     }
-    .card-slot .cs-icon { font-size:1.4rem; }
-    .card-slot .cs-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.06em; color:#6a5a3a; text-align:center; line-height:1.2; padding:0 3px; }
-    .card-slot .cs-sub  { font-size:.48rem; color:#4a3a1a; text-align:center; }
+    .card-slot .cs-icon  { font-size:1.5rem; }
+    .card-slot .cs-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; color:#8a7a5a; text-align:center; line-height:1.2; padding:0 3px; }
+    .card-slot .cs-sub   { font-size:.55rem; color:#5a4a2a; text-align:center; }
 
-    /* Bloc avancement — centré dans l'espace restant */
+    /* Bloc avancement */
     .top-avancement {
       display:flex; align-items:center; justify-content:center;
       gap:6px; padding:0 24px; flex:1;
@@ -99,17 +99,16 @@
     ::-webkit-scrollbar-thumb { background:rgba(184,134,11,.3); border-radius:2px; }
 
     .ile-section-title {
-      font-family:'Cinzel Decorative',serif; font-size:.62rem; color:var(--gold);
+      font-family:'Cinzel Decorative',serif; font-size:.85rem; color:var(--gold);
       text-transform:uppercase; letter-spacing:.1em;
-      padding:9px 10px 7px; border-bottom:1px solid rgba(184,134,11,.12);
+      padding:10px 12px 8px; border-bottom:1px solid rgba(184,134,11,.15);
       text-align:center; flex-shrink:0;
     }
 
     /* MAT CARD ÎLE */
     .ile-card {
-      flex:1; min-height:0;
       background:rgba(20,13,5,.9); border-bottom:1px solid rgba(184,134,11,.1);
-      padding:9px 11px; display:flex; flex-direction:column; gap:5px;
+      padding:12px 14px; display:flex; flex-direction:column; gap:7px;
       position:relative; overflow:hidden; transition:background .2s; cursor:default;
     }
     .ile-card:last-child { border-bottom:none; }
@@ -122,23 +121,104 @@
     .ile-card.hex-highlight { background:rgba(184,134,11,.15) !important; }
     .ile-card.hex-highlight::before { opacity:1; }
 
-    .ile-header { display:flex; align-items:flex-start; gap:7px; }
-    .ile-icon { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
+    .ile-header { display:flex; align-items:flex-start; gap:9px; }
+    .ile-icon { font-size:1.7rem; flex-shrink:0; margin-top:1px; }
     .ile-info { flex:1; min-width:0; }
-    .ile-name { font-family:'Cinzel',serif; font-size:.82rem; font-weight:600; color:#eedcb4; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .ile-biome { font-size:.68rem; color:#8a7a5e; font-style:italic; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .ile-coord { font-family:monospace; font-size:.65rem; color:rgba(74,237,204,.45); margin-top:2px; letter-spacing:.04em; }
-    .ile-coord.has-coord { color:#4aedcc; opacity:.9; }
+    .ile-name { font-family:'Cinzel',serif; font-size:1.05rem; font-weight:600; color:#eedcb4; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ile-biome { font-size:.88rem; color:#9a8a6e; font-style:italic; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    .ile-objets-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.08em; color:#5a4a2a; margin-top:auto; padding-top:4px; }
-    .ile-objets-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(24px,1fr)); gap:3px; }
+    .ile-coords { display:flex; flex-wrap:wrap; gap:3px; margin-top:4px; }
+    .ile-coord-tag { font-family:monospace; font-size:.7rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:2px 6px; }
+    .ile-coord-tag.has-coord { color:#4aedcc; opacity:.9; background:rgba(74,237,204,.12); border-color:rgba(74,237,204,.35); }
+
+    .ile-objets-label { font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#5a4a2a; padding-top:2px; }
+    .ile-objets-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(26px,1fr)); gap:3px; }
     .obj-slot {
       aspect-ratio:1; border:1px dashed rgba(184,134,11,.2); border-radius:3px;
       background:rgba(255,255,255,.02);
       display:flex; align-items:center; justify-content:center;
-      font-size:.6rem; color:#3a2a10; cursor:default; transition:border-color .15s;
+      font-size:.72rem; color:#3a2a10; cursor:default; transition:border-color .15s;
     }
     .obj-slot:hover { border-color:rgba(184,134,11,.4); }
+
+    /* ── PARCHEMIN SUR LA ILE-CARD ── */
+    .ile-parchemin-wrap {
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px; margin:0 -2px;
+      border-radius:7px;
+      background:rgba(184,134,11,.05);
+      border:1px solid rgba(184,134,11,.12);
+    }
+    .ile-parchemin-label {
+      font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:#6a5a30;
+      white-space:nowrap; flex-shrink:0;
+    }
+
+    /* La "carte parchemin" flip */
+    .parch-card-scene {
+      flex:1; height:56px;
+      perspective:400px;
+    }
+    .parch-card-inner {
+      width:100%; height:100%;
+      position:relative;
+      transform-style:preserve-3d;
+      transition:transform .55s cubic-bezier(.4,0,.2,1);
+      cursor:pointer;
+    }
+    .parch-card-scene.revealed .parch-card-inner {
+      transform:rotateY(180deg);
+    }
+    .parch-card-face {
+      position:absolute; inset:0;
+      backface-visibility:hidden;
+      -webkit-backface-visibility:hidden;
+      border-radius:6px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    /* Dos : parchemin enroulé */
+    .parch-back-face {
+      background:linear-gradient(135deg, rgba(101,72,24,.9) 0%, rgba(60,40,12,.95) 100%);
+      border:1px solid rgba(184,134,11,.45);
+      flex-direction:column; gap:3px;
+    }
+    .parch-back-face:hover {
+      border-color:rgba(212,160,23,.75);
+      background:linear-gradient(135deg, rgba(120,86,28,.9) 0%, rgba(75,50,15,.95) 100%);
+    }
+    .parch-scroll-svg { width:36px; height:36px; opacity:.85; }
+    .parch-back-hint {
+      font-size:.6rem; color:rgba(212,160,23,.55); letter-spacing:.06em;
+      text-transform:uppercase; font-family:'Cinzel',serif;
+    }
+    /* Face : contenu révélé */
+    .parch-front-face {
+      transform:rotateY(180deg);
+      flex-direction:column; gap:4px;
+      padding:6px 10px;
+    }
+    .parch-front-face.type-ile {
+      background:linear-gradient(135deg, rgba(101,72,10,.92) 0%, rgba(60,44,8,.96) 100%);
+      border:1px solid rgba(212,160,23,.6);
+    }
+    .parch-front-face.type-vierge {
+      background:linear-gradient(135deg, rgba(50,42,28,.92) 0%, rgba(30,24,12,.96) 100%);
+      border:1px solid rgba(120,110,80,.4);
+    }
+    .parch-front-icon { font-size:1.3rem; line-height:1; }
+    .parch-front-type {
+      font-family:'Cinzel',serif; font-size:.6rem; text-transform:uppercase;
+      letter-spacing:.09em; opacity:.6;
+    }
+    .parch-front-ile {
+      font-family:'Cinzel',serif; font-size:.78rem; color:var(--gold2);
+      text-align:center; line-height:1.25;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    }
+    .parch-front-vierge {
+      font-size:.82rem; color:#8a7a5a; font-style:italic;
+    }
 
     /* CENTRE : CARTE DU MONDE */
     .zone-carte {
@@ -178,15 +258,15 @@
     .sidebar-toggle:hover { background:rgba(30,20,8,.98); }
 
     .panel { background:rgba(255,255,255,.03); border:1px solid rgba(184,134,11,.12); border-radius:6px; padding:12px; flex-shrink:0; }
-    .panel h2 { font-family:'Cinzel',serif; font-size:.85rem; color:var(--gold2); margin-bottom:10px; letter-spacing:.06em; }
-    .player-row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:4px; font-size:.9rem; margin-bottom:4px; background:rgba(255,255,255,.02); }
+    .panel h2 { font-family:'Cinzel',serif; font-size:.95rem; color:var(--gold2); margin-bottom:10px; letter-spacing:.06em; }
+    .player-row { display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:4px; font-size:1rem; margin-bottom:4px; background:rgba(255,255,255,.02); }
     .player-row.active { background:rgba(106,191,97,.08); border:1px solid rgba(106,191,97,.2); }
     .player-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-    .turn-tag { margin-left:auto; font-size:.68rem; background:rgba(106,191,97,.2); border:1px solid #6abf61; border-radius:3px; padding:1px 6px; color:#6abf61; font-family:'Cinzel',serif; }
-    .player-pos { font-family:monospace; font-size:.75rem; color:#4aedcc; margin-left:auto; }
-    .panel ul { list-style:none; font-size:.84rem; color:#7a6a4a; max-height:200px; overflow-y:auto; }
+    .turn-tag { margin-left:auto; font-size:.75rem; background:rgba(106,191,97,.2); border:1px solid #6abf61; border-radius:3px; padding:1px 6px; color:#6abf61; font-family:'Cinzel',serif; }
+    .player-pos { font-family:monospace; font-size:.82rem; color:#4aedcc; margin-left:auto; }
+    .panel ul { list-style:none; font-size:.92rem; color:#7a6a4a; max-height:200px; overflow-y:auto; }
     .panel ul li { padding:3px 0; border-bottom:1px solid rgba(255,255,255,.04); line-height:1.35; }
-    .legend-row { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#6a5a3a; margin-top:6px; }
+    .legend-row { display:flex; align-items:center; gap:6px; font-size:.85rem; color:#6a5a3a; margin-top:6px; }
 
     /* Calibration */
     .calib-panel-inner { display:none; }
@@ -222,49 +302,6 @@
     }
     #hexTip strong { font-family:'Cinzel', serif; font-size:.8rem; }
     #hexTip.show { display:block; }
-
-    /* ── Emplacement parchemin sur les ile-cards ── */
-    .ile-parchemin-wrap {
-      display:flex; align-items:center; gap:6px;
-      margin-top:4px; padding-top:5px;
-      border-top: 1px solid rgba(184,134,11,.1);
-    }
-    .ile-parchemin-label {
-      font-size:.54rem; text-transform:uppercase; letter-spacing:.08em; color:#4a3a18;
-      white-space:nowrap;
-    }
-    .ile-parchemin-slot {
-      flex:1; height:28px; border-radius:4px;
-      border:1px dashed rgba(184,134,11,.22);
-      background:rgba(255,255,255,.02);
-      display:flex; align-items:center; justify-content:center;
-      font-size:.6rem; color:#3a2a10; gap:4px;
-      transition: all .3s;
-      position:relative; overflow:hidden;
-    }
-    .ile-parchemin-slot.has-card {
-      border-style:solid; border-color:rgba(184,134,11,.5);
-      background:rgba(184,134,11,.08);
-    }
-    .ile-parchemin-slot.ile-card-parch {
-      border-color:rgba(212,160,23,.6);
-      background:rgba(212,160,23,.1);
-      color:var(--gold2);
-    }
-    .ile-parchemin-slot.vierge-card-parch {
-      border-color:rgba(120,110,80,.5);
-      background:rgba(120,110,80,.07);
-      color:#9a8a6a;
-    }
-    .ile-parchemin-slot .parch-back {
-      font-size:.75rem; letter-spacing:.04em;
-    }
-    /* face visible */
-    .ile-parchemin-slot .parch-front {
-      display:none; flex-direction:column; align-items:center; font-size:.55rem; line-height:1.3;
-    }
-    .ile-parchemin-slot.revealed .parch-back { display:none; }
-    .ile-parchemin-slot.revealed .parch-front { display:flex; }
 
     /* ── Slots énigmes — états ── */
     .card-slot.enigme-filled {
@@ -580,6 +617,27 @@ function renderIles(){
   bindIleHover();
 }
 
+// SVG parchemin enroulé (dos de la carte)
+const SCROLL_SVG = `<svg class="parch-scroll-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- corps du parchemin -->
+  <rect x="10" y="14" width="44" height="36" rx="3" fill="#c8922a" opacity=".85"/>
+  <rect x="12" y="16" width="40" height="32" rx="2" fill="#e8c06a" opacity=".6"/>
+  <!-- rouleau haut -->
+  <rect x="7" y="10" width="50" height="9" rx="4" fill="#b07820" opacity=".9"/>
+  <rect x="10" y="11" width="44" height="7" rx="3" fill="#d4a030" opacity=".7"/>
+  <!-- rouleau bas -->
+  <rect x="7" y="45" width="50" height="9" rx="4" fill="#b07820" opacity=".9"/>
+  <rect x="10" y="46" width="44" height="7" rx="3" fill="#d4a030" opacity=".7"/>
+  <!-- lignes de texte -->
+  <line x1="18" y1="24" x2="46" y2="24" stroke="#7a5010" stroke-width="1.5" opacity=".5"/>
+  <line x1="18" y1="30" x2="46" y2="30" stroke="#7a5010" stroke-width="1.5" opacity=".5"/>
+  <line x1="18" y1="36" x2="38" y2="36" stroke="#7a5010" stroke-width="1.5" opacity=".5"/>
+  <!-- sceau -->
+  <circle cx="32" cy="32" r="6" fill="#c8400a" opacity=".7"/>
+  <circle cx="32" cy="32" r="4" fill="#e05010" opacity=".6"/>
+  <text x="32" y="35" text-anchor="middle" font-size="5" fill="#fff" opacity=".8" font-family="serif">⚓</text>
+</svg>`;
+
 function ileCardHTML(ile){
   const nbObjets=ile.nb_objets||6;
   const slots=Array.from({length:nbObjets}).map(()=>`<div class="obj-slot">·</div>`).join('');
@@ -590,30 +648,46 @@ function ileCardHTML(ile){
     ? cases.map(c=>`<span class="ile-coord-tag has-coord">Q${c.q} R${c.r}</span>`).join('')
     : `<span class="ile-coord-tag">— aucune coord</span>`;
 
-  // Emplacement parchemin — alimenté par state.setup si disponible
+  // Emplacement parchemin avec flip card SVG
   const pSlot = state.setup?.parcheminsParIle?.[ile.id];
   let parchHTML = '';
-  if(pSlot) {
+
+  if(pSlot){
     const revealed = pSlot.visible;
-    const card = pSlot.card;
-    const typeClass = revealed ? (card?.type === 'ile' ? 'ile-card-parch' : 'vierge-card-parch') : '';
-    const backLabel = '📜 Face cachée';
-    const frontLabel = card?.type === 'ile'
-      ? `<span style="font-size:.8rem">📜</span><span>${card.ile||'Île'}</span>`
-      : `<span style="font-size:.8rem">📄</span><span>Vierge</span>`;
+    const card     = pSlot.card;
+    const isIle    = card?.type === 'ile';
+
+    const frontContent = isIle
+      ? `<span class="parch-front-icon">📜</span>
+         <span class="parch-front-type">Parchemin Île</span>
+         <span class="parch-front-ile">${card.ile||'?'}</span>`
+      : `<span class="parch-front-icon">📄</span>
+         <span class="parch-front-vierge">Vierge</span>`;
+
     parchHTML = `<div class="ile-parchemin-wrap">
       <span class="ile-parchemin-label">Parchemin</span>
-      <div class="ile-parchemin-slot has-card ${typeClass} ${revealed?'revealed':''}"
-           data-ile-id="${ile.id}" onclick="toggleParcheminVisibility('${ile.id}')">
-        <span class="parch-back">${backLabel}</span>
-        <span class="parch-front">${frontLabel}</span>
+      <div class="parch-card-scene ${revealed?'revealed':''}" id="parch-scene-${ile.id}">
+        <div class="parch-card-inner" onclick="toggleParcheminVisibility('${ile.id}')">
+          <div class="parch-card-face parch-back-face">
+            ${SCROLL_SVG}
+            <span class="parch-back-hint">révéler</span>
+          </div>
+          <div class="parch-card-face parch-front-face ${isIle?'type-ile':'type-vierge'}">
+            ${frontContent}
+          </div>
+        </div>
       </div>
     </div>`;
   } else {
+    // Pas encore de setup — slot vide
     parchHTML = `<div class="ile-parchemin-wrap">
       <span class="ile-parchemin-label">Parchemin</span>
-      <div class="ile-parchemin-slot" title="Aucune carte attribuée">
-        <span style="font-size:.6rem;opacity:.4">— vide —</span>
+      <div class="parch-card-scene">
+        <div class="parch-card-inner" style="cursor:default">
+          <div class="parch-card-face parch-back-face" style="opacity:.3;cursor:default">
+            ${SCROLL_SVG}
+          </div>
+        </div>
       </div>
     </div>`;
   }
@@ -647,16 +721,15 @@ function bindIleHover(){
 function renderAvancement(){
   const nb=cfg.avancement?.nb_cartes_temps||6;
   const container=document.getElementById('topAvancement');
-  const tempsCards = state.setup?.cardsTemps || [];
+  // Les cartes temps sont préparées mais jamais affichées au démarrage
+  // Elles seront révélées manuellement au cours du jeu (futur)
   let html=`<span class="top-label">Avancement</span>`;
   for(let i=0;i<nb;i++){
     if(i>0) html+=`<span class="av-arrow">›</span>`;
-    const tc = tempsCards[i];
-    const filled = !!tc;
-    html+=`<div class="card-slot ${filled?'enigme-filled':''}" data-tip="Temps ${i+1}|Carte d'avancement de partie.">
+    html+=`<div class="card-slot" data-tip="Temps ${i+1}|Carte d'avancement de partie." id="tempsSlot${i}">
       <span class="cs-icon">⏳</span>
       <span class="cs-label">Temps ${i+1}</span>
-      <span class="cs-sub">${filled?'prête':'vide'}</span>
+      <span class="cs-sub">vide</span>
     </div>`;
   }
   container.innerHTML=html;
@@ -706,7 +779,9 @@ function toggleEnigmeVisibility(key){
 function toggleParcheminVisibility(ileId){
   if(!state.setup?.parcheminsParIle?.[ileId]) return;
   state.setup.parcheminsParIle[ileId].visible = !state.setup.parcheminsParIle[ileId].visible;
-  renderIles();
+  // Toggle CSS flip directement sans re-render complet
+  const scene = document.getElementById(`parch-scene-${ileId}`);
+  if(scene) scene.classList.toggle('revealed', state.setup.parcheminsParIle[ileId].visible);
 }
 
 // ─── UI Socket ────────────────────────────────────────────────────────────────
