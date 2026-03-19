@@ -630,7 +630,7 @@ async function loadConfig() {
       if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null && c.r == null))) {
         ile.cases = JSON.parse(JSON.stringify(defaut.cases));
       }
-      if (!ile.nb_objets) ile.nb_objets = 6;
+      ile.nb_objets = 6;
       return ile;
     });
     applyRulesToForm(cfg.rules);
