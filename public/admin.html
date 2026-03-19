@@ -24,46 +24,37 @@
     html { font-size: 16px; }
     body { background: var(--ink); color: var(--parch); font-family: 'Crimson Pro', Georgia, serif; font-size: var(--fs-md); line-height: 1.5; min-height: 100vh; }
 
-    /* HEADER */
     header { background: rgba(8,5,1,.98); border-bottom: 2px solid var(--gold); padding: 12px 28px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50; }
     header h1 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); }
     .back-btn { margin-left: auto; padding: 7px 18px; border: 1px solid var(--border); border-radius: 5px; background: transparent; color: #9a8a6a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; text-decoration: none; transition: border-color .2s, color .2s; }
     .back-btn:hover { border-color: var(--gold); color: var(--gold2); }
 
-    /* LAYOUT */
     .page { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 54px); }
 
-    /* SIDENAV */
     .sidenav { background: rgba(5,3,1,.92); border-right: 1px solid var(--border); padding: 18px 0; display: flex; flex-direction: column; gap: 2px; }
     .nav-group { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em; color: #5a4a2a; padding: 12px 16px 4px; font-family: 'Cinzel Decorative', serif; }
     .nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; font-size: var(--fs-sm); color: #7a6a4a; cursor: pointer; transition: background .12s, color .12s; border-left: 3px solid transparent; }
     .nav-item:hover { background: rgba(255,255,255,.03); color: var(--parch); }
     .nav-item.active { background: rgba(184,134,11,.08); color: var(--gold2); border-left-color: var(--gold2); }
     .nav-badge { margin-left: auto; font-size: var(--fs-xs); font-family: monospace; background: rgba(184,134,11,.15); color: var(--gold); padding: 2px 7px; border-radius: 8px; }
-    .nav-badge-soon { margin-left: auto; font-size: .65rem; font-family: 'Cinzel Decorative', serif; background: rgba(74,237,204,.08); color: rgba(74,237,204,.5); border: 1px solid rgba(74,237,204,.2); padding: 2px 7px; border-radius: 8px; letter-spacing: .04em; }
 
-    /* MAIN */
     main { padding: 28px 32px 110px; overflow-y: auto; }
     .tab-panel { display: none; animation: fadeIn .2s ease; }
     .tab-panel.active { display: block; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
 
-    /* SECTION HEADER */
     .section-head { margin-bottom: 22px; }
     .section-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xl); color: var(--gold2); margin-bottom: 6px; }
     .section-desc  { font-size: var(--fs-sm); color: #7a6a4a; font-style: italic; line-height: 1.6; }
 
-    /* SUBTYPE TABS */
     .subtype-tabs { display: flex; gap: 6px; margin-bottom: 22px; flex-wrap: wrap; }
     .stab { padding: 7px 20px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: #7a6a4a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; transition: all .13s; }
     .stab:hover { border-color: var(--gold); color: var(--parch); }
     .stab.active { background: rgba(184,134,11,.12); border-color: var(--gold2); color: var(--gold2); }
 
-    /* EDITOR BLOCK */
     .editor-block { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 22px 24px; margin-bottom: 18px; }
     .editor-block h3 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); color: var(--gold); margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 
-    /* COUNT ROW */
     .count-row { display: flex; align-items: center; gap: 12px; background: rgba(184,134,11,.06); border: 1px solid rgba(184,134,11,.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; }
     .count-row label { font-size: var(--fs-md); color: #9a8a6a; flex: 1; }
     .count-stepper { display: flex; align-items: center; gap: 8px; }
@@ -71,7 +62,6 @@
     .count-stepper button:hover { background: rgba(184,134,11,.18); }
     .count-stepper .count-val { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); min-width: 32px; text-align: center; }
 
-    /* CARD LIST */
     .card-list { display: flex; flex-direction: column; gap: 10px; }
     .card-entry { background: rgba(0,0,0,.38); border: 1px solid rgba(184,134,11,.13); border-radius: 8px; padding: 12px 16px; display: grid; gap: 10px; }
     .card-entry-header { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: #7a6a4a; }
@@ -87,12 +77,10 @@
     .entry-field input:focus, .entry-field select:focus, .entry-field textarea:focus { outline: none; border-color: var(--gold); }
     .entry-field select option { background: #1a1000; }
 
-    /* Champ coordonnée teal */
     .entry-field.coord input { border-color: rgba(74,237,204,.3); color: #4aedcc; }
     .entry-field.coord label { color: rgba(74,237,204,.6); }
     .entry-field.coord input:focus { border-color: #4aedcc; }
 
-    /* TOGGLE */
     .toggle-wrap { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: #7a6a4a; cursor: pointer; }
     .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; }
@@ -101,11 +89,9 @@
     .toggle input:checked + .toggle-slider { background: rgba(74,237,204,.22); border-color: var(--teal); }
     .toggle input:checked + .toggle-slider::after { transform: translateX(16px); background: var(--teal); }
 
-    /* RELIQUE CARD */
     .relique-card { background: var(--surface); border: 1px solid rgba(224,192,48,.3); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
     .relique-card h4 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-md); color: #e0c030; display: flex; align-items: center; gap: 8px; }
 
-    /* OVERVIEW */
     .ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; margin-bottom: 28px; }
     .ov-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 14px 16px; cursor: pointer; transition: border-color .15s; }
     .ov-chip:hover { border-color: var(--gold); }
@@ -113,7 +99,6 @@
     .ov-chip .ov-val  { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xl); color: var(--gold2); }
     .ov-chip .ov-lbl  { font-size: var(--fs-xs); color: #7a6a4a; text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
 
-    /* RULES */
     .rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
     .rule-group { background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 16px 18px; }
     .rule-group h3 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-sm); color: var(--gold); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
@@ -123,13 +108,11 @@
     .rule-field input { padding: 8px 11px; background: rgba(0,0,0,.48); border: 1px solid var(--border); border-radius: 6px; color: var(--parch); font-family: 'Crimson Pro', serif; font-size: var(--fs-md); }
     .rule-field input:focus { outline: none; border-color: var(--gold); }
 
-    /* BUTTONS */
     .btn-add { padding: 8px 18px; border-radius: 6px; border: 1px dashed rgba(184,134,11,.35); background: transparent; color: #9a8a6a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; transition: all .13s; }
     .btn-add:hover { border-color: var(--gold); color: var(--gold2); background: rgba(184,134,11,.07); }
     .btn-remove { padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(192,64,64,.3); background: transparent; color: #a05050; font-size: var(--fs-xs); cursor: pointer; font-family: 'Crimson Pro', serif; transition: all .13s; margin-left: auto; }
     .btn-remove:hover { background: rgba(192,64,64,.12); color: #e06060; border-color: rgba(192,64,64,.6); }
 
-    /* SAVE BAR */
     .save-bar { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 32px; background: rgba(5,3,1,.98); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 14px; z-index: 40; transform: translateY(100%); transition: transform .2s; }
     .save-bar.visible { transform: translateY(0); }
     .save-status { font-size: var(--fs-md); flex: 1; font-style: italic; }
@@ -142,29 +125,24 @@
     .btn-discard { padding: 9px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,.08); background: transparent; color: #7a6a4a; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); cursor: pointer; }
     .btn-discard:hover { color: var(--parch); }
 
-    /* SECTION "À VENIR" */
     .soon-block { background: var(--surface); border: 1px dashed rgba(74,237,204,.2); border-radius: 10px; padding: 48px 24px; text-align: center; opacity: .6; }
     .soon-block .soon-icon { font-size: 3rem; margin-bottom: 14px; }
     .soon-block .soon-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold); margin-bottom: 10px; }
     .soon-block .soon-desc  { font-size: var(--fs-sm); color: #7a6a4a; font-style: italic; line-height: 1.7; max-width: 480px; margin: 0 auto; }
 
-    /* LOADING */
     #loadingOverlay { position: fixed; inset: 0; background: rgba(5,3,1,.85); display: flex; align-items: center; justify-content: center; z-index: 200; font-family: 'Cinzel Decorative', serif; font-size: var(--fs-lg); color: var(--gold2); }
 
-    /* Bloc case île (multi-cases) */
     .case-block { background: rgba(74,237,204,.04); border: 1px solid rgba(74,237,204,.15); border-radius: 6px; padding: 10px 12px; display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; margin-bottom: 6px; }
     .case-block label { font-size: var(--fs-xs); color: rgba(74,237,204,.6); }
     .case-block input { padding: 7px 10px; background: rgba(0,0,0,.52); border: 1px solid rgba(74,237,204,.3); border-radius: 6px; color: #4aedcc; font-family: monospace; font-size: var(--fs-md); }
     .case-block input:focus { outline: none; border-color: #4aedcc; }
     .case-block .case-title { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xs); color: rgba(74,237,204,.5); grid-column: 1/-1; margin-bottom: 2px; }
 
-    /* ILE SELECT — dropdown style */
     .ile-select-wrap { position: relative; }
     .ile-select-wrap select { width: 100%; padding: 8px 11px; background: rgba(0,0,0,.52); border: 1px solid rgba(74,237,204,.3); border-radius: 6px; color: #4aedcc; font-family: 'Crimson Pro', serif; font-size: var(--fs-md); cursor: pointer; }
     .ile-select-wrap select:focus { outline: none; border-color: #4aedcc; }
     .ile-select-wrap select option { background: #1a1000; color: var(--parch); }
 
-    /* TEMPÊTE — style special */
     .tempete-card { background: rgba(74,237,204,.04); border: 1px solid rgba(74,237,204,.2); border-radius: 10px; padding: 18px 20px; margin-bottom: 14px; }
     .tempete-card h4 { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-md); color: #4aedcc; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
     .tempete-cases { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
@@ -188,8 +166,6 @@
 </header>
 
 <div class="page">
-
-  <!-- SIDENAV -->
   <nav class="sidenav">
     <div class="nav-group">Général</div>
     <div class="nav-item active" data-tab="overview" onclick="switchTab('overview')"><span>📊</span> Vue d'ensemble</div>
@@ -208,7 +184,7 @@
     <div class="nav-group">Lieux</div>
     <div class="nav-item" data-tab="port_commerce"    onclick="switchTab('port_commerce')">   <span>⚓</span> Ports de commerce <span class="nav-badge" id="nb-ports">–</span></div>
     <div class="nav-item" data-tab="repaire_pirate"   onclick="switchTab('repaire_pirate')">  <span>💀</span> Repaires pirates  <span class="nav-badge" id="nb-repaires">–</span></div>
-    <div class="nav-item" data-tab="epave"             onclick="switchTab('epave')">            <span>🚢</span> Épaves            <span class="nav-badge" id="nb-epaves">–</span></div>
+    <div class="nav-item" data-tab="epave"            onclick="switchTab('epave')">           <span>🚢</span> Épaves            <span class="nav-badge" id="nb-epaves">–</span></div>
     <div class="nav-item" data-tab="tempete"          onclick="switchTab('tempete')">         <span>🌀</span> Tempête           </div>
     <div class="nav-group">Config</div>
     <div class="nav-item" data-tab="rules"            onclick="switchTab('rules')">           <span>📋</span> Règles</div>
@@ -229,7 +205,7 @@
     <div class="tab-panel" id="tab-parchemin">
       <div class="section-head">
         <div class="section-title">📜 Parchemins</div>
-        <div class="section-desc">Parchemins conduisant à une île précise (sélectionnez parmi les îles configurées), et parchemins vierges sans destination.</div>
+        <div class="section-desc">Parchemins conduisant à une île précise, et parchemins vierges sans destination.</div>
       </div>
       <div class="subtype-tabs">
         <button class="stab active" onclick="showSubtab('parchemin','ile',this)">🏝 Île (destination)</button>
@@ -325,7 +301,7 @@
     <div class="tab-panel" id="tab-ancien_parchemin">
       <div class="section-head">
         <div class="section-title">🗺 Anciens Parchemins</div>
-        <div class="section-desc">3 cartes rares. Chacune révèle la route secrète menant à l'île d'une ancienne relique. Sélectionnez la destination parmi les îles existantes.</div>
+        <div class="section-desc">3 cartes rares. Chacune révèle la route secrète menant à l'île d'une ancienne relique.</div>
       </div>
       <div class="editor-block">
         <h3>🗺 Définition des routes</h3>
@@ -359,7 +335,7 @@
     <div class="tab-panel" id="tab-action">
       <div class="section-head">
         <div class="section-title">⚔ Actions</div>
-        <div class="section-desc">Le joueur possède toujours 5 cartes action en main. Offensives pour perturber un adversaire, défensives pour se protéger.</div>
+        <div class="section-desc">Offensives pour perturber un adversaire, défensives pour se protéger.</div>
       </div>
       <div class="subtype-tabs">
         <button class="stab active" onclick="showSubtab('action','offensive',this)">💥 Offensives</button>
@@ -489,7 +465,7 @@
     <div class="tab-panel" id="tab-port_commerce">
       <div class="section-head">
         <div class="section-title">⚓ Ports de commerce</div>
-        <div class="section-desc">Cases spéciales du plateau pour l'achat d'équipements et l'échange de ressources. Chaque port occupe une seule case.</div>
+        <div class="section-desc">Cases spéciales du plateau pour l'achat d'équipements et l'échange de ressources.</div>
       </div>
       <div class="editor-block">
         <h3>⚓ Liste des ports</h3>
@@ -502,7 +478,7 @@
     <div class="tab-panel" id="tab-repaire_pirate">
       <div class="section-head">
         <div class="section-title">💀 Repaires de pirates</div>
-        <div class="section-desc">Cases spéciales abritant des pirates hostiles ou des factions. Chaque repaire occupe une seule case.</div>
+        <div class="section-desc">Cases spéciales abritant des pirates hostiles ou des factions.</div>
       </div>
       <div class="editor-block">
         <h3>💀 Liste des repaires</h3>
@@ -515,7 +491,7 @@
     <div class="tab-panel" id="tab-epave">
       <div class="section-head">
         <div class="section-title">🚢 Épaves</div>
-        <div class="section-desc">Cases spéciales représentant des navires naufragés. Impossibles à traverser, elles peuvent recéler des trésors. Chaque épave occupe une seule case.</div>
+        <div class="section-desc">Cases spéciales représentant des navires naufragés.</div>
       </div>
       <div class="editor-block">
         <h3>🚢 Liste des épaves</h3>
@@ -528,13 +504,12 @@
     <div class="tab-panel" id="tab-tempete">
       <div class="section-head">
         <div class="section-title">🌀 Zone Tempête</div>
-        <div class="section-desc">Zone permanente infranchissable et inatteignable. Les cases de tempête bloquent tout déplacement et ne peuvent jamais être ciblées.</div>
+        <div class="section-desc">Zone permanente infranchissable et inatteignable.</div>
       </div>
       <div class="tempete-card">
         <h4>🌀 Zone de tempête permanente</h4>
         <p style="font-size:var(--fs-sm);color:#7a6a4a;font-style:italic;margin-bottom:12px">
           Ces cases sont définitivement bloquées — ni traversées, ni ciblées par aucun joueur.
-          La zone est fixe et ne peut pas être modifiée ici ; elle est gérée directement dans le serveur.
         </p>
         <div style="font-size:var(--fs-xs);color:rgba(74,237,204,.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">Cases de tempête actives</div>
         <div class="tempete-cases" id="tempeteCases"></div>
@@ -542,9 +517,7 @@
       <div class="editor-block" style="margin-top:14px">
         <h3>ℹ️ Information</h3>
         <p style="font-size:var(--fs-sm);color:#7a6a4a;line-height:1.7">
-          La zone de tempête est définie dans <code style="color:#4aedcc;background:rgba(74,237,204,.08);padding:1px 5px;border-radius:3px">server.js</code> comme un ensemble de cases bloquées supplémentaires.
-          Ces cases sont invisibles aux joueurs mais bloquent tout pathfinding (BFS). Elles apparaissent en violet sur le plateau du maître de jeu.
-          <br><br>
+          La zone de tempête est définie dans <code style="color:#4aedcc;background:rgba(74,237,204,.08);padding:1px 5px;border-radius:3px">server.js</code> comme un ensemble de cases bloquées supplémentaires.<br><br>
           Cases actuelles : Q11R9, Q12R9, Q13R9, Q11R10, Q12R10, Q13R10, Q14R10, Q11R11, Q12R11, Q13R11, Q12R12, Q13R12.
         </p>
       </div>
@@ -569,7 +542,7 @@ let _uid  = 1000;
 function uid() { return `c${++_uid}`; }
 function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-// ── Îles par défaut avec leurs coordonnées pré-remplies ───────────────────────
+// FIX : nb_objets = 6 pour toutes les îles par défaut
 const ILES_DEFAUT = [
   { id:'ile_0', nom:'Île aux Squelettes', biome:'Jungle maudite',      icon:'💀', nb_objets:6, cases:[{q:11,r:1},{q:12,r:2}] },
   { id:'ile_1', nom:'Île des Tempêtes',   biome:'Récifs balayés',      icon:'⛈',  nb_objets:6, cases:[{q:21,r:4},{q:22,r:4}] },
@@ -583,7 +556,6 @@ const ILES_DEFAUT = [
   { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:6, cases:[{q:20,r:21}] },
 ];
 
-// Cases de tempête — infranchissables et inatteignables
 const TEMPETE_CASES = [
   {q:11,r:9},{q:12,r:9},{q:13,r:9},
   {q:11,r:10},{q:12,r:10},{q:13,r:10},{q:14,r:10},
@@ -591,7 +563,6 @@ const TEMPETE_CASES = [
   {q:12,r:12},{q:13,r:12}
 ];
 
-// Helper: liste des noms d'îles pour les selects
 function getIleOptions(selectedNom) {
   const iles = state.iles || ILES_DEFAUT;
   const opts = iles.map(ile => {
@@ -611,28 +582,33 @@ async function loadConfig() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const cfg = await res.json();
     state = cfg.cards;
-    if (!state.iles || !state.iles.length) state.iles = defaultIles();
+    // FIX : s'assurer que toutes les îles ont nb_objets = 6
+    if (!state.iles || !state.iles.length) {
+      state.iles = defaultIles();
+    } else {
+      state.iles = state.iles.map((ile, i) => {
+        // Migration : ancien format coord_q/coord_r → cases[]
+        if (!ile.cases) {
+          const cases = [];
+          if (ile.coord_q != null && ile.coord_r != null)
+            cases.push({ q: ile.coord_q, r: ile.coord_r });
+          const { coord_q, coord_r, ...rest } = ile;
+          ile = { ...rest, cases };
+        }
+        // Appliquer les coordonnées par défaut si manquantes
+        const defaut = ILES_DEFAUT[i];
+        if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null && c.r == null))) {
+          ile.cases = JSON.parse(JSON.stringify(defaut.cases));
+        }
+        // FIX : forcer nb_objets à 6
+        ile.nb_objets = 6;
+        return ile;
+      });
+    }
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
     if (!state.ports    || !state.ports.length)    state.ports    = defaultPorts();
     if (!state.repaires || !state.repaires.length) state.repaires = defaultRepaires();
     if (!state.epaves   || !state.epaves.length)   state.epaves   = defaultEpaves();
-    // Migration : ancien format coord_q/coord_r → cases[]
-    state.iles = state.iles.map((ile, i) => {
-      if (!ile.cases) {
-        const cases = [];
-        if (ile.coord_q != null && ile.coord_r != null)
-          cases.push({ q: ile.coord_q, r: ile.coord_r });
-        const { coord_q, coord_r, ...rest } = ile;
-        ile = { ...rest, cases };
-      }
-      // Appliquer les coordonnées par défaut si toutes les cases sont vides
-      const defaut = ILES_DEFAUT[i];
-      if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null && c.r == null))) {
-        ile.cases = JSON.parse(JSON.stringify(defaut.cases));
-      }
-      ile.nb_objets = 6;
-      return ile;
-    });
     applyRulesToForm(cfg.rules);
     renderAll();
     document.getElementById('loadingOverlay').style.display = 'none';
@@ -727,7 +703,6 @@ function renderAll() {
   updateOverview();
 }
 
-// Parchemin Île — avec sélecteur d'île
 function renderParcheminIle() {
   const arr = state.parchemin_ile || [];
   document.getElementById('cnt-parchemin_ile').textContent = arr.length;
@@ -752,13 +727,11 @@ function renderParcheminIle() {
     </div>`).join('');
 }
 
-// Parchemin Vierge
 function renderParcheminVierge() {
   const cnt = state.parchemin_vierge?.count ?? 0;
   document.getElementById('cnt-parchemin_vierge').textContent = cnt;
 }
 
-// Énigme Latitude
 function renderEnigmeLatitude() {
   const arr = state.enigme_latitude || [];
   document.getElementById('cnt-enigme_latitude').textContent = arr.length;
@@ -773,7 +746,6 @@ function renderEnigmeLatitude() {
     </div>`).join('');
 }
 
-// Énigme Longitude
 function renderEnigmeLongitude() {
   const arr = state.enigme_longitude || [];
   document.getElementById('cnt-enigme_longitude').textContent = arr.length;
@@ -788,7 +760,6 @@ function renderEnigmeLongitude() {
     </div>`).join('');
 }
 
-// Énigme Code
 function renderEnigmeCode() {
   const arr = state.enigme_code || [];
   document.getElementById('cnt-enigme_code').textContent = arr.length;
@@ -812,7 +783,6 @@ function renderEnigmeCode() {
     </div>`).join('');
 }
 
-// Anciens Parchemins — avec sélecteur d'île
 function renderAncienParchemin() {
   const arr = state.ancien_parchemin || [];
   document.getElementById('list-ancien_parchemin').innerHTML = arr.map((c,i) => `
@@ -833,7 +803,6 @@ function renderAncienParchemin() {
     </div>`).join('');
 }
 
-// Reliques
 function renderReliques() {
   const rel = state.reliques || {};
   const defs = [
@@ -862,7 +831,6 @@ function renderReliques() {
   }).join('');
 }
 
-// Liste générique (équipements, actions, atouts)
 function renderSimpleList(key, icon, fields, labels) {
   const arr = state[key] || [];
   const listEl = document.getElementById(`list-${key}`);
@@ -895,7 +863,6 @@ function updateActionBadge() {
   if (el) el.textContent = (state.action_offensive?.length||0) + (state.action_defensive?.length||0);
 }
 
-// Événements
 function renderEvenement() {
   const arr = state.evenement || [];
   const relOptions = [
@@ -932,7 +899,6 @@ function renderEvenement() {
   document.getElementById('nb-event').textContent = arr.length;
 }
 
-// ── Îles (multi-cases 1 à 3) ─────────────────────────────────────────────────
 function renderIles() {
   const arr = state.iles || [];
   document.getElementById('cnt-iles').textContent = arr.length;
@@ -982,8 +948,6 @@ function renderIles() {
       <div style="margin-top:8px">${casesHTML}</div>
     </div>`;
   }).join('');
-
-  // Rafraîchir aussi les selects d'îles dans parchemins et anciens parchemins
   renderParcheminIle();
   renderAncienParchemin();
 }
@@ -1002,7 +966,6 @@ function setCaseCoord(i, ci, axis, val) {
   markDirty();
 }
 
-// Lieux (ports / repaires / épaves)
 function renderLieux(key) {
   const arr = state[key] || [];
   const icons = { ports:'⚓', repaires:'💀', epaves:'🚢' };
@@ -1027,7 +990,6 @@ function renderLieux(key) {
             oninput="state['${key}'][${i}].coord_r=this.value!==''?parseInt(this.value):null;markDirty()"></div>
       </div>
     </div>`).join('');
-
   const badgeIds = { ports:'nb-ports', repaires:'nb-repaires', epaves:'nb-epaves' };
   const badge = document.getElementById(badgeIds[key]);
   if (badge) badge.textContent = arr.length;
@@ -1043,7 +1005,6 @@ function removeLieu(key, i) {
   renderLieux(key); markDirty(); updateOverview();
 }
 
-// Tempête — affichage des cases fixes
 function renderTempete() {
   const el = document.getElementById('tempeteCases');
   if (!el) return;
@@ -1052,14 +1013,12 @@ function renderTempete() {
   ).join('');
 }
 
-// Avancement
 function renderAvancement() {
   const nb = state.avancement?.nb_cartes_temps ?? 6;
   const el = document.getElementById('nb_cartes_temps');
   if (el) el.value = nb;
 }
 
-// Overview
 function updateOverview() {
   const s = state;
   const types = [
@@ -1182,17 +1141,17 @@ function defaultIles() {
 
 function defaultPorts() {
   return [
-    { id:'port_0', nom:'Port de la Tortue',      coord_q:4,  coord_r:3  },
-    { id:'port_1', nom:'Port du Roi des Mers',   coord_q:12, coord_r:5  },
-    { id:'port_2', nom:'Port de l\'Orient',      coord_q:23, coord_r:10 },
-    { id:'port_3', nom:'Port des Caraïbes',      coord_q:16, coord_r:18 },
-    { id:'port_4', nom:'Port du Couchant',        coord_q:4,  coord_r:13 },
+    { id:'port_0', nom:'Port de la Tortue',    coord_q:4,  coord_r:3  },
+    { id:'port_1', nom:'Port du Roi des Mers', coord_q:12, coord_r:5  },
+    { id:'port_2', nom:"Port de l'Orient",     coord_q:23, coord_r:10 },
+    { id:'port_3', nom:'Port des Caraïbes',    coord_q:16, coord_r:18 },
+    { id:'port_4', nom:'Port du Couchant',     coord_q:4,  coord_r:13 },
   ];
 }
 
 function defaultRepaires() {
   return [
-    { id:'rep_0', nom:'Repaire de la Grotte Noire', coord_q:1,  coord_r:6  },
+    { id:'rep_0', nom:'Repaire de la Grotte Noire',  coord_q:1,  coord_r:6  },
     { id:'rep_1', nom:'Repaire du Cap des Traîtres', coord_q:23, coord_r:2  },
     { id:'rep_2', nom:'Repaire de la Baie Maudite',  coord_q:7,  coord_r:20 },
     { id:'rep_3', nom:'Repaire du Rocher du Diable', coord_q:23, coord_r:18 },
@@ -1204,7 +1163,7 @@ function defaultEpaves() {
     { id:'ep_0', nom:'Épave du Santa Fortuna',   coord_q:1,  coord_r:1  },
     { id:'ep_1', nom:'Épave du Corsaire Noir',   coord_q:18, coord_r:2  },
     { id:'ep_2', nom:'Épave du Brise-Lame',      coord_q:8,  coord_r:9  },
-    { id:'ep_3', nom:'Épave du Pélican d\'Or',   coord_q:20, coord_r:12 },
+    { id:'ep_3', nom:"Épave du Pélican d'Or",    coord_q:20, coord_r:12 },
     { id:'ep_4', nom:'Épave du Sanctuaire',      coord_q:2,  coord_r:19 },
     { id:'ep_5', nom:'Épave du Dragon des Mers', coord_q:11, coord_r:17 },
     { id:'ep_6', nom:'Épave du Vieux Jacques',   coord_q:22, coord_r:21 },

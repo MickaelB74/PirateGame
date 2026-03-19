@@ -54,12 +54,52 @@ function saveConfig(cfg) {
   }
 }
 
+// ─── Defaults ─────────────────────────────────────────────────────────────────
+// FIX: nb_objets=6 pour toutes les îles + coordonnées cases[] pré-remplies
+const DEFAULT_ILES = [
+  { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 6, cases: [{q:11,r:1},{q:12,r:2}] },
+  { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 6, cases: [{q:21,r:4},{q:22,r:4}] },
+  { id: "ile_2", nom: "Île Dorée",          biome: "Plages de sable fin", icon: "💰", nb_objets: 6, cases: [{q:5,r:7}] },
+  { id: "ile_3", nom: "Île des Brumes",     biome: "Marais mystérieux",   icon: "🌫", nb_objets: 6, cases: [{q:17,r:8}] },
+  { id: "ile_4", nom: "Île du Kraken",      biome: "Abysses redoutés",    icon: "🦑", nb_objets: 6, cases: [{q:2,r:14}] },
+  { id: "ile_5", nom: "Île Volcanique",     biome: "Terres ardentes",     icon: "🌋", nb_objets: 6, cases: [{q:8,r:13},{q:9,r:13},{q:9,r:14}] },
+  { id: "ile_6", nom: "Île des Naufragés",  biome: "Épaves et ruines",    icon: "⚓", nb_objets: 6, cases: [{q:16,r:15}] },
+  { id: "ile_7", nom: "Île des Épices",     biome: "Forêts aromatiques",  icon: "🌿", nb_objets: 6, cases: [{q:22,r:14}] },
+  { id: "ile_8", nom: "Île des Coraux",     biome: "Lagon turquoise",     icon: "🪸", nb_objets: 6, cases: [{q:5,r:20},{q:5,r:21}] },
+  { id: "ile_9", nom: "Île Fantôme",        biome: "Brume perpétuelle",   icon: "👻", nb_objets: 6, cases: [{q:20,r:21}] },
+];
+
+const DEFAULT_PORTS = [
+  { id: "port_0", nom: "Port de la Tortue",     coord_q: 4,  coord_r: 3  },
+  { id: "port_1", nom: "Port du Roi des Mers",  coord_q: 12, coord_r: 5  },
+  { id: "port_2", nom: "Port de l'Orient",      coord_q: 23, coord_r: 10 },
+  { id: "port_3", nom: "Port des Caraïbes",     coord_q: 16, coord_r: 18 },
+  { id: "port_4", nom: "Port du Couchant",      coord_q: 4,  coord_r: 13 },
+];
+
+const DEFAULT_REPAIRES = [
+  { id: "rep_0", nom: "Repaire de la Grotte Noire",  coord_q: 1,  coord_r: 6  },
+  { id: "rep_1", nom: "Repaire du Cap des Traîtres", coord_q: 23, coord_r: 2  },
+  { id: "rep_2", nom: "Repaire de la Baie Maudite",  coord_q: 7,  coord_r: 20 },
+  { id: "rep_3", nom: "Repaire du Rocher du Diable", coord_q: 23, coord_r: 18 },
+];
+
+const DEFAULT_EPAVES = [
+  { id: "ep_0", nom: "Épave du Santa Fortuna",   coord_q: 1,  coord_r: 1  },
+  { id: "ep_1", nom: "Épave du Corsaire Noir",   coord_q: 18, coord_r: 2  },
+  { id: "ep_2", nom: "Épave du Brise-Lame",      coord_q: 8,  coord_r: 9  },
+  { id: "ep_3", nom: "Épave du Pélican d'Or",    coord_q: 20, coord_r: 12 },
+  { id: "ep_4", nom: "Épave du Sanctuaire",      coord_q: 2,  coord_r: 19 },
+  { id: "ep_5", nom: "Épave du Dragon des Mers", coord_q: 11, coord_r: 17 },
+  { id: "ep_6", nom: "Épave du Vieux Jacques",   coord_q: 22, coord_r: 21 },
+];
+
 // ─── Config runtime ───────────────────────────────────────────────────────────
 const savedConfig = loadConfig();
 
 let adminConfig = savedConfig || {
   cards: {
-    parchemin_ile:    Array.from({ length: 10 }, (_, i) => ({ id: `pi_${i}`, ile: `Île ${i + 1}`, description: "" })),
+    parchemin_ile:    Array.from({ length: 10 }, (_, i) => ({ id: `pi_${i}`, ile: DEFAULT_ILES[i]?.nom || `Île ${i + 1}`, description: "" })),
     parchemin_vierge: { count: 10 },
     enigme_latitude:  Array.from({ length: 3 },  (_, i) => ({ id: `el_${i}`,  valeur: i + 1 })),
     enigme_longitude: Array.from({ length: 3 },  (_, i) => ({ id: `elo_${i}`, valeur: i + 1 })),
@@ -103,58 +143,48 @@ let adminConfig = savedConfig || {
       { id: "ev_4", nom: "Attaque du Kraken", description: "Passe ton prochain tour et perds 1 point de coque.",           annule_relique: "",                 enabled: true },
       { id: "ev_5", nom: "Chant des Sirènes", description: "Envoûté par les sirènes. Défausse une carte action au choix.", annule_relique: "",                 enabled: true },
     ],
-    // ── FIX : îles et avancement absents des defaults ─────────────────────────
-    ports:   [],
-    repaires: [],
-    epaves:  [],
-    iles: [
-      { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 3 },
-      { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 2 },
-      { id: "ile_2", nom: "Île Dorée",          biome: "Plages de sable fin", icon: "💰", nb_objets: 4 },
-      { id: "ile_3", nom: "Île des Brumes",     biome: "Marais mystérieux",   icon: "🌫", nb_objets: 3 },
-      { id: "ile_4", nom: "Île du Kraken",      biome: "Abysses redoutés",    icon: "🦑", nb_objets: 2 },
-      { id: "ile_5", nom: "Île Volcanique",     biome: "Terres ardentes",     icon: "🌋", nb_objets: 2 },
-      { id: "ile_6", nom: "Île des Naufragés",  biome: "Épaves et ruines",    icon: "⚓", nb_objets: 3 },
-      { id: "ile_7", nom: "Île des Épices",     biome: "Forêts aromatiques",  icon: "🌿", nb_objets: 4 },
-      { id: "ile_8", nom: "Île des Coraux",     biome: "Lagon turquoise",     icon: "🪸", nb_objets: 3 },
-      { id: "ile_9", nom: "Île Fantôme",        biome: "Brume perpétuelle",   icon: "👻", nb_objets: 2 },
-    ],
+    iles:      JSON.parse(JSON.stringify(DEFAULT_ILES)),
+    ports:     JSON.parse(JSON.stringify(DEFAULT_PORTS)),
+    repaires:  JSON.parse(JSON.stringify(DEFAULT_REPAIRES)),
+    epaves:    JSON.parse(JSON.stringify(DEFAULT_EPAVES)),
     avancement: { nb_cartes_temps: 6 },
   },
   rules: JSON.parse(JSON.stringify(RULES)),
 };
 
-// ─── Garantir que les clés iles/avancement existent même sur un config.json ancien ──
-if (!adminConfig.cards.iles) {
-  adminConfig.cards.iles = [
-    { id: "ile_0", nom: "Île aux Squelettes", biome: "Jungle maudite",      icon: "💀", nb_objets: 3 },
-    { id: "ile_1", nom: "Île des Tempêtes",   biome: "Récifs balayés",      icon: "⛈",  nb_objets: 2 },
-    { id: "ile_2", nom: "Île Dorée",          biome: "Plages de sable fin", icon: "💰", nb_objets: 4 },
-    { id: "ile_3", nom: "Île des Brumes",     biome: "Marais mystérieux",   icon: "🌫", nb_objets: 3 },
-    { id: "ile_4", nom: "Île du Kraken",      biome: "Abysses redoutés",    icon: "🦑", nb_objets: 2 },
-    { id: "ile_5", nom: "Île Volcanique",     biome: "Terres ardentes",     icon: "🌋", nb_objets: 2 },
-    { id: "ile_6", nom: "Île des Naufragés",  biome: "Épaves et ruines",    icon: "⚓", nb_objets: 3 },
-    { id: "ile_7", nom: "Île des Épices",     biome: "Forêts aromatiques",  icon: "🌿", nb_objets: 4 },
-    { id: "ile_8", nom: "Île des Coraux",     biome: "Lagon turquoise",     icon: "🪸", nb_objets: 3 },
-    { id: "ile_9", nom: "Île Fantôme",        biome: "Brume perpétuelle",   icon: "👻", nb_objets: 2 },
-  ];
-  console.log("  ✓ Clé 'iles' ajoutée au config existant.");
+// ─── Migration / garanties sur config existante ───────────────────────────────
+// S'assurer que toutes les clés existent, même sur un ancien config.json
+
+if (!adminConfig.cards.iles || !adminConfig.cards.iles.length) {
+  adminConfig.cards.iles = JSON.parse(JSON.stringify(DEFAULT_ILES));
+  console.log("  ✓ Clé 'iles' initialisée.");
 }
 if (!adminConfig.cards.avancement) {
   adminConfig.cards.avancement = { nb_cartes_temps: 6 };
-  console.log("  ✓ Clé 'avancement' ajoutée au config existant.");
+  console.log("  ✓ Clé 'avancement' ajoutée.");
 }
-if (!adminConfig.cards.ports)    adminConfig.cards.ports    = [];
-if (!adminConfig.cards.repaires) adminConfig.cards.repaires = [];
-if (!adminConfig.cards.epaves)   adminConfig.cards.epaves   = [];
-// Migration îles : ancien format cases[] ou coord_q/coord_r
-adminConfig.cards.iles = (adminConfig.cards.iles || []).map(ile => {
+if (!adminConfig.cards.ports    || !adminConfig.cards.ports.length)    { adminConfig.cards.ports    = JSON.parse(JSON.stringify(DEFAULT_PORTS));    console.log("  ✓ Clé 'ports' initialisée."); }
+if (!adminConfig.cards.repaires || !adminConfig.cards.repaires.length) { adminConfig.cards.repaires = JSON.parse(JSON.stringify(DEFAULT_REPAIRES)); console.log("  ✓ Clé 'repaires' initialisée."); }
+if (!adminConfig.cards.epaves   || !adminConfig.cards.epaves.length)   { adminConfig.cards.epaves   = JSON.parse(JSON.stringify(DEFAULT_EPAVES));   console.log("  ✓ Clé 'epaves' initialisée."); }
+
+// FIX: Migration îles — ancien format coord_q/coord_r → cases[] + nb_objets manquant
+adminConfig.cards.iles = adminConfig.cards.iles.map((ile, i) => {
+  // Migration format ancien → cases[]
   if (!ile.cases) {
     const cases = [];
     if (ile.coord_q != null && ile.coord_r != null)
       cases.push({ q: ile.coord_q, r: ile.coord_r });
     const { coord_q, coord_r, ...rest } = ile;
-    return { ...rest, cases };
+    ile = { ...rest, cases };
+  }
+  // FIX: Si nb_objets est manquant ou < 6, forcer à 6
+  if (!ile.nb_objets || ile.nb_objets < 6) {
+    ile.nb_objets = 6;
+  }
+  // Si cases vides, appliquer les coordonnées par défaut
+  const defaut = DEFAULT_ILES[i];
+  if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null && c.r == null))) {
+    ile.cases = JSON.parse(JSON.stringify(defaut.cases));
   }
   return ile;
 });
@@ -174,25 +204,22 @@ app.post("/api/config", (req, res) => {
 
   const ok = saveConfig(adminConfig);
 
-  // ── FIX : notifier les masters du changement de config en temps réel ─────
   io.to("master").emit("config:updated", adminConfig.cards);
-  // Re-broadcaster le gameState avec les nouveaux obstacles
   broadcastState();
 
   res.json({ ok });
 });
 
 // ─── Hex Grid ─────────────────────────────────────────────────────────────────
-// 22 rangs (r=0..21), rangs pairs=25 cols (q=0..24), rangs impairs=24 cols (q=0..23)
 const ROWS = 22;
 function colsForRow(r) { return r % 2 === 0 ? 25 : 24; }
 
 // Points de départ — tous toujours disponibles simultanément
 const START_POSITIONS = [
   { q:  0, r:  0 },
-  { q: 25, r:  0 },
+  { q: 24, r:  0 },
   { q:  0, r: 10 },
-  { q: 25, r: 10 },
+  { q: 24, r: 10 },
   { q:  0, r: 21 },
   { q: 24, r: 21 },
 ];
@@ -206,7 +233,7 @@ function hexNeighbors(q, r) {
     .filter(n => n.r >= 0 && n.r < ROWS && n.q >= 0 && n.q < colsForRow(n.r));
 }
 
-// ─── Obstacles pour broadcast (format léger pour les clients) ────────────────
+// ─── Obstacles pour broadcast ────────────────────────────────────────────────
 function getObstaclesArray() {
   const obs = [];
   const cards = adminConfig.cards;
@@ -230,8 +257,7 @@ function getObstaclesArray() {
   return obs;
 }
 
-// ─── Obstacles depuis la config ───────────────────────────────────────────────
-// Cases de tempête — infranchissables ET inatteignables (jamais destinations valides)
+// ─── Obstacles bloquants ─────────────────────────────────────────────────────
 const TEMPETE_CELLS = new Set([
   '11,9','12,9','13,9',
   '11,10','12,10','13,10','14,10',
@@ -239,13 +265,9 @@ const TEMPETE_CELLS = new Set([
   '12,12','13,12'
 ]);
 
-// Retourne un Set de clés "q,r" des cases bloquées (îles, ports, repaires).
-// Une case bloquée peut être une DESTINATION valide mais pas un point de TRANSIT.
 function getBlockedCells() {
   const blocked = new Set();
   const cards = adminConfig.cards;
-
-  // Îles — support format cases[] ET ancien format coord_q/coord_r
   for (const ile of (cards.iles || [])) {
     if (ile.cases && ile.cases.length) {
       for (const c of ile.cases) {
@@ -255,70 +277,47 @@ function getBlockedCells() {
       blocked.add(`${ile.coord_q},${ile.coord_r}`);
     }
   }
-
-  // Ports de commerce
   for (const port of (cards.ports || [])) {
     if (port.coord_q != null && port.coord_r != null)
       blocked.add(`${port.coord_q},${port.coord_r}`);
   }
-
-  // Repaires de pirates
   for (const rep of (cards.repaires || [])) {
     if (rep.coord_q != null && rep.coord_r != null)
       blocked.add(`${rep.coord_q},${rep.coord_r}`);
   }
-
-  // Épaves
   for (const ep of (cards.epaves || [])) {
     if (ep.coord_q != null && ep.coord_r != null)
       blocked.add(`${ep.coord_q},${ep.coord_r}`);
   }
-
   return blocked;
 }
 
 // ─── BFS avec obstacles ────────────────────────────────────────────────────────
-// Les cases bloquées (îles, ports, repaires) sont des destinations valides
-// mais ne peuvent pas être traversées : le BFS s'arrête à elles sans continuer.
 function hexesInRange(q, r, range) {
   const blocked  = getBlockedCells();
   const visited  = new Set();
   const result   = [];
-  // file : { q, r, dist, blockedHere }
-  // blockedHere : si true, on a atterri sur un obstacle → on ne continue pas au-delà
   const queue    = [{ q, r, dist: 0, blockedHere: false }];
   visited.add(`${q},${r}`);
 
   while (queue.length) {
     const { q: cq, r: cr, dist, blockedHere } = queue.shift();
-
-    // Ajouter comme destination valide (sauf la case de départ)
     if (dist > 0) result.push({ q: cq, r: cr });
-
-    // Ne pas continuer depuis une case bloquée ni au-delà de la portée
     if (dist >= range || blockedHere) continue;
-
     for (const n of hexNeighbors(cq, cr)) {
       const key = `${n.q},${n.r}`;
       if (visited.has(key)) continue;
       visited.add(key);
-
-      // Vérifier si la case voisine est occupée par un autre joueur (ne peut pas y aller)
       const occupiedByOther = Object.values(gameState.players).some(
         p => p.position && p.position.q === n.q && p.position.r === n.r
       );
       if (occupiedByOther) continue;
-
       const isBlocked = blocked.has(key);
       const isTempete = TEMPETE_CELLS.has(key);
-      
-      // Cases de tempête : ni traversées, ni destinations
       if (isTempete) continue;
-      
       queue.push({ ...n, dist: dist + 1, blockedHere: isBlocked });
     }
   }
-
   return result;
 }
 
@@ -377,6 +376,8 @@ io.on("connection", (socket) => {
   socket.on("master:join", () => {
     socket.join("master");
     addLog("Maître de jeu connecté.");
+    // FIX: envoyer la config immédiatement au master pour que les îles soient visibles sans sauvegarder
+    socket.emit("config:updated", adminConfig.cards);
     broadcastState();
   });
 
@@ -395,7 +396,7 @@ io.on("connection", (socket) => {
     gameState.turnOrder = playerIds;
     gameState.turnIndex = 0;
     gameState.currentTurn = playerIds[0];
-    gameState.pendingStartSlots = [...START_POSITIONS]; // tous disponibles simultanément
+    gameState.pendingStartSlots = [...START_POSITIONS];
     gameState.diceRoll = null;
     gameState.moveOptions = [];
     addLog(`Partie démarrée ! ${gameState.players[playerIds[0]].name} choisit sa case de départ.`);

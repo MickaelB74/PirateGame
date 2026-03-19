@@ -43,19 +43,29 @@
       height:calc(100vh - 50px);
     }
 
-    /* BORD HAUT */
+    /* ═══════════════════════════════════════════════════════════════
+       BORD HAUT — FIX : centrage des éléments
+       ═══════════════════════════════════════════════════════════════ */
     .zone-top {
       grid-column:1/4; grid-row:1;
-      display:flex; align-items:stretch;
+      display:flex; align-items:center; justify-content:center;
       background:linear-gradient(180deg,rgba(8,5,1,.98),rgba(13,9,5,.92));
       border-bottom:1px solid var(--border); position:relative;
+      gap:0;
     }
     .zone-top::after {
       content:''; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%);
       width:300px; height:1px; background:linear-gradient(90deg,transparent,var(--gold2),transparent);
     }
-    .top-enigmes { display:flex; align-items:center; gap:8px; padding:0 20px; border-right:1px solid var(--border); flex-shrink:0; }
+
+    /* Bloc énigmes — séparé du bloc avancement par un divider */
+    .top-enigmes {
+      display:flex; align-items:center; gap:8px; padding:0 20px;
+      border-right:1px solid var(--border); flex-shrink:0;
+      height:100%;
+    }
     .top-label { font-family:'Cinzel Decorative',serif; font-size:.65rem; color:var(--gold); text-transform:uppercase; letter-spacing:.14em; white-space:nowrap; opacity:.7; margin-right:4px; }
+
     .card-slot {
       width:62px; height:78px; border:1px dashed rgba(184,134,11,.3); border-radius:6px;
       background:rgba(255,255,255,.025);
@@ -65,7 +75,14 @@
     .card-slot .cs-icon { font-size:1.4rem; }
     .card-slot .cs-label { font-size:.58rem; text-transform:uppercase; letter-spacing:.06em; color:#6a5a3a; text-align:center; line-height:1.2; padding:0 3px; }
     .card-slot .cs-sub  { font-size:.48rem; color:#4a3a1a; text-align:center; }
-    .top-avancement { flex:1; display:flex; align-items:center; gap:6px; padding:0 16px; overflow-x:auto; scrollbar-width:none; }
+
+    /* Bloc avancement — centré dans l'espace restant */
+    .top-avancement {
+      display:flex; align-items:center; justify-content:center;
+      gap:6px; padding:0 24px; flex:1;
+      overflow-x:auto; scrollbar-width:none;
+      height:100%;
+    }
     .top-avancement::-webkit-scrollbar { display:none; }
     .av-arrow { color:rgba(184,134,11,.35); font-size:.9rem; flex-shrink:0; }
 
@@ -110,7 +127,6 @@
     .ile-info { flex:1; min-width:0; }
     .ile-name { font-family:'Cinzel',serif; font-size:.82rem; font-weight:600; color:#eedcb4; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .ile-biome { font-size:.68rem; color:#8a7a5e; font-style:italic; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    /* Coordonnée */
     .ile-coord { font-family:monospace; font-size:.65rem; color:rgba(74,237,204,.45); margin-top:2px; letter-spacing:.04em; }
     .ile-coord.has-coord { color:#4aedcc; opacity:.9; }
 
@@ -124,27 +140,23 @@
     }
     .obj-slot:hover { border-color:rgba(184,134,11,.4); }
 
-    /* CENTRE : CARTE DU MONDE — FIX CENTRAGE + CONTAIN */
+    /* CENTRE : CARTE DU MONDE */
     .zone-carte {
       grid-column:2; grid-row:2;
       position:relative; overflow:hidden; background:#0a0705;
-      /* centrer l'image dans la zone */
       display:flex; align-items:center; justify-content:center;
     }
     #mapContainer {
       position:relative;
-      /* s'adapte à la zone disponible */
       width:100%; height:100%;
       display:flex; align-items:center; justify-content:center;
     }
     #mapImg {
       display:block;
-      /* contain : toute l'image visible, ratio préservé */
       max-width:100%; max-height:100%; width:auto; height:auto;
       object-fit:contain; user-select:none; position:relative; z-index:1;
     }
     #hexCanvas { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:2; }
-    /* L'overlay SVG est repositionné par JS pour coller exactement à l'image */
     #hexOverlay { position:absolute; z-index:3; pointer-events:all; overflow:visible; }
 
     /* Sidebar */
@@ -201,7 +213,7 @@
     .ile-coord-tag { font-family:monospace; font-size:.6rem; color:rgba(74,237,204,.4); background:rgba(74,237,204,.06); border:1px solid rgba(74,237,204,.15); border-radius:3px; padding:1px 5px; }
     .ile-coord-tag.has-coord { color:#4aedcc; opacity:.9; background:rgba(74,237,204,.12); border-color:rgba(74,237,204,.35); }
 
-    /* Tooltip hex coordonnées */
+    /* Tooltip hex */
     #hexTip {
       position:fixed; background:rgba(5,3,1,.96); border:1px solid rgba(180,180,180,.4);
       border-radius:4px; padding:5px 11px; font-size:.85rem; color:#aaa;
@@ -234,7 +246,7 @@
 
 <div class="plateau">
 
-  <!-- BORD HAUT -->
+  <!-- BORD HAUT — FIX : justify-content:center appliqué via CSS, les deux blocs sont naturellement centrés -->
   <div class="zone-top">
     <div class="top-enigmes">
       <span class="top-label">Énigmes</span>
@@ -307,7 +319,7 @@ function hexPoints(cx,cy,s){ s=s||1; const R=HEX_R*s,pts=[]; for(let i=0;i<6;i++
 // ─── Config & Socket ──────────────────────────────────────────────────────────
 const socket=io();
 let state={}, cfg={};
-let hoveredIleCases=[]; // tableau de {q,r} pour l'île survolée
+let hoveredIleCases=[];
 
 const playerUrl=`${location.protocol}//${location.hostname}:${location.port}/player`;
 document.getElementById('playerUrl').textContent=playerUrl;
@@ -315,6 +327,7 @@ function copyUrl(){ navigator.clipboard.writeText(playerUrl).then(()=>{ const el
 
 socket.emit('master:join');
 socket.on('game:state',(s)=>{ state=s; renderUI(); renderMap(); });
+// FIX: config:updated reçu dès la connexion, plus besoin de sauvegarder dans admin pour voir les îles
 socket.on('config:updated',(cards)=>{ cfg=cards; renderIles(); renderAvancement(); });
 
 fetch('/api/config').then(r=>r.json()).then(c=>{ cfg=c.cards||{}; renderIles(); renderAvancement(); }).catch(()=>{});
@@ -329,9 +342,8 @@ function renderIles(){
 }
 
 function ileCardHTML(ile){
-  const nbObjets=ile.nb_objets||3;
+  const nbObjets=ile.nb_objets||6;
   const slots=Array.from({length:nbObjets}).map(()=>`<div class="obj-slot">·</div>`).join('');
-  // Support ancien format (coord_q/coord_r) et nouveau format (cases[])
   let cases=[];
   if(ile.cases && ile.cases.length) cases=ile.cases.filter(c=>c.q!=null&&c.r!=null);
   else if(ile.coord_q!=null&&ile.coord_r!=null) cases=[{q:ile.coord_q,r:ile.coord_r}];
@@ -403,13 +415,12 @@ function renderUI(){
   document.getElementById('logList').innerHTML=(state.log?.length?state.log:['Aucun événement.']).map(e=>`<li>${e}</li>`).join('');
 }
 
-// ─── Map — scale basé sur l'image réelle (contain) ───────────────────────────
+// ─── Map ─────────────────────────────────────────────────────────────────────
 function getScale(){
   const img=document.getElementById('mapImg');
   return img.clientWidth/IMG_W;
 }
 
-// Positionner l'overlay SVG exactement sur l'image (après contain)
 function syncOverlay(){
   const img=document.getElementById('mapImg');
   const wrap=document.getElementById('mapWrap');
@@ -429,7 +440,6 @@ function renderMap(){
   const svg=document.getElementById('hexOverlay');
   let html='';
 
-  // Grille — rangs pairs 26 cols, rangs impairs 25 cols
   for(let r=0;r<ROWS;r++){
     const cols=colsForRow(r);
     for(let q=0;q<cols;q++){
@@ -439,21 +449,18 @@ function renderMap(){
     }
   }
 
-  // ── Cases de départ (picking) ─────────────────────────────────────────────
   if(state.status==='picking'&&state.pendingStartSlots)
     for(const {q,r} of state.pendingStartSlots){
       const {x,y}=hexCenter(q,r,scale);
       html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(74,238,204,0.25)" stroke="#4aedcc" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
 
-  // ── Options de déplacement ────────────────────────────────────────────────
   if(state.moveOptions?.length)
     for(const {q,r} of state.moveOptions){
       const {x,y}=hexCenter(q,r,scale);
       html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(255,200,50,0.28)" stroke="#ffc832" stroke-width="${1.5*scale}" style="pointer-events:none"/>`;
     }
 
-  // Surbrillance île survolée (hover matcard) — toutes les cases
   for(const {q,r} of hoveredIleCases){
     const {x,y}=hexCenter(q,r,scale);
     html+=`<polygon points="${hexPoints(x,y,scale)}" fill="rgba(212,160,23,0.32)" stroke="#d4a017" stroke-width="${2.5*scale}" style="pointer-events:none"/>`;
@@ -462,7 +469,6 @@ function renderMap(){
       style="pointer-events:none">Q${q} R${r}</text>`;
   }
 
-  // Joueurs
   for(const [id,p] of Object.entries(state.players||{})){
     if(!p.position) continue;
     const {x,y}=hexCenter(p.position.q,p.position.r,scale);
@@ -472,7 +478,6 @@ function renderMap(){
     html+=`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" fill="#1a1209" font-family="Cinzel Decorative" font-size="${7*scale}" font-weight="bold" style="pointer-events:none">${p.name[0].toUpperCase()}</text>`;
   }
 
-  // Dé
   if(state.diceRoll&&state.players[state.diceRoll.playerId]?.position){
     const p=state.players[state.diceRoll.playerId],{x,y}=hexCenter(p.position.q,p.position.r,scale);
     html+=`<text x="${x+18*scale}" y="${y-18*scale}" text-anchor="middle" dominant-baseline="central" fill="#ffc832" font-size="${16*scale}" style="pointer-events:none">🎲${state.diceRoll.value}</text>`;
@@ -483,40 +488,35 @@ function renderMap(){
   bindHexHover();
 }
 
-// ─── Index des lieux par case (recalculé à chaque renderMap) ────────────────
-let obstacleIndex = new Map(); // clé "q,r" -> { type, label, icon }
+// ─── Index des lieux ─────────────────────────────────────────────────────────
+let obstacleIndex = new Map();
 
 function buildObstacleIndex() {
   obstacleIndex.clear();
-  // Îles (multi-cases)
   for (const ile of (cfg.iles||[])) {
     const cases = (ile.cases||[]).filter(c=>c.q!=null&&c.r!=null);
     if (!cases.length && ile.coord_q!=null) cases.push({q:ile.coord_q,r:ile.coord_r});
     for (const c of cases)
       obstacleIndex.set(`${c.q},${c.r}`, { type:'ile', label:ile.nom||'Île', icon:'🏝' });
   }
-  // Ports
   for (const p of (cfg.ports||[])) {
     if (p.coord_q!=null&&p.coord_r!=null)
       obstacleIndex.set(`${p.coord_q},${p.coord_r}`, { type:'port', label:p.nom||'Port', icon:'⚓' });
   }
-  // Repaires
   for (const r of (cfg.repaires||[])) {
     if (r.coord_q!=null&&r.coord_r!=null)
       obstacleIndex.set(`${r.coord_q},${r.coord_r}`, { type:'repaire', label:r.nom||'Repaire', icon:'💀' });
   }
-  // Épaves
   for (const e of (cfg.epaves||[])) {
     if (e.coord_q!=null&&e.coord_r!=null)
       obstacleIndex.set(`${e.coord_q},${e.coord_r}`, { type:'epave', label:e.nom||'Épave', icon:'🚢' });
   }
 }
 
-// ─── Hover hex cells — surbrillance grise + tooltip coords ───────────────────
+// ─── Hover hex cells ──────────────────────────────────────────────────────────
 const hexTip=document.getElementById('hexTip');
 function bindHexHover(){
   const svg=document.getElementById('hexOverlay');
-  // Couleurs par type de lieu
   const LIEU_STYLES = {
     ile:     { fill:'rgba(30,100,30,0.35)',  stroke:'#5aad52', tipColor:'#5aad52' },
     port:    { fill:'rgba(20,60,130,0.35)',  stroke:'#4ac8ff', tipColor:'#4ac8ff' },
@@ -533,7 +533,6 @@ function bindHexHover(){
       const lieu=obstacleIndex.get(`${q},${r}`);
       const style=lieu ? LIEU_STYLES[lieu.type]||LIEU_STYLES.default : LIEU_STYLES.default;
 
-      // Surbrillance ghost
       let ghost=document.getElementById('hex-ghost');
       if(!ghost){
         ghost=document.createElementNS('http://www.w3.org/2000/svg','polygon');
@@ -545,7 +544,6 @@ function bindHexHover(){
       ghost.setAttribute('stroke',style.stroke);
       ghost.setAttribute('stroke-width', 1.8*scale);
 
-      // Icône ghost (si lieu)
       let ghostIcon=document.getElementById('hex-ghost-icon');
       if(!ghostIcon){
         ghostIcon=document.createElementNS('http://www.w3.org/2000/svg','text');
@@ -562,7 +560,6 @@ function bindHexHover(){
         ghostIcon.textContent='';
       }
 
-      // Tooltip
       hexTip.style.color = style.tipColor;
       if(lieu){
         hexTip.innerHTML = `<span style="opacity:.7">${lieu.icon}</span> <strong>${lieu.label}</strong> <span style="opacity:.5;font-size:.8em">Q${q} R${r}</span>`;
