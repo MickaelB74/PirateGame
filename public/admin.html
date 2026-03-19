@@ -613,19 +613,23 @@ async function loadConfig() {
     state = cfg.cards;
     if (!state.iles || !state.iles.length) state.iles = defaultIles();
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
-    if (!state.ports)      state.ports      = defaultPorts();
-    if (!state.repaires)   state.repaires   = defaultRepaires();
-    if (!state.epaves)     state.epaves     = defaultEpaves();
+    if (!state.ports    || !state.ports.length)    state.ports    = defaultPorts();
+    if (!state.repaires || !state.repaires.length) state.repaires = defaultRepaires();
+    if (!state.epaves   || !state.epaves.length)   state.epaves   = defaultEpaves();
     // Migration : ancien format coord_q/coord_r → cases[]
-    state.iles = state.iles.map(ile => {
+    state.iles = state.iles.map((ile, i) => {
       if (!ile.cases) {
         const cases = [];
         if (ile.coord_q != null && ile.coord_r != null)
           cases.push({ q: ile.coord_q, r: ile.coord_r });
         const { coord_q, coord_r, ...rest } = ile;
-        return { ...rest, cases };
+        ile = { ...rest, cases };
       }
-      // S'assurer que nb_objets est à 6 si pas défini
+      // Appliquer les coordonnées par défaut si toutes les cases sont vides
+      const defaut = ILES_DEFAUT[i];
+      if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null && c.r == null))) {
+        ile.cases = JSON.parse(JSON.stringify(defaut.cases));
+      }
       if (!ile.nb_objets) ile.nb_objets = 6;
       return ile;
     });
