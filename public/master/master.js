@@ -12,7 +12,7 @@ let cfg       = {};
 let hoveredIleCases = [];
 
 // Calibration
-let calibState = { HEX_R: 21.7, MARGIN_X: 48, MARGIN_Y: 44, COL_SP: 48.6, ROW_SP: 41.6, ROW_OFFSET: 24.4 };
+let calibState = { HEX_R: 24.1, MARGIN_X: 48.5, MARGIN_Y: 42.5, COL_SP: 48.5, ROW_SP: 41.9, ROW_OFFSET: 24.3 };
 let _lastSetupSig = null;
 
 // Index obstacles pour hover
@@ -289,9 +289,19 @@ function renderMap() {
 
   // Options de déplacement
   if (state.moveOptions?.length) {
+    const LIEU_STYLES = {
+      ile:     { fill: 'rgba(30,100,30,0.45)',  stroke: '#5aad52' },
+      port:    { fill: 'rgba(20,60,130,0.45)',  stroke: '#4ac8ff' },
+      repaire: { fill: 'rgba(120,20,20,0.45)',  stroke: '#c04040' },
+      epave:   { fill: 'rgba(90,70,20,0.45)',   stroke: '#c8a840' },
+      default: { fill: 'rgba(255,200,50,0.28)', stroke: '#ffc832' },
+    };
     for (const { q, r } of state.moveOptions) {
       const { x, y } = hexCenter(q, r, scale);
-      html += `<polygon points="${hexPoints(x, y, scale)}" fill="rgba(255,200,50,0.28)" stroke="#ffc832" stroke-width="${1.5 * scale}" style="pointer-events:none"/>`;
+      const lieu  = obstacleIndex.get(`${q},${r}`);
+      const style = lieu ? (LIEU_STYLES[lieu.type] || LIEU_STYLES.default) : LIEU_STYLES.default;
+      html += `<polygon points="${hexPoints(x, y, scale)}" fill="${style.fill}" stroke="${style.stroke}" stroke-width="${1.5 * scale}" style="pointer-events:none"/>`;
+      if (lieu) html += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${11 * scale}" style="pointer-events:none">${lieu.icon}</text>`;
     }
   }
 

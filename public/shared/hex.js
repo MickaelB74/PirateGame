@@ -10,12 +10,12 @@ export const IMG_H   = 952;
 export const GRID_ROWS = 22;
 
 // Paramètres de placement — peuvent être modifiés par la calibration
-export let HEX_R      = 21.0;
+export let HEX_R      = 24.100;
 export let MARGIN_X   = 48.5;
-export let MARGIN_Y   = 39.0;
-export let COL_SP     = 48.4;
-export let ROW_SP     = 41.6;
-export let ROW_OFFSET = 24.4;
+export let MARGIN_Y   = 42.5;
+export let COL_SP     = 48.500;
+export let ROW_SP     = 41.900;
+export let ROW_OFFSET = 24.300;
 
 /**
  * Modifie les paramètres de calibration.
@@ -36,7 +36,7 @@ export function setCalibParams(params) {
  * @returns {number}
  */
 export function colsForRow(r) {
-  return r % 2 === 0 ? 25 : 24;
+  return r % 2 === 0 ? 26 : 25;
 }
 
 /**

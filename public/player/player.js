@@ -16,8 +16,8 @@ let myColor    = '#b8860b';
 // ─── Constantes de calibration (modifiables via le tiroir) ───────────────────
 
 let calibState = {
-  HEX_R: 21.0, MARGIN_X: 48.5, MARGIN_Y: 39.0,
-  COL_SP: 48.4, ROW_SP: 41.6, ROW_OFFSET: 24.4,
+  HEX_R: 24.1, MARGIN_X: 48.5, MARGIN_Y: 42.5,
+  COL_SP: 48.5, ROW_SP: 41.3, ROW_OFFSET: 24.3,
 };
 
 // ─── Init Socket ──────────────────────────────────────────────────────────────
@@ -282,14 +282,29 @@ function renderMiniMap(state, isPickPhase) {
       </g>`;
     }
   } else {
-    html += `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="rgba(0,0,0,0.35)"/>`;
-    for (const { q, r } of (state.moveOptions || [])) {
-      const { x, y } = hexCenter(q, r, s);
-      html += `<g class="hex-clickable" onclick="window._moveHere(${q},${r})">
-        <polygon points="${hexPoints(x, y, s)}" fill="rgba(255,200,50,0.30)" stroke="#ffc832" stroke-width="${2 * s}"/>
-      </g>`;
-    }
+  // Construire index obstacles depuis state.obstacles
+  const obsIndex = new Map();
+  for (const obs of (state.obstacles || [])) obsIndex.set(`${obs.q},${obs.r}`, obs);
+
+  const LIEU_STYLES = {
+    ile:     { fill: 'rgba(30,100,30,0.45)',  stroke: '#5aad52' },
+    port:    { fill: 'rgba(20,60,130,0.45)',  stroke: '#4ac8ff' },
+    repaire: { fill: 'rgba(120,20,20,0.45)',  stroke: '#c04040' },
+    epave:   { fill: 'rgba(90,70,20,0.45)',   stroke: '#c8a840' },
+    default: { fill: 'rgba(255,200,50,0.30)', stroke: '#ffc832' },
+  };
+
+  html += `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="rgba(0,0,0,0.35)"/>`;
+  for (const { q, r } of (state.moveOptions || [])) {
+    const { x, y } = hexCenter(q, r, s);
+    const obs   = obsIndex.get(`${q},${r}`);
+    const style = obs ? (LIEU_STYLES[obs.type] || LIEU_STYLES.default) : LIEU_STYLES.default;
+    html += `<g class="hex-clickable" onclick="window._moveHere(${q},${r})">
+      <polygon points="${hexPoints(x, y, s)}" fill="${style.fill}" stroke="${style.stroke}" stroke-width="${2 * s}"/>
+      ${obs ? `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${9 * s}" style="pointer-events:none">${obs.icon}</text>` : ''}
+    </g>`;
   }
+}
 
   // Joueurs
   for (const [id, p] of Object.entries(state.players || {})) {
@@ -429,6 +444,7 @@ function initListeners() {
 
 initSocket();
 initListeners();
+setCalibParams(calibState);
 renderShipDashboard(defaultShip());
 renderResources({});
 updateCalibDisplay();

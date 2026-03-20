@@ -16,7 +16,7 @@ const GRID_ROWS = 22;
  * @returns {number}
  */
 function colsForRow(r) {
-  return r % 2 === 0 ? 25 : 24;
+  return r % 2 === 0 ? 26 : 25;
 }
 
 /**
@@ -97,9 +97,9 @@ function hexesInRange(q, r, range, blockedSet, stormSet, occupiedPositions) {
  */
 const START_POSITIONS = [
   { q:  0, r:  0 },
-  { q: 24, r:  0 },
+  { q: 25, r:  0 },
   { q:  0, r: 10 },
-  { q: 24, r: 10 },
+  { q: 25, r: 10 },
   { q:  0, r: 21 },
   { q: 24, r: 21 },
 ];
