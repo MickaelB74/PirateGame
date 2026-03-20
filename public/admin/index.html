@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Éditeur de cartes</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+
+<!-- ── Overlay chargement ───────────────────────────────────────────────── -->
+<div class="loading-overlay" id="loadingOverlay">⏳ Chargement de la configuration…</div>
+
+<!-- ── Header ───────────────────────────────────────────────────────────── -->
+<header class="admin-header">
+  <h1 class="admin-header__title">⚙ Éditeur de cartes</h1>
+  <a href="/master" class="admin-header__link">← Retour au plateau</a>
+</header>
+
+<!-- ── Layout sidenav + main ────────────────────────────────────────────── -->
+<div class="admin-layout">
+
+  <!-- ── Sidenav ── -->
+  <nav class="sidenav">
+
+    <div class="sidenav__group">Général</div>
+    <div class="sidenav__item is-active" data-tab="overview"
+         onclick="window._admin.switchTab('overview')">
+      <span>📊</span> Vue d'ensemble
+    </div>
+
+    <div class="sidenav__group">Cartes</div>
+    <div class="sidenav__item" data-tab="parchemin"
+         onclick="window._admin.switchTab('parchemin')">
+      <span>📜</span> Parchemins
+      <span class="sidenav__badge" id="nb-parchemin">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="enigme"
+         onclick="window._admin.switchTab('enigme')">
+      <span>🔍</span> Énigmes
+      <span class="sidenav__badge" id="nb-enigme">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="ancien_parchemin"
+         onclick="window._admin.switchTab('ancien_parchemin')">
+      <span>🗺</span> Anciens parch.
+      <span class="sidenav__badge">3</span>
+    </div>
+    <div class="sidenav__item" data-tab="relique"
+         onclick="window._admin.switchTab('relique')">
+      <span>⭐</span> Reliques
+      <span class="sidenav__badge">3</span>
+    </div>
+    <div class="sidenav__item" data-tab="equipement"
+         onclick="window._admin.switchTab('equipement')">
+      <span>⚙</span> Équipements
+      <span class="sidenav__badge" id="nb-equip">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="action"
+         onclick="window._admin.switchTab('action')">
+      <span>⚔</span> Actions
+      <span class="sidenav__badge" id="nb-action">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="atout"
+         onclick="window._admin.switchTab('atout')">
+      <span>💨</span> Atouts
+      <span class="sidenav__badge" id="nb-atout">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="evenement"
+         onclick="window._admin.switchTab('evenement')">
+      <span>⚡</span> Événements
+      <span class="sidenav__badge" id="nb-event">–</span>
+    </div>
+
+    <div class="sidenav__group">Plateau</div>
+    <div class="sidenav__item" data-tab="iles"
+         onclick="window._admin.switchTab('iles')">
+      <span>🏝</span> Îles
+      <span class="sidenav__badge" id="nb-iles">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="avancement"
+         onclick="window._admin.switchTab('avancement')">
+      <span>⏳</span> Avancement
+    </div>
+
+    <div class="sidenav__group">Lieux</div>
+    <div class="sidenav__item" data-tab="port_commerce"
+         onclick="window._admin.switchTab('port_commerce')">
+      <span>⚓</span> Ports de commerce
+      <span class="sidenav__badge" id="nb-ports">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="repaire_pirate"
+         onclick="window._admin.switchTab('repaire_pirate')">
+      <span>💀</span> Repaires pirates
+      <span class="sidenav__badge" id="nb-repaires">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="epave"
+         onclick="window._admin.switchTab('epave')">
+      <span>🚢</span> Épaves
+      <span class="sidenav__badge" id="nb-epaves">–</span>
+    </div>
+    <div class="sidenav__item" data-tab="tempete"
+         onclick="window._admin.switchTab('tempete')">
+      <span>🌀</span> Tempête
+    </div>
+
+    <div class="sidenav__group">Config</div>
+    <div class="sidenav__item" data-tab="rules"
+         onclick="window._admin.switchTab('rules')">
+      <span>📋</span> Règles
+    </div>
+
+  </nav>
+
+  <!-- ══════════════════════════════════════════════════════
+       MAIN
+       ══════════════════════════════════════════════════════ -->
+  <main class="admin-main">
+
+    <!-- ── VUE D'ENSEMBLE ── -->
+    <div class="tab-panel is-active" id="tab-overview">
+      <div class="section-head">
+        <div class="section-head__title">📊 Vue d'ensemble</div>
+        <div class="section-head__desc">Résumé du registre. Cliquez sur un type pour l'éditer.</div>
+      </div>
+      <div class="overview-grid" id="ovGrid"></div>
+    </div>
+
+    <!-- ── PARCHEMINS ── -->
+    <div class="tab-panel" id="tab-parchemin">
+      <div class="section-head">
+        <div class="section-head__title">📜 Parchemins</div>
+        <div class="section-head__desc">Parchemins conduisant à une île précise, et parchemins vierges sans destination.</div>
+      </div>
+      <div class="subtabs">
+        <button class="subtab is-active"
+                onclick="window._admin.showSubtab('parchemin','ile',this)">🏝 Île (destination)</button>
+        <button class="subtab"
+                onclick="window._admin.showSubtab('parchemin','vierge',this)">📄 Vierge</button>
+      </div>
+      <div id="parchemin-ile">
+        <div class="editor-block">
+          <div class="editor-block__title">🏝 Parchemins Île</div>
+          <div class="count-row">
+            <span class="count-row__label">Nombre de parchemins île</span>
+            <div class="count-stepper">
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('parchemin_ile',-1)">−</button>
+              <span class="count-stepper__val" id="cnt-parchemin_ile">–</span>
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('parchemin_ile',+1)">+</button>
+            </div>
+          </div>
+          <div class="card-list" id="list-parchemin_ile"></div>
+        </div>
+      </div>
+      <div id="parchemin-vierge" style="display:none">
+        <div class="editor-block">
+          <div class="editor-block__title">📄 Parchemins Vierges</div>
+          <p style="font-size:.85rem;color:#7a6a4a;font-style:italic;margin-bottom:14px">
+            Les parchemins vierges n'ont aucune donnée propre. Définissez simplement combien en mettre dans le deck.
+          </p>
+          <div class="count-row">
+            <span class="count-row__label">Nombre de parchemins vierges</span>
+            <div class="count-stepper">
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('parchemin_vierge',-1)">−</button>
+              <span class="count-stepper__val" id="cnt-parchemin_vierge">–</span>
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('parchemin_vierge',+1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ÉNIGMES ── -->
+    <div class="tab-panel" id="tab-enigme">
+      <div class="section-head">
+        <div class="section-head__title">🔍 Énigmes</div>
+        <div class="section-head__desc">Coordonnées de latitude, longitude et codes de déchiffrement pour localiser une île.</div>
+      </div>
+      <div class="subtabs">
+        <button class="subtab is-active" onclick="window._admin.showSubtab('enigme','latitude',this)">↔ Latitude</button>
+        <button class="subtab"           onclick="window._admin.showSubtab('enigme','longitude',this)">↕ Longitude</button>
+        <button class="subtab"           onclick="window._admin.showSubtab('enigme','code',this)">🔐 Code</button>
+      </div>
+      <div id="enigme-latitude">
+        <div class="editor-block">
+          <div class="editor-block__title">↔ Cartes Latitude</div>
+          <div class="count-row">
+            <span class="count-row__label">Nombre de cartes Latitude</span>
+            <div class="count-stepper">
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('enigme_latitude',-1)">−</button>
+              <span class="count-stepper__val" id="cnt-enigme_latitude">–</span>
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('enigme_latitude',+1)">+</button>
+            </div>
+          </div>
+          <div class="card-list" id="list-enigme_latitude"></div>
+        </div>
+      </div>
+      <div id="enigme-longitude" style="display:none">
+        <div class="editor-block">
+          <div class="editor-block__title">↕ Cartes Longitude</div>
+          <div class="count-row">
+            <span class="count-row__label">Nombre de cartes Longitude</span>
+            <div class="count-stepper">
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('enigme_longitude',-1)">−</button>
+              <span class="count-stepper__val" id="cnt-enigme_longitude">–</span>
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('enigme_longitude',+1)">+</button>
+            </div>
+          </div>
+          <div class="card-list" id="list-enigme_longitude"></div>
+        </div>
+      </div>
+      <div id="enigme-code" style="display:none">
+        <div class="editor-block">
+          <div class="editor-block__title">🔐 Cartes Code</div>
+          <p style="font-size:.85rem;color:#7a6a4a;font-style:italic;margin-bottom:14px">
+            Chaque code est une formule de déchiffrement des coordonnées (ex : Latitude +2, Longitude −5).
+          </p>
+          <div class="count-row">
+            <span class="count-row__label">Nombre de cartes Code</span>
+            <div class="count-stepper">
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('enigme_code',-1)">−</button>
+              <span class="count-stepper__val" id="cnt-enigme_code">–</span>
+              <button class="count-stepper__btn" onclick="window._admin.changeCount('enigme_code',+1)">+</button>
+            </div>
+          </div>
+          <div class="card-list" id="list-enigme_code"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ANCIENS PARCHEMINS ── -->
+    <div class="tab-panel" id="tab-ancien_parchemin">
+      <div class="section-head">
+        <div class="section-head__title">🗺 Anciens Parchemins</div>
+        <div class="section-head__desc">3 cartes rares. Chacune révèle la route secrète menant à l'île d'une ancienne relique.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">🗺 Définition des routes</div>
+        <div class="card-list" id="list-ancien_parchemin"></div>
+      </div>
+    </div>
+
+    <!-- ── RELIQUES ── -->
+    <div class="tab-panel" id="tab-relique">
+      <div class="section-head">
+        <div class="section-head__title">⭐ Reliques</div>
+        <div class="section-head__desc">3 cartes légendaires uniques. Chacune annule définitivement un événement climatique pour son porteur.</div>
+      </div>
+      <div id="reliques-container"></div>
+    </div>
+
+    <!-- ── ÉQUIPEMENTS ── -->
+    <div class="tab-panel" id="tab-equipement">
+      <div class="section-head">
+        <div class="section-head__title">⚙ Équipements</div>
+        <div class="section-head__desc">Ressources supplémentaires pour le navire. Chaque carte occupe un slot cargaison.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">⚙ Types d'équipements</div>
+        <div class="card-list" id="list-equipement"></div>
+        <button class="btn-add" onclick="window._admin.addItem('equipement')">+ Ajouter un équipement</button>
+      </div>
+    </div>
+
+    <!-- ── ACTIONS ── -->
+    <div class="tab-panel" id="tab-action">
+      <div class="section-head">
+        <div class="section-head__title">⚔ Actions</div>
+        <div class="section-head__desc">Offensives pour perturber un adversaire, défensives pour se protéger.</div>
+      </div>
+      <div class="subtabs">
+        <button class="subtab is-active" onclick="window._admin.showSubtab('action','offensive',this)">💥 Offensives</button>
+        <button class="subtab"           onclick="window._admin.showSubtab('action','defensive',this)">🛡 Défensives</button>
+      </div>
+      <div id="action-offensive">
+        <div class="editor-block">
+          <div class="editor-block__title">💥 Cartes Offensives</div>
+          <div class="card-list" id="list-action_offensive"></div>
+          <button class="btn-add" onclick="window._admin.addItem('action_offensive')">+ Ajouter une offensive</button>
+        </div>
+      </div>
+      <div id="action-defensive" style="display:none">
+        <div class="editor-block">
+          <div class="editor-block__title">🛡 Cartes Défensives</div>
+          <div class="card-list" id="list-action_defensive"></div>
+          <button class="btn-add" onclick="window._admin.addItem('action_defensive')">+ Ajouter une défensive</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ATOUTS ── -->
+    <div class="tab-panel" id="tab-atout">
+      <div class="section-head">
+        <div class="section-head__title">💨 Atouts</div>
+        <div class="section-head__desc">Cartes utilisables par le joueur pour lui-même.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">💨 Cartes Atout</div>
+        <div class="card-list" id="list-atout"></div>
+        <button class="btn-add" onclick="window._admin.addItem('atout')">+ Ajouter un atout</button>
+      </div>
+    </div>
+
+    <!-- ── ÉVÉNEMENTS ── -->
+    <div class="tab-panel" id="tab-evenement">
+      <div class="section-head">
+        <div class="section-head__title">⚡ Événements</div>
+        <div class="section-head__desc">Piochées en arrivant sur une case ⚡. Concernent uniquement le joueur qui les pioche.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">⚡ Cartes Événement</div>
+        <div class="card-list" id="list-evenement"></div>
+        <button class="btn-add" onclick="window._admin.addItem('evenement')">+ Ajouter un événement</button>
+      </div>
+    </div>
+
+    <!-- ── ÎLES ── -->
+    <div class="tab-panel" id="tab-iles">
+      <div class="section-head">
+        <div class="section-head__title">🏝 Îles</div>
+        <div class="section-head__desc">Chaque île peut occuper 1 à 3 cases sur la grille. Définissez la taille puis les coordonnées Q/R de chaque case.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">🏝 Liste des îles</div>
+        <div class="count-row">
+          <span class="count-row__label">Nombre d'îles</span>
+          <div class="count-stepper">
+            <button class="count-stepper__btn" onclick="window._admin.changeCount('iles',-1)">−</button>
+            <span class="count-stepper__val" id="cnt-iles">–</span>
+            <button class="count-stepper__btn" onclick="window._admin.changeCount('iles',+1)">+</button>
+          </div>
+        </div>
+        <div class="card-list" id="list-iles"></div>
+      </div>
+    </div>
+
+    <!-- ── AVANCEMENT ── -->
+    <div class="tab-panel" id="tab-avancement">
+      <div class="section-head">
+        <div class="section-head__title">⏳ Avancement</div>
+        <div class="section-head__desc">Nombre de cartes "Temps" affichées dans la barre d'avancement en haut du plateau.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">⏳ Cartes Temps</div>
+        <div class="rule-field" style="max-width:300px">
+          <label>Nombre de cartes Temps</label>
+          <input type="number" id="nb_cartes_temps" min="1" max="20" value="6"
+                 oninput="window._admin.markDirty?.() ?? window._markDirty?.()">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PORTS DE COMMERCE ── -->
+    <div class="tab-panel" id="tab-port_commerce">
+      <div class="section-head">
+        <div class="section-head__title">⚓ Ports de commerce</div>
+        <div class="section-head__desc">Cases spéciales du plateau pour l'achat d'équipements et l'échange de ressources.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">⚓ Liste des ports</div>
+        <div class="card-list" id="list-ports"></div>
+        <button class="btn-add" onclick="window._admin.addLieu('ports')">+ Ajouter un port</button>
+      </div>
+    </div>
+
+    <!-- ── REPAIRES DE PIRATES ── -->
+    <div class="tab-panel" id="tab-repaire_pirate">
+      <div class="section-head">
+        <div class="section-head__title">💀 Repaires de pirates</div>
+        <div class="section-head__desc">Cases spéciales abritant des pirates hostiles ou des factions.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">💀 Liste des repaires</div>
+        <div class="card-list" id="list-repaires"></div>
+        <button class="btn-add" onclick="window._admin.addLieu('repaires')">+ Ajouter un repaire</button>
+      </div>
+    </div>
+
+    <!-- ── ÉPAVES ── -->
+    <div class="tab-panel" id="tab-epave">
+      <div class="section-head">
+        <div class="section-head__title">🚢 Épaves</div>
+        <div class="section-head__desc">Cases spéciales représentant des navires naufragés pouvant être pillés.</div>
+      </div>
+      <div class="editor-block">
+        <div class="editor-block__title">🚢 Liste des épaves</div>
+        <div class="card-list" id="list-epaves"></div>
+        <button class="btn-add" onclick="window._admin.addLieu('epaves')">+ Ajouter une épave</button>
+      </div>
+    </div>
+
+    <!-- ── TEMPÊTE ── -->
+    <div class="tab-panel" id="tab-tempete">
+      <div class="section-head">
+        <div class="section-head__title">🌀 Zone Tempête</div>
+        <div class="section-head__desc">Zone permanente infranchissable — ni traversée, ni ciblée.</div>
+      </div>
+      <div class="tempete-card">
+        <div class="tempete-card__title">🌀 Zone de tempête permanente</div>
+        <p style="font-size:.85rem;color:#7a6a4a;font-style:italic;margin-bottom:10px">
+          Ces cases sont définitivement bloquées pour tous les joueurs.
+        </p>
+        <div style="font-size:.72rem;color:rgba(74,237,204,.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Cases actives</div>
+        <div class="tempete-cases" id="tempeteCases"></div>
+      </div>
+      <div class="editor-block" style="margin-top:12px">
+        <div class="editor-block__title">ℹ️ Information</div>
+        <p style="font-size:.85rem;color:#7a6a4a;line-height:1.7">
+          La zone de tempête est définie dans
+          <code style="color:#4aedcc;background:rgba(74,237,204,.08);padding:1px 5px;border-radius:3px">game/grid.js</code>
+          comme un ensemble de cases bloquées supplémentaires.<br><br>
+          Cases actuelles : Q11-13 R9, Q11-14 R10, Q11-13 R11, Q12-13 R12.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── RÈGLES ── -->
+    <div class="tab-panel" id="tab-rules">
+      <div class="section-head">
+        <div class="section-head__title">📋 Règles</div>
+        <div class="section-head__desc">Paramètres numériques du jeu.</div>
+      </div>
+      <div class="rules-grid">
+
+        <div class="rule-group">
+          <div class="rule-group__title">⛵ Navire — Coque</div>
+          <div class="rule-field"><label>PV bonus niv.1</label><input type="number" id="hull1" value="0" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>PV bonus niv.2</label><input type="number" id="hull2" value="2" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>PV bonus niv.3</label><input type="number" id="hull3" value="5" oninput="window._admin.markDirty?.()"></div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group__title">⛵ Navire — Voiles</div>
+          <div class="rule-field"><label>Déplacement niv.1</label><input type="number" id="sails1" value="1" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Déplacement niv.2</label><input type="number" id="sails2" value="2" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Déplacement niv.3</label><input type="number" id="sails3" value="3" oninput="window._admin.markDirty?.()"></div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group__title">💣 Canons</div>
+          <div class="rule-field"><label>Portée niv.1</label><input type="number" id="c1" value="1" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Portée niv.2</label><input type="number" id="c2" value="2" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Portée niv.3</label><input type="number" id="c3" value="3" oninput="window._admin.markDirty?.()"></div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group__title">🎲 Partie</div>
+          <div class="rule-field"><label>Joueurs min</label><input type="number" id="pmin" value="1" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Joueurs max</label><input type="number" id="pmax" value="6" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Faces du dé</label><input type="number" id="dfaces" value="6" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Cartes en main (max)</label><input type="number" id="handmax" value="5" oninput="window._admin.markDirty?.()"></div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group__title">🪙 Ressources de départ</div>
+          <div class="rule-field"><label>Doublons</label><input type="number" id="sd" value="0" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Réputation</label><input type="number" id="sr" value="0" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Recherche</label><input type="number" id="sc" value="0" oninput="window._admin.markDirty?.()"></div>
+        </div>
+
+        <div class="rule-group">
+          <div class="rule-group__title">📦 Cale</div>
+          <div class="rule-field"><label>Slots cargaison</label><input type="number" id="cargo" value="10" oninput="window._admin.markDirty?.()"></div>
+          <div class="rule-field"><label>Slots équipement</label><input type="number" id="equip" value="6" oninput="window._admin.markDirty?.()"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div><!-- end .admin-layout -->
+
+<!-- ── Save bar ──────────────────────────────────────────────────────────── -->
+<div class="save-bar" id="saveBar">
+  <span class="save-bar__status save-bar__status--dirty" id="saveStatus">⚠ Modifications non sauvegardées</span>
+  <button class="save-bar__discard" onclick="window._admin.discard()">Annuler</button>
+  <button class="save-bar__btn" id="btnSave" onclick="window._admin.save()">💾 Sauvegarder</button>
+</div>
+
+<script type="module" src="admin.js"></script>
+
+<!-- Patch pour markDirty accessible depuis les oninput inline du HTML statique -->
+<script>
+  // Les inputs des règles utilisent window._admin.markDirty?.()
+  // On relie ça proprement une fois le module chargé (window._admin exposé à l'init)
+</script>
+
+</body>
+</html>

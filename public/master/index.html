@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maître de Jeu — Plateau en Ligne</title>
+  <link rel="stylesheet" href="/shared/shared.css" />
+  <link rel="stylesheet" href="master.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════ -->
+<header class="master-header">
+  <h1 class="master-header__title font-display">⚓ Maître de Jeu</h1>
+  <span class="badge badge--waiting" id="statusBadge">En attente</span>
+
+  <div class="master-header__info">
+    <span>👥 <span id="playerCount">0</span></span>
+    <span class="master-header__sep">|</span>
+    <span>URL : <span id="playerUrl" class="master-header__url" title="Cliquer pour copier"></span></span>
+  </div>
+
+  <div class="master-header__controls">
+    <a href="/admin" class="btn">⚙ Admin</a>
+    <button class="btn calib-btn" id="btnCalib">Calibration</button>
+    <button class="btn btn--success" id="btnStart" disabled>▶ Démarrer</button>
+    <button class="btn btn--danger"  id="btnReset">↺ Reset</button>
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════════════════════
+     PLATEAU
+═══════════════════════════════════════════════════════ -->
+<div class="plateau">
+
+  <!-- Zone haute (énigmes + avancement) -->
+  <div class="zone-top">
+
+    <div class="top-enigmes">
+      <span class="top-label font-display">Énigmes</span>
+      <div class="card-slot" id="slotLatitude"  data-tip="Latitude|Révèle une coordonnée X.">
+        <span class="card-slot__icon">↔</span>
+        <span class="card-slot__label">Latitude</span>
+        <span class="card-slot__sub">vide</span>
+      </div>
+      <div class="card-slot" id="slotLongitude" data-tip="Longitude|Révèle une coordonnée Y.">
+        <span class="card-slot__icon">↕</span>
+        <span class="card-slot__label">Longitude</span>
+        <span class="card-slot__sub">vide</span>
+      </div>
+      <div class="card-slot" id="slotCode"      data-tip="Code|Combinaison de déchiffrement.">
+        <span class="card-slot__icon">🔐</span>
+        <span class="card-slot__label">Code</span>
+        <span class="card-slot__sub">vide</span>
+      </div>
+    </div>
+
+    <div class="top-avancement" id="topAvancement">
+      <span class="top-label font-display">Avancement</span>
+    </div>
+
+  </div>
+
+  <!-- Colonne gauche : îles -->
+  <div class="zone-iles zone-iles--left" id="ileGauche">
+    <div class="zone-iles__title font-display">🏝 Îles</div>
+  </div>
+
+  <!-- Zone centrale : carte -->
+  <div class="zone-carte" id="mapWrap">
+    <div id="mapContainer">
+      <img id="mapImg" src="/Map.jpg" alt="Carte" />
+      <canvas id="hexCanvas"></canvas>
+      <svg id="hexOverlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <!-- Sidebar joueurs/log -->
+    <div class="sidebar" id="sidebar">
+      <div class="panel" id="calibPanel">
+        <div class="panel__title">⚙ Calibration grille</div>
+        <div id="calibInner" class="calib-inner">
+          <div class="calib-row"><label>Rayon (HEX_R) <span id="vR">21.70</span>px</label><input type="range" id="sR" min="10" max="50" step="0.1" value="21.7"/></div>
+          <div class="calib-row"><label>Marge gauche (MARGIN_X) <span id="vMX">48</span>px</label><input type="range" id="sMX" min="0" max="100" step="0.5" value="48"/></div>
+          <div class="calib-row"><label>Marge haute (MARGIN_Y) <span id="vMY">44</span>px</label><input type="range" id="sMY" min="0" max="100" step="0.5" value="44"/></div>
+          <div class="calib-row"><label>Col. spacing (COL_SP) <span id="vCS">48.6</span>px</label><input type="range" id="sCS" min="20" max="80" step="0.1" value="48.6"/></div>
+          <div class="calib-row"><label>Row spacing (ROW_SP) <span id="vRS">41.6</span>px</label><input type="range" id="sRS" min="20" max="70" step="0.1" value="41.6"/></div>
+          <div class="calib-row"><label>Odd row offset <span id="vOF">24.4</span>px</label><input type="range" id="sOF" min="0" max="50" step="0.1" value="24.4"/></div>
+          <pre class="calib-code" id="calibCode"></pre>
+          <button class="btn calib-copy" id="btnCalibCopy">📋 Copier les constantes</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel__title">👥 Joueurs (<span id="playerCountS">0</span>)</div>
+        <div id="playerList"></div>
+        <div class="legend-row">
+          <div class="legend-dot legend-dot--active"></div> Tour actif
+        </div>
+      </div>
+
+      <div class="panel panel--flex">
+        <div class="panel__title">Journal</div>
+        <ul id="logList" class="log-list"><li>En attente…</li></ul>
+      </div>
+    </div>
+
+    <button class="sidebar-toggle" id="sidebarToggle">Joueurs &amp; Log</button>
+  </div>
+
+  <!-- Colonne droite : îles -->
+  <div class="zone-iles zone-iles--right" id="ileDroite">
+    <div class="zone-iles__title font-display">🏝 Îles</div>
+  </div>
+
+</div><!-- /.plateau -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     POPUP PARCHEMIN
+═══════════════════════════════════════════════════════ -->
+<div id="parchPopupOverlay" class="popup-overlay" aria-hidden="true">
+  <div class="parch-popup">
+    <button class="parch-popup__close" id="btnParchClose">✕</button>
+    <div class="parch-popup__ile" id="parchPopupIleName"></div>
+    <div class="parch-popup__scroll">
+      <div class="parch-popup__rouleau"></div>
+      <div class="parch-popup__body" id="parchPopupBody"></div>
+      <div class="parch-popup__rouleau"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     POPUP MISE EN PLACE
+═══════════════════════════════════════════════════════ -->
+<div id="setupOverlay" class="popup-overlay" aria-hidden="true">
+  <div class="setup-modal">
+
+    <div class="setup-modal__header">
+      <h2 class="setup-modal__title font-display">⚓ Mise en place de la partie</h2>
+      <span class="badge badge--other" id="setupStepBadge">Étape 1 / 2</span>
+    </div>
+
+    <div class="setup-modal__body" id="setupBody">
+
+      <!-- Étape 1 : parchemins -->
+      <div class="setup-section setup-section--active" id="setupSec1">
+        <div class="setup-section__title font-title">
+          <span class="step-num">1</span>
+          📜 Distribution des Parchemins
+        </div>
+        <p class="setup-section__desc">3 parchemins île sélectionnés au hasard, complétés par des vierges. Distribués face cachée sur chaque île.</p>
+        <div class="setup-label">Cartes tirées</div>
+        <div class="setup-cards-grid" id="setupParchCards"></div>
+        <div class="setup-label" style="margin-top:10px">Attribution</div>
+        <div class="setup-attrib-list" id="setupParchAttrib"></div>
+      </div>
+
+      <!-- Étape 2 : énigmes -->
+      <div class="setup-section" id="setupSec2">
+        <div class="setup-section__title font-title">
+          <span class="step-num">2</span>
+          🔍 Dépôt des Énigmes
+        </div>
+        <p class="setup-section__desc">1 carte Latitude, 1 Longitude, 1 Code tirées au hasard. Placées face cachée sur les emplacements dédiés.</p>
+        <div class="setup-cards-grid" id="setupEnigmeCards"></div>
+      </div>
+
+    </div>
+
+    <div class="setup-modal__footer">
+      <div class="setup-progress"><div class="setup-progress__bar" id="setupProgressBar" style="width:50%"></div></div>
+      <button class="btn"          id="setupBtnNext"  >Étape suivante →</button>
+      <button class="btn btn--success hidden" id="setupBtnClose">✓ Commencer la partie</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     TOOLTIP
+═══════════════════════════════════════════════════════ -->
+<div id="tooltip"  class="tooltip"  aria-hidden="true"></div>
+<div id="hexTip"   class="hex-tip"  aria-hidden="true"></div>
+
+
+<!-- ── Scripts ─────────────────────────────────────────────── -->
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="master.js"></script>
+</body>
+</html>

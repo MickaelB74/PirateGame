@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <title>Joueur — Plateau en Ligne</title>
+  <link rel="stylesheet" href="/shared/shared.css" />
+  <link rel="stylesheet" href="player.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     ÉCRAN DE CONNEXION
+═══════════════════════════════════════════════════════ -->
+<div id="loginScreen" class="login">
+  <div class="login__logo font-display">
+    ⚔ Plateau en Ligne
+    <span class="login__sub">Interface joueur</span>
+  </div>
+
+  <div class="login__field">
+    <label for="nameInput" class="login__label">Votre nom</label>
+    <input
+      id="nameInput"
+      type="text"
+      class="login__input"
+      placeholder="Entrez votre nom…"
+      maxlength="20"
+      autocomplete="off"
+    />
+  </div>
+
+  <button class="btn btn--large" id="btnJoin">Rejoindre la partie →</button>
+
+  <p id="connStatus" class="login__status">
+    <span class="conn-dot conn-dot--off" id="connDot"></span>
+    Connexion…
+  </p>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════
+     ÉCRAN DE JEU
+═══════════════════════════════════════════════════════ -->
+<div id="gameScreen" class="game hidden">
+
+  <!-- ── En-tête ─────────────────────────────────────────── -->
+  <header class="game__header">
+    <span class="game__player-name font-display">
+      <span class="player-dot" id="myColorDot"></span>
+      <span id="headerName">Joueur</span>
+    </span>
+
+    <span class="badge badge--waiting" id="turnBadge">En attente</span>
+
+    <button class="btn calib-btn" id="btnCalib" aria-label="Calibration">⚙</button>
+  </header>
+
+  <!-- ── Contenu principal ───────────────────────────────── -->
+  <div class="game__content" id="gameContent">
+
+    <!-- Carte de statut -->
+    <div class="status-card status-card--other" id="statusCard">
+      <div class="status-card__icon" id="bigIcon">⏳</div>
+      <div class="status-card__title font-display" id="bigText">En attente du début…</div>
+      <div class="status-card__sub" id="subText">Le maître de jeu démarre bientôt.</div>
+    </div>
+
+    <!-- Section dé -->
+    <div class="dice-section panel hidden" id="diceSection">
+      <div class="panel__title">🎲 Lancer le dé</div>
+      <div class="dice-section__body">
+        <div class="dice-face" id="diceFace">?</div>
+        <button class="btn btn--large dice-section__roll" id="btnRoll">Lancer le dé !</button>
+      </div>
+      <div class="dice-section__hint hidden" id="diceInstruction">
+        Déplacement : <strong id="diceValue">–</strong> case(s) — Appuyez sur une case
+      </div>
+    </div>
+
+    <!-- Minimap -->
+    <div class="map-section hidden" id="mapSection">
+      <div class="map-section__viewport" id="mapViewport">
+        <img id="miniMap" src="/Map.jpg" alt="Carte" class="map-section__img" />
+        <svg id="miniSvg" xmlns="http://www.w3.org/2000/svg" class="map-section__svg"></svg>
+        <span class="map-section__zoom-label" id="zoomLabel">🔍 Zone de déplacement</span>
+      </div>
+    </div>
+
+    <!-- Bouton fin de tour -->
+    <button class="btn btn--success btn--large" id="btnEndTurn" disabled>
+      Terminer mon tour →
+    </button>
+
+    <!-- Séparateur -->
+    <div class="sep"><span class="sep__label">⛵ Navire &amp; Main</span></div>
+
+    <!-- Barre de ressources -->
+    <div class="resources-bar" id="resourcesBar">
+      <div class="res-item">
+        <span class="res-item__icon">🪙</span>
+        <div>
+          <div class="res-item__value font-display" id="resDoublons">0</div>
+          <div class="res-item__label">Doublons</div>
+        </div>
+      </div>
+      <div class="res-item">
+        <span class="res-item__icon">⚓</span>
+        <div>
+          <div class="res-item__value font-display" id="resReputation">0</div>
+          <div class="res-item__label">Réputation</div>
+        </div>
+      </div>
+      <div class="res-item">
+        <span class="res-item__icon">🔭</span>
+        <div>
+          <div class="res-item__value font-display" id="resResearch">0</div>
+          <div class="res-item__label">Recherche</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard navire -->
+    <div class="ship-card" id="shipDashboard">
+      <div class="ship-card__header">
+        <span class="ship-card__title font-display">⛵ Mon Navire</span>
+        <span class="ship-card__name" id="shipNameDisplay">Le Vengeur des Mers</span>
+      </div>
+      <div class="ship-stats-grid">
+
+        <div class="stat-block stat-block--hull">
+          <div class="stat-block__label">
+            <span class="stat-block__icon">🛡</span>
+            <span>Coque</span>
+            <span class="stat-block__lvl" id="hullLvlBadge">Niv. 1</span>
+          </div>
+          <div class="stat-pips" id="hull-pips">
+            <div class="pip pip--filled" data-stat="hull" data-idx="0"></div>
+            <div class="pip"            data-stat="hull" data-idx="1"></div>
+            <div class="pip"            data-stat="hull" data-idx="2"></div>
+          </div>
+          <div class="stat-block__desc" id="hullDesc">Résistance de base</div>
+        </div>
+
+        <div class="stat-block stat-block--sails">
+          <div class="stat-block__label">
+            <span class="stat-block__icon">⛵</span>
+            <span>Voiles</span>
+            <span class="stat-block__lvl" id="sailsLvlBadge">Niv. 1</span>
+          </div>
+          <div class="stat-pips" id="sails-pips">
+            <div class="pip pip--filled" data-stat="sails" data-idx="0"></div>
+            <div class="pip"            data-stat="sails" data-idx="1"></div>
+            <div class="pip"            data-stat="sails" data-idx="2"></div>
+          </div>
+          <div class="stat-block__desc" id="sailsDesc">Déplacement +1</div>
+        </div>
+
+        <div class="stat-block stat-block--cannons">
+          <div class="stat-block__label">
+            <span class="stat-block__icon">💣</span>
+            <span>Canons</span>
+            <span class="stat-block__lvl" id="cannonsLvlBadge">Niv. 1</span>
+          </div>
+          <div class="stat-pips" id="cannons-pips">
+            <div class="pip pip--filled" data-stat="cannons" data-idx="0"></div>
+            <div class="pip"            data-stat="cannons" data-idx="1"></div>
+            <div class="pip"            data-stat="cannons" data-idx="2"></div>
+          </div>
+          <div class="stat-block__desc" id="cannonsDesc">Portée de tir : 1</div>
+        </div>
+
+        <div class="stat-block stat-block--crew">
+          <div class="stat-block__label">
+            <span class="stat-block__icon">☠</span>
+            <span>Équipage</span>
+            <span class="stat-block__lvl" id="crewLvlBadge">Niv. 1</span>
+          </div>
+          <div class="stat-pips" id="crew-pips">
+            <div class="pip pip--filled" data-stat="crew" data-idx="0"></div>
+            <div class="pip"            data-stat="crew" data-idx="1"></div>
+            <div class="pip"            data-stat="crew" data-idx="2"></div>
+          </div>
+          <div class="stat-block__desc" id="crewDesc">5 matelots</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Main de cartes -->
+    <div class="deck-section panel" id="deckSection">
+      <div class="deck-section__header">
+        <span class="panel__title">🃏 Main</span>
+        <span class="deck-section__count" id="deckCountLabel">0 / 5 cartes</span>
+      </div>
+      <div class="cards-row" id="cardsRow">
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+        <div class="card-slot-empty">–</div>
+      </div>
+    </div>
+
+    <!-- Cale & Équipement -->
+    <div class="hold-section panel" id="holdSection">
+
+      <div class="hold-section__header">
+        <span class="panel__title">📦 Cale · Cargaison</span>
+        <span class="hold-section__count" id="cargoCountLabel">0 / 10</span>
+      </div>
+      <div class="cargo-grid" id="cargoGrid">
+        <div class="hold-slot hold-slot--empty" data-index="0"></div>
+        <div class="hold-slot hold-slot--empty" data-index="1"></div>
+        <div class="hold-slot hold-slot--empty" data-index="2"></div>
+        <div class="hold-slot hold-slot--empty" data-index="3"></div>
+        <div class="hold-slot hold-slot--empty" data-index="4"></div>
+        <div class="hold-slot hold-slot--empty" data-index="5"></div>
+        <div class="hold-slot hold-slot--empty" data-index="6"></div>
+        <div class="hold-slot hold-slot--empty" data-index="7"></div>
+        <div class="hold-slot hold-slot--empty" data-index="8"></div>
+        <div class="hold-slot hold-slot--empty" data-index="9"></div>
+      </div>
+
+      <hr class="hold-section__divider" />
+
+      <div class="hold-section__header" style="margin-top:10px">
+        <span class="panel__title">⚔ Équipement</span>
+        <span class="hold-section__count" id="equipCountLabel">0 / 6</span>
+      </div>
+      <div class="equip-grid" id="equipGrid">
+        <div class="hold-slot hold-slot--equip hold-slot--empty" data-index="0"></div>
+        <div class="hold-slot hold-slot--equip hold-slot--empty" data-index="1"></div>
+        <div class="hold-slot hold-slot--equip hold-slot--empty" data-index="2"></div>
+        <div class="hold-slot hold-slot--equip hold-slot--empty" data-index="3"></div>
+        <div class="hold-slot hold-slot--equip hold-slot--empty" data-index="4"></div>
+        <div class="hold-slot hold-slot--equip hold-slot--empty" data-index="5"></div>
+      </div>
+    </div>
+
+    <!-- Liste des joueurs -->
+    <div class="panel">
+      <div class="panel__title">Joueurs</div>
+      <div id="playersList"></div>
+    </div>
+
+    <!-- Journal -->
+    <div class="panel">
+      <div class="panel__title">Journal</div>
+      <ul id="logList" class="log-list"><li>En attente…</li></ul>
+    </div>
+
+  </div><!-- /.game__content -->
+</div><!-- /#gameScreen -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     TIROIR DE CALIBRATION
+═══════════════════════════════════════════════════════ -->
+<div id="calibDrawer" class="calib-drawer" aria-hidden="true">
+  <div class="calib-drawer__header">
+    <h3 class="calib-drawer__title font-display">⚙ Calibration grille</h3>
+    <button class="calib-drawer__close" id="btnCalibClose">✕</button>
+  </div>
+
+  <div class="calib-drawer__sliders">
+    <div class="calib-row">
+      <label>Rayon (HEX_R) <span id="vR">21.00</span>px</label>
+      <input type="range" id="sR"  min="10" max="50" step="0.1" value="21"   />
+    </div>
+    <div class="calib-row">
+      <label>Marge gauche (MARGIN_X) <span id="vMX">48.5</span>px</label>
+      <input type="range" id="sMX" min="0"  max="120" step="0.5" value="48.5" />
+    </div>
+    <div class="calib-row">
+      <label>Marge haute (MARGIN_Y) <span id="vMY">39.0</span>px</label>
+      <input type="range" id="sMY" min="0"  max="120" step="0.5" value="39.0" />
+    </div>
+    <div class="calib-row">
+      <label>Espacement col (COL_SP) <span id="vCS">48.40</span>px</label>
+      <input type="range" id="sCS" min="20" max="80"  step="0.1" value="48.4" />
+    </div>
+    <div class="calib-row">
+      <label>Espacement rang (ROW_SP) <span id="vRS">41.60</span>px</label>
+      <input type="range" id="sRS" min="15" max="70"  step="0.1" value="41.6" />
+    </div>
+    <div class="calib-row">
+      <label>Offset rang impair <span id="vOF">24.40</span>px</label>
+      <input type="range" id="sOF" min="0"  max="50"  step="0.1" value="24.4" />
+    </div>
+  </div>
+
+  <pre class="calib-drawer__code" id="calibCode"></pre>
+  <button class="btn calib-drawer__copy" id="btnCalibCopy">📋 Copier les constantes</button>
+</div>
+
+
+<!-- ── Scripts ─────────────────────────────────────────────── -->
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="player.js"></script>
+</body>
+</html>

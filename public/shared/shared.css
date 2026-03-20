@@ -1,0 +1,243 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   shared/shared.css — Variables, reset et bases communes
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Imports Google Fonts ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+/* ── Variables de design ──────────────────────────────────────────────────── */
+:root {
+  /* Palette */
+  --ink:    #0f0b05;
+  --parch:  #f0e4c8;
+  --gold:   #b8860b;
+  --gold2:  #d4a017;
+  --teal:   #4aedcc;
+  --green:  #2d5a27;
+  --red:    #c04040;
+
+  /* Bordures */
+  --border:        rgba(184, 134, 11, .22);
+  --border-hover:  rgba(184, 134, 11, .5);
+
+  /* Surfaces */
+  --surface:     rgba(20, 13, 4, .96);
+  --surface-alt: rgba(255, 255, 255, .04);
+
+  /* Texte muted */
+  --muted:  #7a6a4a;
+  --muted2: #5a4a2a;
+
+  /* Typographie */
+  --font-display: 'Cinzel Decorative', serif;
+  --font-title:   'Cinzel', serif;
+  --font-body:    'Crimson Pro', Georgia, serif;
+  --font-mono:    monospace;
+
+  /* Rayons */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+
+  /* Transitions */
+  --t-fast: .15s ease;
+  --t-mid:  .25s ease;
+
+  /* Fond global */
+  --bg-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+}
+
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--ink);
+  color: var(--parch);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.55;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(184, 134, 11, .08) 0%, transparent 55%),
+    var(--bg-noise);
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(184, 134, 11, .3) transparent;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(184, 134, 11, .3); border-radius: 10px; }
+
+/* ── Typographie commune ──────────────────────────────────────────────────── */
+.font-display { font-family: var(--font-display); }
+.font-title   { font-family: var(--font-title); }
+.font-body    { font-family: var(--font-body); }
+.font-mono    { font-family: var(--font-mono); }
+
+/* ── Composants partagés ──────────────────────────────────────────────────── */
+
+/* Bouton de base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border);
+  background: rgba(184, 134, 11, .1);
+  color: var(--gold2);
+  font-family: var(--font-display);
+  font-size: .78rem;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { background: rgba(184, 134, 11, .22); border-color: var(--gold2); }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.btn--danger {
+  border-color: rgba(192, 64, 64, .4);
+  color: #c86432;
+  background: rgba(192, 64, 64, .06);
+}
+.btn--danger:hover:not(:disabled) { background: rgba(192, 64, 64, .16); border-color: rgba(192, 64, 64, .8); }
+
+.btn--success {
+  border-color: rgba(106, 191, 97, .5);
+  color: #d4f5d0;
+  background: rgba(45, 90, 39, .2);
+}
+.btn--success:hover:not(:disabled) { background: rgba(45, 90, 39, .35); }
+
+.btn--large { padding: 12px 28px; font-size: .88rem; }
+
+/* Badge de statut */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-family: var(--font-title);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  border: 1px solid transparent;
+}
+.badge--waiting  { background: rgba(90, 90, 90, .2);        border-color: #555;     color: #aaa; }
+.badge--picking  { background: rgba(74, 237, 204, .1);      border-color: #4aedcc;  color: #4aedcc; }
+.badge--playing  { background: rgba(106, 191, 97, .1);      border-color: #6abf61;  color: #6abf61; }
+.badge--ended    { background: rgba(200, 100, 50, .1);      border-color: #c86432;  color: #c86432; }
+.badge--my-turn  { background: rgba(45, 90, 39, .3);        border-color: #6abf61;  color: #6abf61; }
+.badge--other    { background: rgba(0, 0, 0, .2);           border-color: #4a3b20;  color: #8a7a5e; }
+.badge--picking-active { background: rgba(74, 238, 204, .15); border-color: #4aedcc; color: #4aedcc; }
+
+/* Panel générique */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 16px;
+}
+.panel__title {
+  font-family: var(--font-display);
+  font-size: .72rem;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+
+/* Séparateur décoratif */
+.sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+.sep::before, .sep::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(184, 134, 11, .12);
+}
+.sep__label {
+  font-family: var(--font-display);
+  font-size: .55rem;
+  color: #4a3b20;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  white-space: nowrap;
+}
+
+/* Point de connexion */
+.conn-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.conn-dot--on  { background: #6abf61; }
+.conn-dot--off { background: #e07070; }
+
+/* Toggle switch */
+.toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle__slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .12);
+  border-radius: 20px;
+  transition: all .2s;
+  cursor: pointer;
+}
+.toggle__slider::after {
+  content: '';
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  left: 3px;
+  top: 3px;
+  border-radius: 50%;
+  background: #4a3b20;
+  transition: transform .2s, background .2s;
+}
+.toggle input:checked + .toggle__slider {
+  background: rgba(74, 237, 204, .22);
+  border-color: var(--teal);
+}
+.toggle input:checked + .toggle__slider::after {
+  transform: translateX(16px);
+  background: var(--teal);
+}
+
+/* Animations communes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fadeInFast {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .6; }
+}
+
+.anim-fade-in { animation: fadeIn .3s ease both; }
