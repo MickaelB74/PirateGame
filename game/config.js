@@ -1,8 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // game/config.js — Persistance et defaults de la configuration admin
-//
-// Responsabilité unique : charger, sauvegarder et migrer adminConfig.
-// Aucune logique de jeu ici.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const fs   = require('fs');
@@ -52,6 +49,13 @@ const DEFAULT_EPAVES = [
   { id: 'ep_6', nom: 'Épave du Vieux Jacques',   coord_q: 22, coord_r: 21 },
 ];
 
+// Reliques : 3 fixes, toujours poseidon / eole / zeus — structure immuable
+const DEFAULT_RELIQUES = {
+  poseidon: { event: "Mer d'Huile",  desc: "Contrôle des mers. La carte Mer d'Huile n'a plus d'effet sur vous.",    enabled: true },
+  eole:     { event: 'Vent Violent', desc: "Contrôle des vents. La carte Vent Violent n'a plus d'effet sur vous.", enabled: true },
+  zeus:     { event: 'Orage',        desc: "Contrôle de la foudre. La carte Orage n'a plus d'effet sur vous.",     enabled: true },
+};
+
 // ─── Config par défaut complète ───────────────────────────────────────────────
 
 function buildDefaultConfig() {
@@ -66,45 +70,45 @@ function buildDefaultConfig() {
       enigme_latitude:  Array.from({ length: 3 }, (_, i) => ({ id: `el_${i}`,  valeur: i + 1 })),
       enigme_longitude: Array.from({ length: 3 }, (_, i) => ({ id: `elo_${i}`, valeur: i + 1 })),
       enigme_code:      Array.from({ length: 3 }, (_, i) => ({ id: `ec_${i}`,  delta_lat: 0, delta_lon: 0, description: '' })),
+
+      // 3 anciens parchemins — champ `relique` est un label d'affichage fixe,
+      // seuls `ile_destination` et `description` sont configurables par l'admin.
       ancien_parchemin: [
-        { id: 'ap_poseidon', relique: 'Totem de Poséidon', ile_destination: '', description: '' },
-        { id: 'ap_eole',     relique: "Totem d'Éole",      ile_destination: '', description: '' },
-        { id: 'ap_zeus',     relique: 'Totem de Zeus',     ile_destination: '', description: '' },
+        {
+          id:              'ap_poseidon',
+          relique:         'Totem de Poséidon',
+          ile_destination: "Île du Kraken",
+          description:     "Une carte usée révèle la route vers les abysses du Kraken.",
+        },
+        {
+          id:              'ap_eole',
+          relique:         "Totem d'Éole",
+          ile_destination: "Île des Brumes",
+          description:     "Des inscriptions floues indiquent les marais de l'Île des Brumes.",
+        },
+        {
+          id:              'ap_zeus',
+          relique:         'Totem de Zeus',
+          ile_destination: "Île Fantôme",
+          description:     "Une encre invisible révèle la route vers l'Île Fantôme.",
+        },
       ],
-      reliques: {
-        poseidon: { event: "Mer d'Huile",  desc: "Contrôle des mers. La carte Mer d'Huile n'a plus d'effet sur vous.",    enabled: true },
-        eole:     { event: 'Vent Violent', desc: "Contrôle des vents. La carte Vent Violent n'a plus d'effet sur vous.", enabled: true },
-        zeus:     { event: 'Orage',        desc: "Contrôle de la foudre. La carte Orage n'a plus d'effet sur vous.",     enabled: true },
-      },
+
+      // Reliques liées — toujours les 3 mêmes, reconstruites à l'init
+      reliques: JSON.parse(JSON.stringify(DEFAULT_RELIQUES)),
+
+      // Équipements
       equipement: [
         { id: 'eq_0', nom: 'Boulet et Poudre',  description: 'Ressource de combat. Occupe 1 slot cargaison.',    enabled: true },
         { id: 'eq_1', nom: 'Planches et Clous', description: 'Ressource de réparation. Occupe 1 slot cargaison.', enabled: true },
       ],
-      action_offensive: [
-        { id: 'ao_0', nom: 'Boulet de Canon',      description: "Inflige des dégâts à un joueur dans la portée de tes canons.",           enabled: true },
-        { id: 'ao_1', nom: "À l'Abordage !",       description: 'Vole des doublons à un joueur adjacent.',                               enabled: true },
-        { id: 'ao_2', nom: 'Sabotage',             description: "Réduit le déplacement d'un joueur adverse à son prochain tour.",        enabled: true },
-        { id: 'ao_3', nom: 'Vol de Parchemin',     description: 'Vole un Parchemin aléatoire à un joueur adjacent.',                     enabled: true },
-        { id: 'ao_4', nom: 'Brouillard de Guerre', description: "Force un joueur adverse à relancer son dé et garder le pire résultat.", enabled: true },
-      ],
-      action_defensive: [
-        { id: 'ad_0', nom: 'Parade !',          description: "Annule une carte offensive jouée contre toi ce tour.",  enabled: true },
-        { id: 'ad_1', nom: 'Renforts de Coque', description: "Absorbe les prochains dégâts reçus sur la coque.",      enabled: true },
-        { id: 'ad_2', nom: 'Brume Protectrice', description: "Ton navire est insaisissable ce tour.",                  enabled: true },
-      ],
-      atout: [
-        { id: 'at_0', nom: 'Vent en Poupe',      description: "Ajoute +2 cases à ton déplacement ce tour.",   enabled: true },
-        { id: 'at_1', nom: 'Navigation Étoilée', description: 'Relance ton dé et garde le meilleur résultat.', enabled: true },
-        { id: 'at_2', nom: 'Trésor Caché',       description: 'Gagne 3 doublons immédiatement.',               enabled: true },
-      ],
-      evenement: [
-        { id: 'ev_0', nom: "Mer d'Huile",      description: "Tu ne peux pas te déplacer ce tour.",                           annule_relique: 'relique_poseidon', enabled: true },
-        { id: 'ev_1', nom: 'Vent Violent',      description: 'Tu te déplaces de 3 cases dans une direction aléatoire.',      annule_relique: 'relique_eole',     enabled: true },
-        { id: 'ev_2', nom: 'Orage',             description: 'Tu perds 1 point de coque.',                                   annule_relique: 'relique_zeus',     enabled: true },
-        { id: 'ev_3', nom: 'Fortune de Mer',    description: "Tu trouves une épave à la dérive. Gagne 2 doublons.",          annule_relique: '',                 enabled: true },
-        { id: 'ev_4', nom: 'Attaque du Kraken', description: 'Passe ton prochain tour et perds 1 point de coque.',           annule_relique: '',                 enabled: true },
-        { id: 'ev_5', nom: 'Chant des Sirènes', description: "Envoûté par les sirènes. Défausse une carte action au choix.", annule_relique: '',                 enabled: true },
-      ],
+
+      // Actions / Atouts / Événements : vides — structure à définir plus tard
+      action_offensive: [],
+      action_defensive: [],
+      atout:            [],
+      evenement:        [],
+
       iles:       JSON.parse(JSON.stringify(DEFAULT_ILES)),
       ports:      JSON.parse(JSON.stringify(DEFAULT_PORTS)),
       repaires:   JSON.parse(JSON.stringify(DEFAULT_REPAIRES)),
@@ -119,17 +123,14 @@ function buildDefaultConfig() {
 
 function migrateIles(iles) {
   return iles.map((ile, i) => {
-    // Ancien format coord_q/coord_r → cases[]
     if (!ile.cases) {
       const cases = [];
       if (ile.coord_q != null && ile.coord_r != null)
         cases.push({ q: ile.coord_q, r: ile.coord_r });
-      const { coord_q, coord_r, ...rest } = ile; // eslint-disable-line no-unused-vars
+      const { coord_q, coord_r, ...rest } = ile;
       ile = { ...rest, cases };
     }
-    // Forcer nb_objets à 6 minimum
     if (!ile.nb_objets || ile.nb_objets < 6) ile.nb_objets = 6;
-    // Coordonnées par défaut si manquantes
     const defaut = DEFAULT_ILES[i];
     if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null && c.r == null)))
       ile.cases = JSON.parse(JSON.stringify(defaut.cases));
@@ -143,10 +144,6 @@ function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-/**
- * Charge la config depuis le disque (ou retourne null).
- * @returns {object|null}
- */
 function loadConfig() {
   ensureDataDir();
   if (!fs.existsSync(CONFIG_FILE)) {
@@ -164,11 +161,6 @@ function loadConfig() {
   }
 }
 
-/**
- * Sauvegarde la config sur le disque.
- * @param {object} cfg
- * @returns {boolean}
- */
 function saveConfig(cfg) {
   ensureDataDir();
   try {
@@ -181,21 +173,42 @@ function saveConfig(cfg) {
   }
 }
 
-/**
- * Initialise adminConfig depuis le disque ou les valeurs par défaut,
- * en appliquant toutes les migrations nécessaires.
- * @returns {object} adminConfig
- */
 function initConfig() {
-  const saved   = loadConfig();
-  const cfg     = saved || buildDefaultConfig();
+  const saved = loadConfig();
+  const cfg   = saved || buildDefaultConfig();
 
-  // Garantir les clés manquantes sur un ancien config.json
+  // Garantir les clés structurelles manquantes
   if (!cfg.cards.iles      || !cfg.cards.iles.length)      cfg.cards.iles      = JSON.parse(JSON.stringify(DEFAULT_ILES));
   if (!cfg.cards.ports     || !cfg.cards.ports.length)     cfg.cards.ports     = JSON.parse(JSON.stringify(DEFAULT_PORTS));
   if (!cfg.cards.repaires  || !cfg.cards.repaires.length)  cfg.cards.repaires  = JSON.parse(JSON.stringify(DEFAULT_REPAIRES));
   if (!cfg.cards.epaves    || !cfg.cards.epaves.length)    cfg.cards.epaves    = JSON.parse(JSON.stringify(DEFAULT_EPAVES));
   if (!cfg.cards.avancement)                                cfg.cards.avancement = { nb_cartes_temps: 6 };
+
+  // Reliques : toujours reconstruites depuis les défauts (immuables)
+  cfg.cards.reliques = JSON.parse(JSON.stringify(DEFAULT_RELIQUES));
+
+  // Anciens parchemins : garantir les 3 entrées avec les bons ids/reliques,
+  // en préservant ile_destination et description si déjà renseignés.
+  const AP_DEFAULTS = buildDefaultConfig().cards.ancien_parchemin;
+  if (!Array.isArray(cfg.cards.ancien_parchemin) || cfg.cards.ancien_parchemin.length !== 3) {
+    cfg.cards.ancien_parchemin = AP_DEFAULTS;
+  } else {
+    cfg.cards.ancien_parchemin = AP_DEFAULTS.map((def, i) => {
+      const saved = cfg.cards.ancien_parchemin[i] || {};
+      return {
+        id:              def.id,
+        relique:         def.relique,
+        ile_destination: saved.ile_destination ?? def.ile_destination,
+        description:     saved.description     ?? def.description,
+      };
+    });
+  }
+
+  // Actions / Atouts / Événements : toujours forcés à vide côté serveur
+  cfg.cards.action_offensive = [];
+  cfg.cards.action_defensive = [];
+  cfg.cards.atout            = [];
+  cfg.cards.evenement        = [];
 
   // Migration îles
   cfg.cards.iles = migrateIles(cfg.cards.iles);
@@ -212,4 +225,5 @@ module.exports = {
   DEFAULT_PORTS,
   DEFAULT_REPAIRES,
   DEFAULT_EPAVES,
+  DEFAULT_RELIQUES,
 };

@@ -1,14 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // admin/admin.js — Éditeur de configuration (ES module)
-//
-// Responsabilités :
-//   - Charger / sauvegarder la config via GET/POST /api/config
-//   - Rendre chaque section de carte (parchemins, énigmes, îles, lieux…)
-//   - Gérer la navigation par onglets
-//   - Synchroniser la save-bar
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ─── Constantes grille (pour la tempête) ──────────────────────────────────────
 const STORM_CELLS = [
   {q:11,r:9},{q:12,r:9},{q:13,r:9},
   {q:11,r:10},{q:12,r:10},{q:13,r:10},{q:14,r:10},
@@ -29,6 +22,13 @@ const DEFAULT_ILES = [
   { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:6, cases:[{q:20,r:21}] },
 ];
 
+// Reliques fixes — labels immuables, jamais modifiables depuis l'admin
+const RELIQUES_FIXES = [
+  { key: 'poseidon', icon: '🔱', name: 'Totem de Poséidon' },
+  { key: 'eole',     icon: '💨', name: "Totem d'Éole"      },
+  { key: 'zeus',     icon: '⚡', name: 'Totem de Zeus'      },
+];
+
 // ─── State ────────────────────────────────────────────────────────────────────
 let state = {};
 let _uid  = 1000;
@@ -36,7 +36,6 @@ let _uid  = 1000;
 function uid() { return `c${++_uid}`; }
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-// ─── Helpers îles ─────────────────────────────────────────────────────────────
 function getIleOptions(selectedNom = '') {
   const iles = state.iles || DEFAULT_ILES;
   return `<option value="">— Aucune —</option>` +
@@ -59,7 +58,6 @@ async function loadConfig() {
 
     state = cfg.cards || {};
 
-    // ── Garanties / migrations ──
     if (!state.iles || !state.iles.length) {
       state.iles = JSON.parse(JSON.stringify(DEFAULT_ILES));
     } else {
@@ -71,9 +69,8 @@ async function loadConfig() {
           ile = { ...rest, cases };
         }
         const defaut = DEFAULT_ILES[i];
-        if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null))) {
+        if (defaut && (!ile.cases.length || ile.cases.every(c => c.q == null)))
           ile.cases = JSON.parse(JSON.stringify(defaut.cases));
-        }
         if (!ile.nb_objets || ile.nb_objets < 1) ile.nb_objets = 6;
         return ile;
       });
@@ -101,6 +98,7 @@ async function saveConfig() {
       nb_cartes_temps: parseInt(document.getElementById('nb_cartes_temps')?.value) || 6,
     };
 
+    // Ne jamais sauvegarder les listes vides en écrasant — le serveur les force à []
     const body = { cards: state, rules: collectRules() };
     const res = await fetch('/api/config', {
       method:  'POST',
@@ -139,10 +137,7 @@ function markDirty() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function applyRulesToForm(rules) {
-  const set = (id, val) => {
-    const el = document.getElementById(id);
-    if (el && val !== undefined && val !== null) el.value = val;
-  };
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
   const sb = rules.ship?.statBonuses || {};
   set('hull1', sb.hull?.[0]);   set('hull2', sb.hull?.[1]);   set('hull3', sb.hull?.[2]);
   set('sails1', sb.sails?.[0]); set('sails2', sb.sails?.[1]); set('sails3', sb.sails?.[2]);
@@ -178,7 +173,7 @@ function collectRules() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// NAVIGATION PAR ONGLETS
+// NAVIGATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export function switchTab(tab) {
@@ -210,11 +205,10 @@ function renderAll() {
   renderEnigmeCode();
   renderAncienParchemin();
   renderReliques();
-  renderSimpleList('equipement',       '⚙',  ['nom','description'], ['Nom','Description / effet']);
-  renderSimpleList('action_offensive', '💥', ['nom','description'], ['Nom de la carte','Description / effet']);
-  renderSimpleList('action_defensive', '🛡', ['nom','description'], ['Nom de la carte','Description / effet']);
-  renderSimpleList('atout',            '💨', ['nom','description'], ['Nom','Description / effet']);
-  renderEvenement();
+  renderSimpleList('equipement', '⚙', ['nom','description'], ['Nom','Description / effet']);
+  renderTodoSection('action',    '⚔ Actions',     'La mécanique des cartes action (offensives / défensives) sera conçue dans une prochaine itération.');
+  renderTodoSection('atout',     '💨 Atouts',      'La mécanique des cartes atout sera conçue dans une prochaine itération.');
+  renderTodoSection('evenement', '⚡ Événements',  'La mécanique des cartes événement sera conçue dans une prochaine itération.');
   renderIles();
   renderAvancement();
   renderLieux('ports',    '⚓');
@@ -339,20 +333,33 @@ function renderEnigmeCode() {
 }
 
 // ─── Anciens Parchemins ───────────────────────────────────────────────────────
+// 3 champs éditables : relique associée (select fixe), île de destination, description.
+// Tout est pré-rempli depuis les données.
 
 function renderAncienParchemin() {
   const arr = state.ancien_parchemin || [];
-  const el = document.getElementById('list-ancien_parchemin');
+  const el  = document.getElementById('list-ancien_parchemin');
   if (!el) return;
+
   el.innerHTML = arr.map((c, i) => `
     <div class="card-entry">
       <div class="card-entry__header">
-        <span class="card-entry__num">${esc(c.relique)}</span>
+        <span class="card-entry__num">🗺 Ancien Parchemin ${i + 1}</span>
       </div>
-      <div class="fields">
+      <div class="fields--3">
+        <div class="field">
+          <label class="field__label">Relique associée</label>
+          <select class="ile-select"
+            onchange="window._admin.setField('ancien_parchemin',${i},'relique',this.value)">
+            ${RELIQUES_FIXES.map(r =>
+              `<option value="${esc(r.name)}" ${c.relique === r.name ? 'selected' : ''}>${r.icon} ${esc(r.name)}</option>`
+            ).join('')}
+          </select>
+        </div>
         <div class="field">
           <label class="field__label">Île de destination</label>
-          <select class="ile-select" onchange="window._admin.setField('ancien_parchemin',${i},'ile_destination',this.value)">
+          <select class="ile-select"
+            onchange="window._admin.setField('ancien_parchemin',${i},'ile_destination',this.value)">
             ${getIleOptions(c.ile_destination)}
           </select>
         </div>
@@ -366,45 +373,55 @@ function renderAncienParchemin() {
 }
 
 // ─── Reliques ─────────────────────────────────────────────────────────────────
+// Affichage en lecture seule — les valeurs sont fixes côté serveur.
 
 function renderReliques() {
-  const rel = state.reliques || {};
-  const defs = [
-    { key: 'poseidon', icon: '🔱', name: 'Totem de Poséidon' },
-    { key: 'eole',     icon: '💨', name: "Totem d'Éole" },
-    { key: 'zeus',     icon: '⚡', name: 'Totem de Zeus' },
-  ];
   const el = document.getElementById('reliques-container');
   if (!el) return;
-  el.innerHTML = defs.map(d => {
-    const r = rel[d.key] || {};
-    return `<div class="relique-card">
-      <div class="relique-card__title">${d.icon} ${d.name}</div>
-      <div class="fields">
-        <div class="field">
-          <label class="field__label">Événement annulé</label>
-          <input type="text" value="${esc(r.event)}"
-            oninput="window._admin.setRelique('${d.key}','event',this.value)">
-        </div>
-        <div class="field">
-          <label class="field__label">Description de l'effet</label>
-          <input type="text" value="${esc(r.desc)}"
-            oninput="window._admin.setRelique('${d.key}','desc',this.value)">
-        </div>
+  el.innerHTML = `
+    <div class="soon-block" style="padding:22px 20px;opacity:1">
+      <div class="soon-block__icon">🔒</div>
+      <div class="soon-block__title" style="font-size:.9rem">Reliques — Lecture seule</div>
+      <div class="soon-block__desc">
+        Les 3 reliques sont fixes et liées aux Anciens Parchemins.<br>
+        Leurs effets sont définis dans le code et ne sont pas modifiables depuis l'admin.
       </div>
-      <label class="toggle-wrap">
-        <span class="toggle">
-          <input type="checkbox" ${r.enabled !== false ? 'checked' : ''}
-            onchange="window._admin.setRelique('${d.key}','enabled',this.checked)">
-          <span class="toggle__slider"></span>
-        </span>
-        Activée dans le jeu
-      </label>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+      ${RELIQUES_FIXES.map(r => `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
+          background:rgba(255,255,255,.025);border:1px solid rgba(184,134,11,.15);
+          border-radius:8px;font-size:.9rem;color:#9a8a6a">
+          <span style="font-size:1.3rem">${r.icon}</span>
+          <strong style="color:#d4a017">${esc(r.name)}</strong>
+        </div>`).join('')}
     </div>`;
-  }).join('');
 }
 
-// ─── Listes simples (équipement, actions, atouts) ─────────────────────────────
+// ─── Sections "À venir" (actions / atouts / événements) ──────────────────────
+// Affiche uniquement un panneau informatif. Aucun bouton d'ajout.
+
+function renderTodoSection(tabKey, title, message) {
+  // Les ids dans le HTML : list-action_offensive, list-action_defensive,
+  // list-atout, list-evenement
+  const ids = {
+    action:    ['list-action_offensive', 'list-action_defensive'],
+    atout:     ['list-atout'],
+    evenement: ['list-evenement'],
+  };
+  const html = `
+    <div class="soon-block">
+      <div class="soon-block__icon">🚧</div>
+      <div class="soon-block__title">${title}</div>
+      <div class="soon-block__desc">${message}</div>
+    </div>`;
+  for (const id of (ids[tabKey] || [])) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+}
+
+// ─── Listes simples (équipement) ──────────────────────────────────────────────
 
 function renderSimpleList(key, icon, fields, labels) {
   const arr = state[key] || [];
@@ -433,57 +450,6 @@ function renderSimpleList(key, icon, fields, labels) {
           </div>`).join('')}
       </div>
     </div>`).join('');
-  updateActionBadge();
-}
-
-// ─── Événements ───────────────────────────────────────────────────────────────
-
-function renderEvenement() {
-  const arr = state.evenement || [];
-  const relOptions = [
-    { val: '',                label: '— Aucune —' },
-    { val: 'relique_poseidon', label: 'Totem de Poséidon' },
-    { val: 'relique_eole',     label: "Totem d'Éole" },
-    { val: 'relique_zeus',     label: 'Totem de Zeus' },
-  ];
-  const el = document.getElementById('list-evenement');
-  if (!el) return;
-  el.innerHTML = arr.map((c, i) => `
-    <div class="card-entry">
-      <div class="card-entry__header">
-        <span class="card-entry__num">⚡ Événement ${i + 1}</span>
-        <label class="toggle-wrap" style="margin-left:6px">
-          <span class="toggle">
-            <input type="checkbox" ${c.enabled !== false ? 'checked' : ''}
-              onchange="window._admin.setField('evenement',${i},'enabled',this.checked)">
-            <span class="toggle__slider"></span>
-          </span>
-          <span style="font-size:.8rem">${c.enabled !== false ? 'Actif' : 'Inactif'}</span>
-        </label>
-        <button class="btn-remove" onclick="window._admin.removeFrom('evenement',${i})">✕</button>
-      </div>
-      <div class="fields--3">
-        <div class="field">
-          <label class="field__label">Nom de l'événement</label>
-          <input type="text" value="${esc(c.nom)}"
-            oninput="window._admin.setField('evenement',${i},'nom',this.value)">
-        </div>
-        <div class="field">
-          <label class="field__label">Description / effet</label>
-          <input type="text" value="${esc(c.description)}"
-            oninput="window._admin.setField('evenement',${i},'description',this.value)">
-        </div>
-        <div class="field">
-          <label class="field__label">Annulé par la relique</label>
-          <select onchange="window._admin.setField('evenement',${i},'annule_relique',this.value)">
-            ${relOptions.map(r => `<option value="${r.val}" ${c.annule_relique === r.val ? 'selected' : ''}>${r.label}</option>`).join('')}
-          </select>
-        </div>
-      </div>
-    </div>`).join('');
-
-  const badge = document.getElementById('nb-event');
-  if (badge) badge.textContent = arr.length;
 }
 
 // ─── Îles ─────────────────────────────────────────────────────────────────────
@@ -560,7 +526,6 @@ function renderIles() {
     </div>`;
   }).join('');
 
-  // Resync les sélects qui dépendent des noms d'îles
   renderParcheminIle();
   renderAncienParchemin();
 }
@@ -573,7 +538,7 @@ function renderAvancement() {
   if (el) el.value = nb;
 }
 
-// ─── Lieux (ports, repaires, épaves) ─────────────────────────────────────────
+// ─── Lieux ────────────────────────────────────────────────────────────────────
 
 function renderLieux(key, icon) {
   const arr = state[key] || [];
@@ -627,12 +592,12 @@ function updateOverview() {
   const types = [
     { icon:'📜', lbl:'Parchemins',   n:(s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0), tab:'parchemin' },
     { icon:'🔍', lbl:'Énigmes',      n:(s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0), tab:'enigme' },
-    { icon:'🗺',  lbl:'Anc. Parch.', n:3, tab:'ancien_parchemin' },
+    { icon:'🗺',  lbl:'Anc. Parch.', n:(s.ancien_parchemin?.length||0), tab:'ancien_parchemin' },
     { icon:'⭐', lbl:'Reliques',     n:3, tab:'relique' },
     { icon:'⚙',  lbl:'Équipements', n:s.equipement?.length||0, tab:'equipement' },
-    { icon:'⚔',  lbl:'Actions',     n:(s.action_offensive?.length||0)+(s.action_defensive?.length||0), tab:'action' },
-    { icon:'💨', lbl:'Atouts',       n:s.atout?.length||0, tab:'atout' },
-    { icon:'⚡', lbl:'Événements',   n:s.evenement?.length||0, tab:'evenement' },
+    { icon:'⚔',  lbl:'Actions',     n:0, tab:'action' },
+    { icon:'💨', lbl:'Atouts',       n:0, tab:'atout' },
+    { icon:'⚡', lbl:'Événements',   n:0, tab:'evenement' },
     { icon:'🏝', lbl:'Îles',         n:s.iles?.length||0, tab:'iles' },
     { icon:'⚓', lbl:'Ports',         n:s.ports?.length||0, tab:'port_commerce' },
     { icon:'💀', lbl:'Repaires',      n:s.repaires?.length||0, tab:'repaire_pirate' },
@@ -640,7 +605,7 @@ function updateOverview() {
     { icon:'🌀', lbl:'Tempête',       n:STORM_CELLS.length, tab:'tempete' },
   ];
   const total = types.reduce((acc, t) => acc + t.n, 0);
-  const grid = document.getElementById('ovGrid');
+  const grid  = document.getElementById('ovGrid');
   if (!grid) return;
 
   grid.innerHTML =
@@ -656,26 +621,17 @@ function updateOverview() {
         <div class="overview-chip__label">${t.lbl}</div>
       </div>`).join('');
 
-  // Badges sidenav
-  const setBadge = (id, n) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = n;
-  };
+  const setBadge = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
   setBadge('nb-parchemin', (s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0));
   setBadge('nb-enigme',    (s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0));
   setBadge('nb-equip',     s.equipement?.length||0);
-  setBadge('nb-atout',     s.atout?.length||0);
-  setBadge('nb-event',     s.evenement?.length||0);
+  setBadge('nb-atout',     0);
+  setBadge('nb-event',     0);
+  setBadge('nb-action',    0);
   setBadge('nb-iles',      s.iles?.length||0);
   setBadge('nb-ports',     s.ports?.length||0);
   setBadge('nb-repaires',  s.repaires?.length||0);
   setBadge('nb-epaves',    s.epaves?.length||0);
-  updateActionBadge();
-}
-
-function updateActionBadge() {
-  const el = document.getElementById('nb-action');
-  if (el) el.textContent = (state.action_offensive?.length||0) + (state.action_defensive?.length||0);
 }
 
 function setCountDisplay(id, n) {
@@ -684,7 +640,7 @@ function setCountDisplay(id, n) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MUTATIONS d'état (appelées depuis les handlers inline via window._admin)
+// MUTATIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function setField(key, i, field, val) {
@@ -696,13 +652,6 @@ function setField(key, i, field, val) {
 function setFieldNum(key, i, field, val) {
   if (!state[key]) return;
   state[key][i][field] = val !== '' ? parseInt(val) || 0 : 0;
-  markDirty();
-}
-
-function setRelique(key, field, val) {
-  if (!state.reliques) state.reliques = {};
-  if (!state.reliques[key]) state.reliques[key] = {};
-  state.reliques[key][field] = val;
   markDirty();
 }
 
@@ -758,8 +707,6 @@ function rerenderLieu(key, icon) {
   renderLieux(key, icon);
 }
 
-// ─── Changer un compteur (parchemins, énigmes, îles) ─────────────────────────
-
 export function changeCount(key, delta) {
   if (key === 'parchemin_vierge') {
     if (!state.parchemin_vierge) state.parchemin_vierge = { count: 0 };
@@ -787,8 +734,6 @@ export function changeCount(key, delta) {
   markDirty(); updateOverview();
 }
 
-// ─── Ajouter un item dans une liste libre ─────────────────────────────────────
-
 export function addItem(key) {
   if (!state[key]) state[key] = [];
   state[key].push({ id: uid(), nom: '', description: '', enabled: true });
@@ -804,38 +749,32 @@ export function addLieu(key) {
   markDirty(); updateOverview();
 }
 
-// ─── Rerender d'une clé spécifique ───────────────────────────────────────────
-
 function rerender(key) {
   if (key === 'iles')             renderIles();
   if (key === 'parchemin_ile')    renderParcheminIle();
+  if (key === 'ancien_parchemin') renderAncienParchemin();
   if (key === 'enigme_latitude')  renderEnigmeLatitude();
   if (key === 'enigme_longitude') renderEnigmeLongitude();
   if (key === 'enigme_code')      renderEnigmeCode();
-  if (key === 'equipement')       renderSimpleList('equipement',       '⚙',  ['nom','description'], ['Nom','Description / effet']);
-  if (key === 'action_offensive') renderSimpleList('action_offensive', '💥', ['nom','description'], ['Nom de la carte','Description / effet']);
-  if (key === 'action_defensive') renderSimpleList('action_defensive', '🛡', ['nom','description'], ['Nom de la carte','Description / effet']);
-  if (key === 'atout')            renderSimpleList('atout',            '💨', ['nom','description'], ['Nom','Description / effet']);
-  if (key === 'evenement')        renderEvenement();
+  if (key === 'equipement')       renderSimpleList('equipement', '⚙', ['nom','description'], ['Nom','Description / effet']);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXPOSITIONS GLOBALES (nécessaires pour les onclick inline dans le HTML généré)
+// EXPOSITIONS GLOBALES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 window._admin = {
   switchTab,
   showSubtab,
-  setField, setFieldNum, setRelique,
+  setField, setFieldNum,
   setLieu, setLieuCoord, rerenderLieu,
   setIleTaille, setCaseCoord,
   removeFrom, removeLieu,
   rerender,
   changeCount, addItem, addLieu,
-  save:       saveConfig,
-  discard:    discardChanges,
+  save:      saveConfig,
+  discard:   discardChanges,
   markDirty,
 };
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
 loadConfig();
