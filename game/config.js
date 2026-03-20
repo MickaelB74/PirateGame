@@ -198,8 +198,8 @@ function initConfig() {
       return {
         id:              def.id,
         relique:         def.relique,
-        ile_destination: saved.ile_destination ?? def.ile_destination,
-        description:     saved.description     ?? def.description,
+        ile_destination: saved.ile_destination || def.ile_destination,
+        description:     saved.description     || def.description,
       };
     });
   }

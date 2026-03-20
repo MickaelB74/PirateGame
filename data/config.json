@@ -107,20 +107,20 @@
       {
         "id": "ap_poseidon",
         "relique": "Totem de Poséidon",
-        "ile_destination": "",
-        "description": ""
+        "ile_destination": "Île du Kraken",
+        "description": "Une carte usée révèle la route vers les abysses du Kraken."
       },
       {
         "id": "ap_eole",
         "relique": "Totem d'Éole",
-        "ile_destination": "",
-        "description": ""
+        "ile_destination": "Île des Brumes",
+        "description": "Des inscriptions floues indiquent les marais de l'Île des Brumes."
       },
       {
         "id": "ap_zeus",
         "relique": "Totem de Zeus",
-        "ile_destination": "",
-        "description": ""
+        "ile_destination": "Île Fantôme",
+        "description": "Une encre invisible révèle la route vers l'Île Fantôme."
       }
     ],
     "reliques": {
