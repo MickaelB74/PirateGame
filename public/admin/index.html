@@ -14,6 +14,9 @@
 <!-- ── Header ───────────────────────────────────────────────────────────── -->
 <header class="admin-header">
   <h1 class="admin-header__title">⚙ Éditeur de cartes</h1>
+  <button class="admin-header__export" onclick="window._admin.openExportModal()">
+    <span>⬇</span> Exporter config.json
+  </button>
   <a href="/master" class="admin-header__link">← Retour au plateau</a>
 </header>
 
@@ -69,6 +72,13 @@
          onclick="window._admin.switchTab('evenement')">
       <span>⚡</span> Événements
       <span class="sidenav__badge" id="nb-event">–</span>
+    </div>
+
+    <div class="sidenav__group">Mécanique</div>
+    <div class="sidenav__item" data-tab="evenements_generiques"
+         onclick="window._admin.switchTab('evenements_generiques')">
+      <span>🌊</span> Évén. Génériques
+      <span class="sidenav__badge" id="nb-evgen">–</span>
     </div>
 
     <div class="sidenav__group">Plateau</div>
@@ -313,6 +323,44 @@
       </div>
     </div>
 
+    <!-- ══════════════════════════════════════════════════════
+         ÉVÉNEMENTS GÉNÉRIQUES
+         ══════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-evenements_generiques">
+      <div class="section-head">
+        <div class="section-head__title">🌊 Événements Génériques</div>
+        <div class="section-head__desc">
+          Base de données des événements pouvant survenir en jeu. Chaque événement est défini par un nom,
+          un effet et une durée. Cette liste sert de référence pour construire les cartes événement, action, atout…
+        </div>
+      </div>
+
+      <div class="evgen-toolbar">
+        <div class="evgen-toolbar__count">
+          <span id="evgen-count-display">0</span> événement(s) défini(s)
+        </div>
+        <div class="evgen-toolbar__actions">
+          <button class="evgen-toolbar__btn evgen-toolbar__btn--add" onclick="window._admin.addEvGen()">
+            + Ajouter un événement
+          </button>
+        </div>
+      </div>
+
+      <div id="list-evenements-generiques" class="evgen-list">
+        <div class="evgen-empty">
+          <span class="evgen-empty__icon">🌊</span>
+          <div class="evgen-empty__text">Aucun événement générique défini</div>
+          <div class="evgen-empty__sub">Cliquez sur « + Ajouter un événement » pour commencer</div>
+        </div>
+      </div>
+
+      <div class="evgen-footer-add">
+        <button class="evgen-footer-btn" onclick="window._admin.addEvGen()">
+          + Ajouter un événement
+        </button>
+      </div>
+    </div>
+
     <!-- ── ÎLES ── -->
     <div class="tab-panel" id="tab-iles">
       <div class="section-head">
@@ -469,6 +517,43 @@
   </main>
 </div><!-- end .admin-layout -->
 
+<!-- ══════════════════════════════════════════════════════
+     MODAL EXPORT
+     ══════════════════════════════════════════════════════ -->
+<div class="export-modal" id="exportModal" aria-hidden="true">
+  <div class="export-modal__panel">
+    <div class="export-modal__header">
+      <div class="export-modal__title">
+        <span class="export-modal__icon">⬇</span>
+        Exporter — config.json
+      </div>
+      <div class="export-modal__subtitle" id="exportCounter">–</div>
+      <button class="export-modal__close" onclick="window._admin.closeExportModal()">✕</button>
+    </div>
+    <div class="export-modal__body">
+      <div class="export-instructions">
+        <span class="export-instructions__step">1</span>
+        Copiez le JSON ci-dessous
+        <span class="export-instructions__sep">→</span>
+        <span class="export-instructions__step">2</span>
+        Collez dans <code>data/config.json</code>
+        <span class="export-instructions__sep">→</span>
+        <span class="export-instructions__step">3</span>
+        Redémarrez le serveur
+      </div>
+      <textarea class="export-textarea" id="exportTextarea" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="export-modal__footer">
+      <button class="export-copy-btn" id="btnExportCopy" onclick="window._admin.copyExportJson()">
+        📋 Copier dans le presse-papier
+      </button>
+      <button class="export-download-btn" onclick="window._admin.downloadExportJson()">
+        ⬇ Télécharger config.json
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Save bar ──────────────────────────────────────────────────────────── -->
 <div class="save-bar" id="saveBar">
   <span class="save-bar__status save-bar__status--dirty" id="saveStatus">⚠ Modifications non sauvegardées</span>
@@ -477,12 +562,6 @@
 </div>
 
 <script type="module" src="admin.js"></script>
-
-<!-- Patch pour markDirty accessible depuis les oninput inline du HTML statique -->
-<script>
-  // Les inputs des règles utilisent window._admin.markDirty?.()
-  // On relie ça proprement une fois le module chargé (window._admin exposé à l'init)
-</script>
 
 </body>
 </html>

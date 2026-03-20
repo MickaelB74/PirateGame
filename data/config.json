@@ -154,122 +154,10 @@
         "enabled": true
       }
     ],
-    "action_offensive": [
-      {
-        "id": "ao_0",
-        "nom": "Boulet de Canon",
-        "description": "Inflige des dégâts à un joueur dans la portée de tes canons.",
-        "enabled": true
-      },
-      {
-        "id": "ao_1",
-        "nom": "À l'Abordage !",
-        "description": "Vole des doublons à un joueur adjacent.",
-        "enabled": true
-      },
-      {
-        "id": "ao_2",
-        "nom": "Sabotage",
-        "description": "Réduit le déplacement d'un joueur adverse à son prochain tour.",
-        "enabled": true
-      },
-      {
-        "id": "ao_3",
-        "nom": "Vol de Parchemin",
-        "description": "Vole un Parchemin aléatoire à un joueur adjacent.",
-        "enabled": true
-      },
-      {
-        "id": "ao_4",
-        "nom": "Brouillard de Guerre",
-        "description": "Force un joueur adverse à relancer son dé et garder le pire résultat.",
-        "enabled": true
-      }
-    ],
-    "action_defensive": [
-      {
-        "id": "ad_0",
-        "nom": "Parade !",
-        "description": "Annule une carte offensive jouée contre toi ce tour.",
-        "enabled": true
-      },
-      {
-        "id": "ad_1",
-        "nom": "Renforts de Coque",
-        "description": "Absorbe les prochains dégâts reçus sur la coque.",
-        "enabled": true
-      },
-      {
-        "id": "ad_2",
-        "nom": "Brume Protectrice",
-        "description": "Ton navire est insaisissable ce tour.",
-        "enabled": true
-      }
-    ],
-    "atout": [
-      {
-        "id": "at_0",
-        "nom": "Vent en Poupe",
-        "description": "Ajoute +2 cases à ton déplacement ce tour.",
-        "enabled": true
-      },
-      {
-        "id": "at_1",
-        "nom": "Navigation Étoilée",
-        "description": "Relance ton dé et garde le meilleur résultat.",
-        "enabled": true
-      },
-      {
-        "id": "at_2",
-        "nom": "Trésor Caché",
-        "description": "Gagne 3 doublons immédiatement.",
-        "enabled": true
-      }
-    ],
-    "evenement": [
-      {
-        "id": "ev_0",
-        "nom": "Mer d'Huile",
-        "description": "Tu ne peux pas te déplacer ce tour.",
-        "annule_relique": "relique_poseidon",
-        "enabled": true
-      },
-      {
-        "id": "ev_1",
-        "nom": "Vent Violent",
-        "description": "Tu te déplaces de 3 cases dans une direction aléatoire.",
-        "annule_relique": "relique_eole",
-        "enabled": true
-      },
-      {
-        "id": "ev_2",
-        "nom": "Orage",
-        "description": "Tu perds 1 point de coque.",
-        "annule_relique": "relique_zeus",
-        "enabled": true
-      },
-      {
-        "id": "ev_3",
-        "nom": "Fortune de Mer",
-        "description": "Tu trouves une épave à la dérive. Gagne 2 doublons.",
-        "annule_relique": "",
-        "enabled": true
-      },
-      {
-        "id": "ev_4",
-        "nom": "Attaque du Kraken",
-        "description": "Passe ton prochain tour et perds 1 point de coque.",
-        "annule_relique": "",
-        "enabled": true
-      },
-      {
-        "id": "ev_5",
-        "nom": "Chant des Sirènes",
-        "description": "Envoûté par les sirènes. Défausse une carte action au choix.",
-        "annule_relique": "",
-        "enabled": true
-      }
-    ],
+    "action_offensive": [],
+    "action_defensive": [],
+    "atout": [],
+    "evenement": [],
     "iles": [
       {
         "id": "ile_0",
@@ -526,7 +414,8 @@
     ],
     "avancement": {
       "nb_cartes_temps": 6
-    }
+    },
+    "evenements_generiques": []
   },
   "rules": {
     "ship": {

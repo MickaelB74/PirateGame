@@ -29,6 +29,25 @@ const RELIQUES_FIXES = [
   { key: 'zeus',     icon: '⚡', name: 'Totem de Zeus'      },
 ];
 
+// Effets prédéfinis pour les événements génériques
+const EFFETS_PREDEFINIS = [
+  'Aucun déplacement ce tour',
+  'Déplacement réduit de moitié',
+  'Déplacement forcé (direction aléatoire)',
+  'Perte de 1 point de coque',
+  'Perte de 2 points de coque',
+  'Perte de 1 doublon',
+  'Perte de 2 doublons',
+  'Gain de 2 doublons',
+  'Gain de 3 doublons',
+  'Passer son tour',
+  'Rejouer immédiatement',
+  'Défausser 1 carte',
+  'Piocher 1 carte supplémentaire',
+  'Voler 1 doublon à un joueur adjacent',
+  'Effet personnalisé…',
+];
+
 // ─── State ────────────────────────────────────────────────────────────────────
 let state = {};
 let _uid  = 1000;
@@ -77,6 +96,7 @@ async function loadConfig() {
     }
 
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
+    if (!Array.isArray(state.evenements_generiques)) state.evenements_generiques = [];
 
     applyRulesToForm(cfg.rules || {});
     renderAll();
@@ -98,7 +118,6 @@ async function saveConfig() {
       nb_cartes_temps: parseInt(document.getElementById('nb_cartes_temps')?.value) || 6,
     };
 
-    // Ne jamais sauvegarder les listes vides en écrasant — le serveur les force à []
     const body = { cards: state, rules: collectRules() };
     const res = await fetch('/api/config', {
       method:  'POST',
@@ -130,6 +149,66 @@ function markDirty() {
   const s = document.getElementById('saveStatus');
   s.textContent = '⚠ Modifications non sauvegardées';
   s.className = 'save-bar__status--dirty save-bar__status';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPORT CONFIG.JSON
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function openExportModal() {
+  // Construire le snapshot courant avec les règles
+  const exportData = {
+    cards: {
+      ...state,
+      avancement: {
+        nb_cartes_temps: parseInt(document.getElementById('nb_cartes_temps')?.value) || 6,
+      },
+    },
+    rules: collectRules(),
+  };
+
+  const jsonStr = JSON.stringify(exportData, null, 2);
+  const modal = document.getElementById('exportModal');
+  const textarea = document.getElementById('exportTextarea');
+  const counter = document.getElementById('exportCounter');
+
+  textarea.value = jsonStr;
+  counter.textContent = `${jsonStr.length.toLocaleString()} caractères · ${exportData.cards.evenements_generiques?.length || 0} événements génériques`;
+
+  modal.classList.add('export-modal--open');
+  textarea.scrollTop = 0;
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').classList.remove('export-modal--open');
+}
+
+function copyExportJson() {
+  const textarea = document.getElementById('exportTextarea');
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    const btn = document.getElementById('btnExportCopy');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copié dans le presse-papier !';
+    btn.classList.add('export-copy-btn--success');
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.classList.remove('export-copy-btn--success');
+    }, 2000);
+  }).catch(() => {
+    textarea.select();
+    document.execCommand('copy');
+  });
+}
+
+function downloadExportJson() {
+  const jsonStr = document.getElementById('exportTextarea').value;
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'config.json';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -209,6 +288,7 @@ function renderAll() {
   renderTodoSection('action',    '⚔ Actions',     'La mécanique des cartes action (offensives / défensives) sera conçue dans une prochaine itération.');
   renderTodoSection('atout',     '💨 Atouts',      'La mécanique des cartes atout sera conçue dans une prochaine itération.');
   renderTodoSection('evenement', '⚡ Événements',  'La mécanique des cartes événement sera conçue dans une prochaine itération.');
+  renderEvenementsGeneriques();
   renderIles();
   renderAvancement();
   renderLieux('ports',    '⚓');
@@ -333,8 +413,6 @@ function renderEnigmeCode() {
 }
 
 // ─── Anciens Parchemins ───────────────────────────────────────────────────────
-// 3 champs éditables : relique associée (select fixe), île de destination, description.
-// Tout est pré-rempli depuis les données.
 
 function renderAncienParchemin() {
   const arr = state.ancien_parchemin || [];
@@ -373,7 +451,6 @@ function renderAncienParchemin() {
 }
 
 // ─── Reliques ─────────────────────────────────────────────────────────────────
-// Affichage en lecture seule — les valeurs sont fixes côté serveur.
 
 function renderReliques() {
   const el = document.getElementById('reliques-container');
@@ -398,12 +475,9 @@ function renderReliques() {
     </div>`;
 }
 
-// ─── Sections "À venir" (actions / atouts / événements) ──────────────────────
-// Affiche uniquement un panneau informatif. Aucun bouton d'ajout.
+// ─── Sections "À venir" ───────────────────────────────────────────────────────
 
 function renderTodoSection(tabKey, title, message) {
-  // Les ids dans le HTML : list-action_offensive, list-action_defensive,
-  // list-atout, list-evenement
   const ids = {
     action:    ['list-action_offensive', 'list-action_defensive'],
     atout:     ['list-atout'],
@@ -418,6 +492,154 @@ function renderTodoSection(tabKey, title, message) {
   for (const id of (ids[tabKey] || [])) {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
+  }
+}
+
+// ─── ÉVÉNEMENTS GÉNÉRIQUES ────────────────────────────────────────────────────
+
+function renderEvenementsGeneriques() {
+  const arr = state.evenements_generiques || [];
+  const el  = document.getElementById('list-evenements-generiques');
+  const badge = document.getElementById('nb-evgen');
+  if (badge) badge.textContent = arr.length;
+  if (!el) return;
+
+  if (!arr.length) {
+    el.innerHTML = `
+      <div class="evgen-empty">
+        <span class="evgen-empty__icon">🌊</span>
+        <div class="evgen-empty__text">Aucun événement générique défini</div>
+        <div class="evgen-empty__sub">Cliquez sur « + Ajouter un événement » pour commencer</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = arr.map((ev, i) => {
+    const dureeLabel = ev.duree === 0 ? 'Instantané' : ev.duree === 1 ? '1 tour' : `${ev.duree} tours`;
+    const dureeColor = ev.duree === 0 ? '#4aedcc' : ev.duree === 1 ? '#d4a017' : '#e07070';
+    return `
+    <div class="evgen-card" id="evgen-${i}">
+      <div class="evgen-card__header">
+        <div class="evgen-card__index">#${String(i + 1).padStart(2, '0')}</div>
+        <div class="evgen-card__name-wrap">
+          <input
+            class="evgen-name-input"
+            type="text"
+            value="${esc(ev.nom)}"
+            placeholder="Nom de l'événement…"
+            oninput="window._admin.setEvGenField(${i},'nom',this.value)"
+          />
+        </div>
+        <div class="evgen-card__duree" style="color:${dureeColor}">
+          <span class="evgen-duree-ico">⏱</span>
+          <span>${dureeLabel}</span>
+        </div>
+        <div class="evgen-card__actions">
+          <button class="evgen-btn-dupe" onclick="window._admin.dupeEvGen(${i})" title="Dupliquer">⧉</button>
+          <button class="evgen-btn-del"  onclick="window._admin.removeEvGen(${i})" title="Supprimer">✕</button>
+        </div>
+      </div>
+      <div class="evgen-card__body">
+        <div class="evgen-field-group">
+          <label class="evgen-label">Effet</label>
+          <div class="evgen-effet-row">
+            <select class="evgen-select" onchange="window._admin.onEffetSelect(${i},this.value)">
+              ${EFFETS_PREDEFINIS.map(ef => {
+                const isCustom = ef === 'Effet personnalisé…';
+                const isSelected = !EFFETS_PREDEFINIS.slice(0, -1).includes(ev.effet)
+                  ? isCustom
+                  : ev.effet === ef;
+                return `<option value="${esc(ef)}" ${isSelected ? 'selected' : ''}>${esc(ef)}</option>`;
+              }).join('')}
+            </select>
+          </div>
+          <textarea
+            class="evgen-textarea"
+            placeholder="Décrivez l'effet complet…"
+            oninput="window._admin.setEvGenField(${i},'effet',this.value)"
+          >${esc(ev.effet)}</textarea>
+        </div>
+        <div class="evgen-field-group">
+          <label class="evgen-label">Durée</label>
+          <div class="evgen-duree-control">
+            <button class="evgen-duree-btn" onclick="window._admin.setEvGenDuree(${i}, Math.max(0, ${ev.duree}-1))">−</button>
+            <div class="evgen-duree-display" style="color:${dureeColor}">
+              <span class="evgen-duree-val">${ev.duree}</span>
+              <span class="evgen-duree-unit">${ev.duree === 0 ? 'instantané' : ev.duree === 1 ? 'tour' : 'tours'}</span>
+            </div>
+            <button class="evgen-duree-btn" onclick="window._admin.setEvGenDuree(${i}, Math.min(10, ${ev.duree}+1))">+</button>
+          </div>
+          <div class="evgen-duree-hint">
+            ${ev.duree === 0 ? '⚡ Effet immédiat, sans durée' : ev.duree === 1 ? '🔄 Actif pendant le tour en cours' : `🔁 Actif pendant ${ev.duree} tours consécutifs`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+export function addEvGen() {
+  if (!Array.isArray(state.evenements_generiques)) state.evenements_generiques = [];
+  state.evenements_generiques.push({
+    id:    uid(),
+    nom:   '',
+    effet: '',
+    duree: 0,
+  });
+  renderEvenementsGeneriques();
+  markDirty();
+  updateOverview();
+  // Scroll to last card
+  const list = document.getElementById('list-evenements-generiques');
+  if (list) setTimeout(() => list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+function setEvGenField(i, field, val) {
+  if (!state.evenements_generiques?.[i]) return;
+  state.evenements_generiques[i][field] = val;
+  markDirty();
+  // Only re-render header part to avoid losing focus
+  if (field === 'nom') {
+    const badge = document.getElementById('nb-evgen');
+    if (badge) badge.textContent = state.evenements_generiques.length;
+  }
+}
+
+function setEvGenDuree(i, val) {
+  if (!state.evenements_generiques?.[i]) return;
+  state.evenements_generiques[i].duree = val;
+  renderEvenementsGeneriques();
+  markDirty();
+}
+
+function dupeEvGen(i) {
+  if (!state.evenements_generiques?.[i]) return;
+  const copy = { ...state.evenements_generiques[i], id: uid(), nom: state.evenements_generiques[i].nom + ' (copie)' };
+  state.evenements_generiques.splice(i + 1, 0, copy);
+  renderEvenementsGeneriques();
+  markDirty();
+  updateOverview();
+}
+
+function removeEvGen(i) {
+  if (!state.evenements_generiques) return;
+  state.evenements_generiques.splice(i, 1);
+  renderEvenementsGeneriques();
+  markDirty();
+  updateOverview();
+}
+
+function onEffetSelect(i, val) {
+  if (!state.evenements_generiques?.[i]) return;
+  if (val !== 'Effet personnalisé…') {
+    state.evenements_generiques[i].effet = val;
+    // Update textarea directly without full re-render to avoid losing select focus
+    const card = document.getElementById(`evgen-${i}`);
+    if (card) {
+      const ta = card.querySelector('.evgen-textarea');
+      if (ta) ta.value = val;
+    }
+    markDirty();
   }
 }
 
@@ -598,6 +820,7 @@ function updateOverview() {
     { icon:'⚔',  lbl:'Actions',     n:0, tab:'action' },
     { icon:'💨', lbl:'Atouts',       n:0, tab:'atout' },
     { icon:'⚡', lbl:'Événements',   n:0, tab:'evenement' },
+    { icon:'🌊', lbl:'Évén. Génér.', n:s.evenements_generiques?.length||0, tab:'evenements_generiques' },
     { icon:'🏝', lbl:'Îles',         n:s.iles?.length||0, tab:'iles' },
     { icon:'⚓', lbl:'Ports',         n:s.ports?.length||0, tab:'port_commerce' },
     { icon:'💀', lbl:'Repaires',      n:s.repaires?.length||0, tab:'repaire_pirate' },
@@ -628,6 +851,7 @@ function updateOverview() {
   setBadge('nb-atout',     0);
   setBadge('nb-event',     0);
   setBadge('nb-action',    0);
+  setBadge('nb-evgen',     s.evenements_generiques?.length||0);
   setBadge('nb-iles',      s.iles?.length||0);
   setBadge('nb-ports',     s.ports?.length||0);
   setBadge('nb-repaires',  s.repaires?.length||0);
@@ -772,9 +996,28 @@ window._admin = {
   removeFrom, removeLieu,
   rerender,
   changeCount, addItem, addLieu,
+  // Événements génériques
+  addEvGen,
+  setEvGenField,
+  setEvGenDuree,
+  dupeEvGen,
+  removeEvGen,
+  onEffetSelect,
+  // Export
+  openExportModal,
+  closeExportModal,
+  copyExportJson,
+  downloadExportJson,
+  // Save
   save:      saveConfig,
   discard:   discardChanges,
   markDirty,
 };
+
+// Init modal export close on backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('exportModal');
+  if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeExportModal(); });
+});
 
 loadConfig();
