@@ -67,7 +67,6 @@ body {
   color: var(--gold2);
 }
 
-/* Export button — prend le margin-left auto pour pousser vers la droite */
 .admin-header__export {
   margin-left: auto;
   padding: 6px 16px;
@@ -91,7 +90,6 @@ body {
 }
 
 .admin-header__link {
-  /* Pas de margin-left:auto ici — export button s'en charge */
   padding: 6px 16px;
   border: 1px solid var(--border);
   border-radius: var(--r-sm);
@@ -846,12 +844,12 @@ body {
   border-bottom: 1px solid rgba(184,134,11,.12);
 }
 
+/* Icône de l'événement dans le header */
 .evgen-card__index {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: var(--fs-xs);
-  color: #5a4a2a;
+  font-size: 1.2rem;
   flex-shrink: 0;
-  min-width: 30px;
+  min-width: 28px;
+  text-align: center;
 }
 
 .evgen-card__name-wrap {
@@ -875,27 +873,22 @@ body {
 .evgen-name-input:focus { border-bottom-color: var(--gold); }
 .evgen-name-input::placeholder { color: #3a2a10; font-weight: 400; font-style: italic; font-family: 'Crimson Pro', serif; font-size: var(--fs-sm); }
 
-.evgen-card__duree {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-family: 'Cinzel Decorative', serif;
-  font-size: var(--fs-xs);
-  flex-shrink: 0;
-  padding: 3px 10px;
-  border-radius: 10px;
-  background: rgba(0,0,0,.3);
-  border: 1px solid rgba(255,255,255,.06);
-}
-.evgen-duree-ico { font-size: .8rem; }
-
 .evgen-card__actions {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
 }
 
-.evgen-btn-dupe,
+/* Body : colonne unique (plus de grille 2 colonnes) */
+.evgen-card__body--single {
+  padding: 0;
+}
+
+.evgen-field-group--full {
+  padding: 12px 14px;
+  border-right: none;
+}
+
 .evgen-btn-del {
   width: 28px;
   height: 28px;
@@ -910,20 +903,7 @@ body {
   transition: all var(--t-fast);
   color: #5a4a2a;
 }
-.evgen-btn-dupe:hover { background: rgba(184,134,11,.15); border-color: var(--gold); color: var(--gold2); }
-.evgen-btn-del:hover  { background: rgba(192,64,64,.15); border-color: rgba(192,64,64,.6); color: #e06060; }
-
-.evgen-card__body {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0;
-}
-
-.evgen-field-group {
-  padding: 12px 14px;
-  border-right: 1px solid rgba(184,134,11,.08);
-}
-.evgen-field-group:last-child { border-right: none; }
+.evgen-btn-del:hover { background: rgba(192,64,64,.15); border-color: rgba(192,64,64,.6); color: #e06060; }
 
 .evgen-label {
   display: block;
@@ -955,7 +935,7 @@ body {
 
 .evgen-textarea {
   width: 100%;
-  min-height: 60px;
+  min-height: 72px;
   padding: 8px 10px;
   background: rgba(0,0,0,.38);
   border: 1px solid rgba(184,134,11,.15);
@@ -969,47 +949,6 @@ body {
 }
 .evgen-textarea:focus { outline: none; border-color: var(--gold); }
 .evgen-textarea::placeholder { color: #3a2a10; font-style: italic; }
-
-.evgen-duree-control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.evgen-duree-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--r-sm);
-  border: 1px solid rgba(184,134,11,.25);
-  background: rgba(0,0,0,.4);
-  color: var(--gold2);
-  font-size: 1.1rem;
-  cursor: pointer;
-  font-family: monospace;
-  transition: background var(--t-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.evgen-duree-btn:hover { background: rgba(184,134,11,.18); }
-
-.evgen-duree-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 60px;
-}
-.evgen-duree-val  { font-family: 'Cinzel Decorative', serif; font-size: var(--fs-xl); line-height: 1; }
-.evgen-duree-unit { font-size: var(--fs-xs); color: #5a4a2a; text-transform: uppercase; letter-spacing: .07em; }
-
-.evgen-duree-hint {
-  font-size: var(--fs-xs);
-  color: #5a4a2a;
-  font-style: italic;
-  line-height: 1.4;
-}
 
 .evgen-footer-add {
   display: flex;

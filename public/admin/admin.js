@@ -48,6 +48,25 @@ const EFFETS_PREDEFINIS = [
   'Effet personnalisé…',
 ];
 
+// Événements génériques prédéfinis (ajoutés à l'init si la liste est vide)
+const EVENEMENTS_PREDEFINIS = [
+  {
+    id:    'ev_orage',
+    nom:   'Orage',
+    effet: "Déplacement du pion de X cases (résultat dé 1–3) dans la direction indiquée par le compas (résultat rotation compas).",
+  },
+  {
+    id:    'ev_mer_huile',
+    nom:   "Mer d'Huile",
+    effet: "Déplacement impossible ce tour. Le joueur reste sur sa case et passe son tour.",
+  },
+  {
+    id:    'ev_vent_violent',
+    nom:   'Vent Violent',
+    effet: "Déplacement dans le sens contraire du vent impossible. +1 case supplémentaire dans le sens du vent.",
+  },
+];
+
 // ─── State ────────────────────────────────────────────────────────────────────
 let state = {};
 let _uid  = 1000;
@@ -96,7 +115,11 @@ async function loadConfig() {
     }
 
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
-    if (!Array.isArray(state.evenements_generiques)) state.evenements_generiques = [];
+
+    // Initialiser les événements génériques prédéfinis si la liste est vide
+    if (!Array.isArray(state.evenements_generiques) || state.evenements_generiques.length === 0) {
+      state.evenements_generiques = JSON.parse(JSON.stringify(EVENEMENTS_PREDEFINIS));
+    }
 
     applyRulesToForm(cfg.rules || {});
     renderAll();
@@ -156,7 +179,6 @@ function markDirty() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function openExportModal() {
-  // Construire le snapshot courant avec les règles
   const exportData = {
     cards: {
       ...state,
@@ -515,12 +537,14 @@ function renderEvenementsGeneriques() {
   }
 
   el.innerHTML = arr.map((ev, i) => {
-    const dureeLabel = ev.duree === 0 ? 'Instantané' : ev.duree === 1 ? '1 tour' : `${ev.duree} tours`;
-    const dureeColor = ev.duree === 0 ? '#4aedcc' : ev.duree === 1 ? '#d4a017' : '#e07070';
+    // Icône selon le nom de l'événement
+    const iconMap = { 'Orage': '⛈', "Mer d'Huile": '🌊', 'Vent Violent': '💨' };
+    const evIcon = iconMap[ev.nom] || '🌀';
+
     return `
     <div class="evgen-card" id="evgen-${i}">
       <div class="evgen-card__header">
-        <div class="evgen-card__index">#${String(i + 1).padStart(2, '0')}</div>
+        <div class="evgen-card__index">${evIcon}</div>
         <div class="evgen-card__name-wrap">
           <input
             class="evgen-name-input"
@@ -530,17 +554,12 @@ function renderEvenementsGeneriques() {
             oninput="window._admin.setEvGenField(${i},'nom',this.value)"
           />
         </div>
-        <div class="evgen-card__duree" style="color:${dureeColor}">
-          <span class="evgen-duree-ico">⏱</span>
-          <span>${dureeLabel}</span>
-        </div>
         <div class="evgen-card__actions">
-          <button class="evgen-btn-dupe" onclick="window._admin.dupeEvGen(${i})" title="Dupliquer">⧉</button>
-          <button class="evgen-btn-del"  onclick="window._admin.removeEvGen(${i})" title="Supprimer">✕</button>
+          <button class="evgen-btn-del" onclick="window._admin.removeEvGen(${i})" title="Supprimer">✕</button>
         </div>
       </div>
-      <div class="evgen-card__body">
-        <div class="evgen-field-group">
+      <div class="evgen-card__body evgen-card__body--single">
+        <div class="evgen-field-group evgen-field-group--full">
           <label class="evgen-label">Effet</label>
           <div class="evgen-effet-row">
             <select class="evgen-select" onchange="window._admin.onEffetSelect(${i},this.value)">
@@ -559,20 +578,6 @@ function renderEvenementsGeneriques() {
             oninput="window._admin.setEvGenField(${i},'effet',this.value)"
           >${esc(ev.effet)}</textarea>
         </div>
-        <div class="evgen-field-group">
-          <label class="evgen-label">Durée</label>
-          <div class="evgen-duree-control">
-            <button class="evgen-duree-btn" onclick="window._admin.setEvGenDuree(${i}, Math.max(0, ${ev.duree}-1))">−</button>
-            <div class="evgen-duree-display" style="color:${dureeColor}">
-              <span class="evgen-duree-val">${ev.duree}</span>
-              <span class="evgen-duree-unit">${ev.duree === 0 ? 'instantané' : ev.duree === 1 ? 'tour' : 'tours'}</span>
-            </div>
-            <button class="evgen-duree-btn" onclick="window._admin.setEvGenDuree(${i}, Math.min(10, ${ev.duree}+1))">+</button>
-          </div>
-          <div class="evgen-duree-hint">
-            ${ev.duree === 0 ? '⚡ Effet immédiat, sans durée' : ev.duree === 1 ? '🔄 Actif pendant le tour en cours' : `🔁 Actif pendant ${ev.duree} tours consécutifs`}
-          </div>
-        </div>
       </div>
     </div>`;
   }).join('');
@@ -584,12 +589,10 @@ export function addEvGen() {
     id:    uid(),
     nom:   '',
     effet: '',
-    duree: 0,
   });
   renderEvenementsGeneriques();
   markDirty();
   updateOverview();
-  // Scroll to last card
   const list = document.getElementById('list-evenements-generiques');
   if (list) setTimeout(() => list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
 }
@@ -598,27 +601,17 @@ function setEvGenField(i, field, val) {
   if (!state.evenements_generiques?.[i]) return;
   state.evenements_generiques[i][field] = val;
   markDirty();
-  // Only re-render header part to avoid losing focus
   if (field === 'nom') {
+    // Mettre à jour l'icône en live
+    const card = document.getElementById(`evgen-${i}`);
+    if (card) {
+      const iconMap = { 'Orage': '⛈', "Mer d'Huile": '🌊', 'Vent Violent': '💨' };
+      const indexEl = card.querySelector('.evgen-card__index');
+      if (indexEl) indexEl.textContent = iconMap[val] || '🌀';
+    }
     const badge = document.getElementById('nb-evgen');
     if (badge) badge.textContent = state.evenements_generiques.length;
   }
-}
-
-function setEvGenDuree(i, val) {
-  if (!state.evenements_generiques?.[i]) return;
-  state.evenements_generiques[i].duree = val;
-  renderEvenementsGeneriques();
-  markDirty();
-}
-
-function dupeEvGen(i) {
-  if (!state.evenements_generiques?.[i]) return;
-  const copy = { ...state.evenements_generiques[i], id: uid(), nom: state.evenements_generiques[i].nom + ' (copie)' };
-  state.evenements_generiques.splice(i + 1, 0, copy);
-  renderEvenementsGeneriques();
-  markDirty();
-  updateOverview();
 }
 
 function removeEvGen(i) {
@@ -633,7 +626,6 @@ function onEffetSelect(i, val) {
   if (!state.evenements_generiques?.[i]) return;
   if (val !== 'Effet personnalisé…') {
     state.evenements_generiques[i].effet = val;
-    // Update textarea directly without full re-render to avoid losing select focus
     const card = document.getElementById(`evgen-${i}`);
     if (card) {
       const ta = card.querySelector('.evgen-textarea');
@@ -999,8 +991,6 @@ window._admin = {
   // Événements génériques
   addEvGen,
   setEvGenField,
-  setEvGenDuree,
-  dupeEvGen,
   removeEvGen,
   onEffetSelect,
   // Export
