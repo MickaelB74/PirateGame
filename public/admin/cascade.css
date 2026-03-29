@@ -1,0 +1,311 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CASCADE — Styles des 4 niveaux de la mécanique de cartes
+   À appendre à admin.css
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Badges de niveau dans la sidenav ───────────────────────────────────────── */
+.sidenav__level-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .65rem;
+  font-family: 'Cinzel Decorative', serif;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+.sidenav__level-badge--1 { background: rgba(255,200,50,.2);  border: 1px solid rgba(255,200,50,.5);  color: #ffc832; }
+.sidenav__level-badge--2 { background: rgba(74,200,255,.15); border: 1px solid rgba(74,200,255,.4);  color: #4ac8ff; }
+.sidenav__level-badge--3 { background: rgba(74,237,204,.15); border: 1px solid rgba(74,237,204,.4);  color: #4aedcc; }
+.sidenav__level-badge--4 { background: rgba(192,110,237,.2); border: 1px solid rgba(192,110,237,.5); color: #c06eed; }
+
+/* Retrait visuel par niveau dans la sidenav */
+.sidenav__item--level1 { padding-left: 22px; }
+.sidenav__item--level2 { padding-left: 22px; }
+.sidenav__item--level3 { padding-left: 22px; }
+.sidenav__item--level4 { padding-left: 22px; }
+
+/* ── Titre de niveau dans les onglets ───────────────────────────────────────── */
+.level-title-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: .72rem;
+  font-family: 'Cinzel Decorative', serif;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.level-title-badge--1 { background: rgba(255,200,50,.15);  border: 1px solid rgba(255,200,50,.4);  color: #ffc832; }
+.level-title-badge--2 { background: rgba(74,200,255,.12);  border: 1px solid rgba(74,200,255,.35); color: #4ac8ff; }
+.level-title-badge--3 { background: rgba(74,237,204,.12);  border: 1px solid rgba(74,237,204,.35); color: #4aedcc; }
+.level-title-badge--4 { background: rgba(192,110,237,.15); border: 1px solid rgba(192,110,237,.4); color: #c06eed; }
+
+/* ── Fil d'Ariane (breadcrumb) ──────────────────────────────────────────────── */
+.cascade-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.cascade-breadcrumb__node {
+  font-size: .78rem;
+  color: #4a3b20;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(184,134,11,.12);
+  background: rgba(0,0,0,.25);
+}
+.cascade-breadcrumb__node--active {
+  color: var(--gold2);
+  border-color: rgba(184,134,11,.4);
+  background: rgba(184,134,11,.1);
+}
+.cascade-breadcrumb__arrow { color: #3a2a10; font-size: .85rem; }
+
+/* ── Schéma de la cascade (overview) ───────────────────────────────────────── */
+.cascade-schema {
+  background: rgba(0,0,0,.3);
+  border: 1px solid rgba(184,134,11,.18);
+  border-radius: var(--r-lg);
+  padding: 18px 22px;
+  margin-bottom: 22px;
+}
+.cascade-schema__title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: .78rem;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+.cascade-schema__flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cascade-schema__node {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: var(--r-md);
+  font-size: .82rem;
+  border: 1px solid rgba(184,134,11,.2);
+  background: rgba(0,0,0,.3);
+  color: #8a7a5a;
+  position: relative;
+}
+.cascade-schema__node--1 { border-color: rgba(255,200,50,.3);  color: #ffc832; background: rgba(255,200,50,.06); }
+.cascade-schema__node--2 { border-color: rgba(74,200,255,.25); color: #4ac8ff; background: rgba(74,200,255,.05); }
+.cascade-schema__node--3 { border-color: rgba(74,237,204,.25); color: #4aedcc; background: rgba(74,237,204,.05); }
+.cascade-schema__node--4 { border-color: rgba(192,110,237,.3); color: #c06eed; background: rgba(192,110,237,.06); }
+.cascade-schema__level {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .62rem;
+  opacity: .6;
+}
+.cascade-schema__icon { font-size: 1.1rem; }
+.cascade-schema__required {
+  font-size: .58rem;
+  color: #4aedcc;
+  background: rgba(74,237,204,.1);
+  border: 1px solid rgba(74,237,204,.25);
+  border-radius: 8px;
+  padding: 1px 6px;
+  margin-left: 4px;
+}
+.cascade-schema__arrow { color: #3a2a10; font-size: 1rem; flex-shrink: 0; }
+
+/* ── Vue d'ensemble : sous-label complétion ─────────────────────────────────── */
+.overview-chip__sub {
+  font-size: .6rem;
+  color: #5a4a2a;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 1px;
+}
+
+/* ── Carte entry par niveau ──────────────────────────────────────────────────── */
+.card-entry--level1 { border-color: rgba(255,200,50,.2);  }
+.card-entry--level1:hover { border-color: rgba(255,200,50,.45); }
+.card-entry--level2 { border-color: rgba(74,200,255,.18); }
+.card-entry--level2:hover { border-color: rgba(74,200,255,.4); }
+.card-entry--level3 { border-color: rgba(74,237,204,.18); }
+.card-entry--level3:hover { border-color: rgba(74,237,204,.4); }
+.card-entry--level4 { border-color: rgba(192,110,237,.2); }
+.card-entry--level4:hover { border-color: rgba(192,110,237,.45); }
+
+.card-entry--incomplete { border-style: dashed !important; }
+
+/* ── Badge de niveau sur l'entrée ───────────────────────────────────────────── */
+.card-entry__badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .58rem;
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.card-entry__badge--level1 { background: rgba(255,200,50,.12);  border: 1px solid rgba(255,200,50,.35);  color: #ffc832; }
+.card-entry__badge--level2 { background: rgba(74,200,255,.1);   border: 1px solid rgba(74,200,255,.3);   color: #4ac8ff; }
+.card-entry__badge--level3 { background: rgba(74,237,204,.1);   border: 1px solid rgba(74,237,204,.3);   color: #4aedcc; }
+.card-entry__badge--level4 { background: rgba(192,110,237,.12); border: 1px solid rgba(192,110,237,.35); color: #c06eed; }
+
+/* ── Tags complet / incomplet ───────────────────────────────────────────────── */
+.cascade-tag {
+  font-size: .65rem;
+  padding: 1px 8px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+.cascade-tag--ok   { background: rgba(90,173,82,.15); border: 1px solid rgba(90,173,82,.35); color: #6abf61; }
+.cascade-tag--warn { background: rgba(224,112,112,.12); border: 1px solid rgba(224,112,112,.35); color: #e07070; }
+
+/* ── Bloc de liaison en cascade ──────────────────────────────────────────────── */
+.cascade-link-block {
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(184,134,11,.1);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+}
+.cascade-link-block__title {
+  font-size: .76rem;
+  color: var(--gold);
+  font-family: 'Cinzel Decorative', serif;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cascade-link-block__hint {
+  font-size: .68rem;
+  color: #5a4a2a;
+  font-style: italic;
+  margin-bottom: 6px;
+}
+.cascade-link-block__empty {
+  font-size: .8rem;
+  color: #5a4a2a;
+  font-style: italic;
+  padding: 8px 0;
+}
+.cascade-link-block__empty a {
+  color: #4aedcc;
+  text-decoration: none;
+}
+.cascade-link-block__empty a:hover { text-decoration: underline; }
+
+.cascade-link-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .65rem;
+  color: #7a6a4a;
+  background: rgba(255,255,255,.05);
+  padding: 1px 6px;
+  border-radius: 8px;
+}
+
+/* ── Multi-select cascade ───────────────────────────────────────────────────── */
+.cascade-multiselect {
+  width: 100%;
+  background: rgba(0,0,0,.5);
+  border: 1px solid rgba(184,134,11,.22);
+  border-radius: var(--r-sm);
+  color: var(--parch);
+  font-family: 'Crimson Pro', serif;
+  font-size: .85rem;
+  padding: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.cascade-multiselect option {
+  background: #1a1000;
+  color: var(--parch);
+  padding: 5px 8px;
+  border-radius: 3px;
+}
+.cascade-multiselect option:checked {
+  background: rgba(184,134,11,.25);
+  color: var(--gold2);
+}
+.cascade-multiselect option[data-incomplet] { color: #e07070; }
+
+/* ── Chips de sélection ─────────────────────────────────────────────────────── */
+.cascade-selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 6px;
+}
+.cascade-chip {
+  font-size: .72rem;
+  padding: 2px 9px;
+  border-radius: 10px;
+  font-family: 'Crimson Pro', serif;
+}
+.cascade-chip--level1 { background: rgba(255,200,50,.1);   border: 1px solid rgba(255,200,50,.3);   color: #ffc832; }
+.cascade-chip--level2 { background: rgba(74,200,255,.08);  border: 1px solid rgba(74,200,255,.25);  color: #4ac8ff; }
+.cascade-chip--level3 { background: rgba(74,237,204,.08);  border: 1px solid rgba(74,237,204,.25);  color: #4aedcc; }
+.cascade-chip--level4 { background: rgba(192,110,237,.1);  border: 1px solid rgba(192,110,237,.3);  color: #c06eed; }
+
+/* ── États vides par niveau ──────────────────────────────────────────────────── */
+.cascade-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 44px 24px;
+  border-radius: var(--r-lg);
+  text-align: center;
+  gap: 8px;
+  border: 2px dashed;
+}
+.cascade-empty__icon  { font-size: 2.5rem; opacity: .45; }
+.cascade-empty__title {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: var(--fs-md);
+}
+.cascade-empty__desc  { font-size: var(--fs-sm); font-style: italic; line-height: 1.65; max-width: 440px; }
+
+.cascade-empty--level1 { border-color: rgba(255,200,50,.2);  }
+.cascade-empty--level1 .cascade-empty__title { color: #ffc832; }
+.cascade-empty--level1 .cascade-empty__desc  { color: #5a4a2a; }
+
+.cascade-empty--level2 { border-color: rgba(74,200,255,.2);  }
+.cascade-empty--level2 .cascade-empty__title { color: #4ac8ff; }
+.cascade-empty--level2 .cascade-empty__desc  { color: #4a5a5a; }
+
+.cascade-empty--level3 { border-color: rgba(74,237,204,.2);  }
+.cascade-empty--level3 .cascade-empty__title { color: #4aedcc; }
+.cascade-empty--level3 .cascade-empty__desc  { color: #4a5a5a; }
+
+.cascade-empty--level4 { border-color: rgba(192,110,237,.25); }
+.cascade-empty--level4 .cascade-empty__title { color: #c06eed; }
+.cascade-empty--level4 .cascade-empty__desc  { color: #6a4a7a; }
+
+/* ── Boutons d'ajout par niveau ──────────────────────────────────────────────── */
+.btn-add--level1 { border-color: rgba(255,200,50,.3);   color: #ffc832; }
+.btn-add--level1:hover { border-color: rgba(255,200,50,.7); background: rgba(255,200,50,.08); }
+
+.btn-add--level2 { border-color: rgba(74,200,255,.3);  color: #4ac8ff; }
+.btn-add--level2:hover { border-color: rgba(74,200,255,.7); background: rgba(74,200,255,.07); }
+
+.btn-add--level3 { border-color: rgba(74,237,204,.3);  color: #4aedcc; }
+.btn-add--level3:hover { border-color: rgba(74,237,204,.7); background: rgba(74,237,204,.07); }
+
+.btn-add--level4 { border-color: rgba(192,110,237,.3); color: #c06eed; }
+.btn-add--level4:hover { border-color: rgba(192,110,237,.7); background: rgba(192,110,237,.07); }
+
+/* ── Count badge dans les titres d'editor-block ─────────────────────────────── */
+.editor-block__count {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  color: #5a4a2a;
+  background: rgba(184,134,11,.1);
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(184,134,11,.2);
+}

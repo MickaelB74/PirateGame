@@ -22,52 +22,13 @@ const DEFAULT_ILES = [
   { id:'ile_9', nom:'Île Fantôme',        biome:'Brume perpétuelle',   icon:'👻', nb_objets:6, cases:[{q:20,r:21}] },
 ];
 
-// Reliques fixes — labels immuables, jamais modifiables depuis l'admin
 const RELIQUES_FIXES = [
   { key: 'poseidon', icon: '🔱', name: 'Totem de Poséidon' },
   { key: 'eole',     icon: '💨', name: "Totem d'Éole"      },
   { key: 'zeus',     icon: '⚡', name: 'Totem de Zeus'      },
 ];
 
-// Effets prédéfinis pour les événements génériques
-const EFFETS_PREDEFINIS = [
-  'Aucun déplacement ce tour',
-  'Déplacement réduit de moitié',
-  'Déplacement forcé (direction aléatoire)',
-  'Perte de 1 point de coque',
-  'Perte de 2 points de coque',
-  'Perte de 1 doublon',
-  'Perte de 2 doublons',
-  'Gain de 2 doublons',
-  'Gain de 3 doublons',
-  'Passer son tour',
-  'Rejouer immédiatement',
-  'Défausser 1 carte',
-  'Piocher 1 carte supplémentaire',
-  'Voler 1 doublon à un joueur adjacent',
-  'Effet personnalisé…',
-];
-
-// Événements génériques prédéfinis (ajoutés à l'init si la liste est vide)
-const EVENEMENTS_PREDEFINIS = [
-  {
-    id:    'ev_orage',
-    nom:   'Orage',
-    effet: "Déplacement du pion de X cases (résultat dé 1–3) dans la direction indiquée par le compas (résultat rotation compas).",
-  },
-  {
-    id:    'ev_mer_huile',
-    nom:   "Mer d'Huile",
-    effet: "Déplacement impossible ce tour. Le joueur reste sur sa case et passe son tour.",
-  },
-  {
-    id:    'ev_vent_violent',
-    nom:   'Vent Violent',
-    effet: "Déplacement dans le sens contraire du vent impossible. +1 case supplémentaire dans le sens du vent.",
-  },
-];
-
-// ─── State ────────────────────────────────────────────────────────────────────
+// ─── État ────────────────────────────────────────────────────────────────────
 let state = {};
 let _uid  = 1000;
 
@@ -82,6 +43,79 @@ function getIleOptions(selectedNom = '') {
       const sel = selectedNom === nom ? 'selected' : '';
       return `<option value="${esc(nom)}" ${sel}>${esc(ile.icon || '🏝')} ${esc(nom)}</option>`;
     }).join('');
+}
+
+// ─── Helpers cascade ─────────────────────────────────────────────────────────
+
+/** Retourne les actions joueur disponibles (niveau 4) */
+function getActionsJoueur() {
+  return state.actions_joueur || [];
+}
+
+/** Retourne les effets disponibles (niveau 3), avec leurs actions joueur liées */
+function getEffets() {
+  return state.effets || [];
+}
+
+/** Retourne les événements génériques (niveau 2) */
+function getEvenementsGeneriques() {
+  return state.evenements_generiques || [];
+}
+
+/** Vérifie si un effet est complet (a au moins une action joueur liée) */
+function isEffetComplet(effet) {
+  return Array.isArray(effet.actions_joueur_ids) && effet.actions_joueur_ids.length > 0;
+}
+
+/** Vérifie si un événement générique est complet (a au moins un effet lié) */
+function isEvenementComplet(ev) {
+  if (!Array.isArray(ev.effets_ids) || ev.effets_ids.length === 0) return false;
+  const effets = getEffets();
+  return ev.effets_ids.every(id => {
+    const ef = effets.find(e => e.id === id);
+    return ef && isEffetComplet(ef);
+  });
+}
+
+/** Compte les éléments complets dans un tableau */
+function countComplets(arr, checkFn) {
+  return arr.filter(checkFn).length;
+}
+
+// ─── Options HTML pour les selects en cascade ────────────────────────────────
+
+function optionsActionsJoueur(selectedIds = []) {
+  const actions = getActionsJoueur();
+  if (!actions.length) {
+    return `<option value="" disabled>— Aucune action joueur définie —</option>`;
+  }
+  return actions.map(a =>
+    `<option value="${esc(a.id)}" ${selectedIds.includes(a.id) ? 'selected' : ''}>${esc(a.icone || '▶')} ${esc(a.nom || 'Sans nom')}</option>`
+  ).join('');
+}
+
+function optionsEffets(selectedIds = []) {
+  const effets = getEffets();
+  if (!effets.length) {
+    return `<option value="" disabled>— Aucun effet défini —</option>`;
+  }
+  return effets.map(ef => {
+    const complet = isEffetComplet(ef);
+    const label = complet ? `${esc(ef.icone || '⚡')} ${esc(ef.nom || 'Sans nom')}` : `⚠ ${esc(ef.nom || 'Sans nom')} (incomplet)`;
+    return `<option value="${esc(ef.id)}" ${selectedIds.includes(ef.id) ? 'selected' : ''} ${!complet ? 'data-incomplet="1"' : ''}>${label}</option>`;
+  }).join('');
+}
+
+function optionsEvenementsGeneriques(selectedIds = []) {
+  const evs = getEvenementsGeneriques();
+  if (!evs.length) {
+    return `<option value="" disabled>— Aucun événement générique défini —</option>`;
+  }
+  return evs.map(ev => {
+    const complet = isEvenementComplet(ev);
+    const label = complet ? `${esc(ev.nom || 'Sans nom')}` : `⚠ ${esc(ev.nom || 'Sans nom')} (incomplet)`;
+    return `<option value="${esc(ev.id)}" ${selectedIds.includes(ev.id) ? 'selected' : ''} ${!complet ? 'data-incomplet="1"' : ''}>${label}</option>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -116,10 +150,13 @@ async function loadConfig() {
 
     if (!state.avancement) state.avancement = { nb_cartes_temps: 6 };
 
-    // Initialiser les événements génériques prédéfinis si la liste est vide
-    if (!Array.isArray(state.evenements_generiques) || state.evenements_generiques.length === 0) {
-      state.evenements_generiques = JSON.parse(JSON.stringify(EVENEMENTS_PREDEFINIS));
-    }
+    // Initialiser les tableaux des 4 niveaux si absents
+    if (!Array.isArray(state.evenements_generiques)) state.evenements_generiques = [];
+    if (!Array.isArray(state.effets))                state.effets = [];
+    if (!Array.isArray(state.actions_joueur))        state.actions_joueur = [];
+    if (!Array.isArray(state.action_offensive))      state.action_offensive = [];
+    if (!Array.isArray(state.action_defensive))      state.action_defensive = [];
+    if (!Array.isArray(state.evenement))             state.evenement = [];
 
     applyRulesToForm(cfg.rules || {});
     renderAll();
@@ -195,7 +232,7 @@ function openExportModal() {
   const counter = document.getElementById('exportCounter');
 
   textarea.value = jsonStr;
-  counter.textContent = `${jsonStr.length.toLocaleString()} caractères · ${exportData.cards.evenements_generiques?.length || 0} événements génériques`;
+  counter.textContent = `${jsonStr.length.toLocaleString()} caractères`;
 
   modal.classList.add('export-modal--open');
   textarea.scrollTop = 0;
@@ -307,10 +344,11 @@ function renderAll() {
   renderAncienParchemin();
   renderReliques();
   renderSimpleList('equipement', '⚙', ['nom','description'], ['Nom','Description / effet']);
-  renderTodoSection('action',    '⚔ Actions',     'La mécanique des cartes action (offensives / défensives) sera conçue dans une prochaine itération.');
-  renderTodoSection('atout',     '💨 Atouts',      'La mécanique des cartes atout sera conçue dans une prochaine itération.');
-  renderTodoSection('evenement', '⚡ Événements',  'La mécanique des cartes événement sera conçue dans une prochaine itération.');
+  // Niveau 4 → 3 → 2 → 1 (du plus bas au plus haut)
+  renderActionsJoueur();
+  renderEffets();
   renderEvenementsGeneriques();
+  renderCartesMecaniques();
   renderIles();
   renderAvancement();
   renderLieux('ports',    '⚓');
@@ -497,144 +535,6 @@ function renderReliques() {
     </div>`;
 }
 
-// ─── Sections "À venir" ───────────────────────────────────────────────────────
-
-function renderTodoSection(tabKey, title, message) {
-  const ids = {
-    action:    ['list-action_offensive', 'list-action_defensive'],
-    atout:     ['list-atout'],
-    evenement: ['list-evenement'],
-  };
-  const html = `
-    <div class="soon-block">
-      <div class="soon-block__icon">🚧</div>
-      <div class="soon-block__title">${title}</div>
-      <div class="soon-block__desc">${message}</div>
-    </div>`;
-  for (const id of (ids[tabKey] || [])) {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = html;
-  }
-}
-
-// ─── ÉVÉNEMENTS GÉNÉRIQUES ────────────────────────────────────────────────────
-
-function renderEvenementsGeneriques() {
-  const arr = state.evenements_generiques || [];
-  const el  = document.getElementById('list-evenements-generiques');
-  const badge = document.getElementById('nb-evgen');
-  if (badge) badge.textContent = arr.length;
-  if (!el) return;
-
-  if (!arr.length) {
-    el.innerHTML = `
-      <div class="evgen-empty">
-        <span class="evgen-empty__icon">🌊</span>
-        <div class="evgen-empty__text">Aucun événement générique défini</div>
-        <div class="evgen-empty__sub">Cliquez sur « + Ajouter un événement » pour commencer</div>
-      </div>`;
-    return;
-  }
-
-  el.innerHTML = arr.map((ev, i) => {
-    // Icône selon le nom de l'événement
-    const iconMap = { 'Orage': '⛈', "Mer d'Huile": '🌊', 'Vent Violent': '💨' };
-    const evIcon = iconMap[ev.nom] || '🌀';
-
-    return `
-    <div class="evgen-card" id="evgen-${i}">
-      <div class="evgen-card__header">
-        <div class="evgen-card__index">${evIcon}</div>
-        <div class="evgen-card__name-wrap">
-          <input
-            class="evgen-name-input"
-            type="text"
-            value="${esc(ev.nom)}"
-            placeholder="Nom de l'événement…"
-            oninput="window._admin.setEvGenField(${i},'nom',this.value)"
-          />
-        </div>
-        <div class="evgen-card__actions">
-          <button class="evgen-btn-del" onclick="window._admin.removeEvGen(${i})" title="Supprimer">✕</button>
-        </div>
-      </div>
-      <div class="evgen-card__body evgen-card__body--single">
-        <div class="evgen-field-group evgen-field-group--full">
-          <label class="evgen-label">Effet</label>
-          <div class="evgen-effet-row">
-            <select class="evgen-select" onchange="window._admin.onEffetSelect(${i},this.value)">
-              ${EFFETS_PREDEFINIS.map(ef => {
-                const isCustom = ef === 'Effet personnalisé…';
-                const isSelected = !EFFETS_PREDEFINIS.slice(0, -1).includes(ev.effet)
-                  ? isCustom
-                  : ev.effet === ef;
-                return `<option value="${esc(ef)}" ${isSelected ? 'selected' : ''}>${esc(ef)}</option>`;
-              }).join('')}
-            </select>
-          </div>
-          <textarea
-            class="evgen-textarea"
-            placeholder="Décrivez l'effet complet…"
-            oninput="window._admin.setEvGenField(${i},'effet',this.value)"
-          >${esc(ev.effet)}</textarea>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-export function addEvGen() {
-  if (!Array.isArray(state.evenements_generiques)) state.evenements_generiques = [];
-  state.evenements_generiques.push({
-    id:    uid(),
-    nom:   '',
-    effet: '',
-  });
-  renderEvenementsGeneriques();
-  markDirty();
-  updateOverview();
-  const list = document.getElementById('list-evenements-generiques');
-  if (list) setTimeout(() => list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-}
-
-function setEvGenField(i, field, val) {
-  if (!state.evenements_generiques?.[i]) return;
-  state.evenements_generiques[i][field] = val;
-  markDirty();
-  if (field === 'nom') {
-    // Mettre à jour l'icône en live
-    const card = document.getElementById(`evgen-${i}`);
-    if (card) {
-      const iconMap = { 'Orage': '⛈', "Mer d'Huile": '🌊', 'Vent Violent': '💨' };
-      const indexEl = card.querySelector('.evgen-card__index');
-      if (indexEl) indexEl.textContent = iconMap[val] || '🌀';
-    }
-    const badge = document.getElementById('nb-evgen');
-    if (badge) badge.textContent = state.evenements_generiques.length;
-  }
-}
-
-function removeEvGen(i) {
-  if (!state.evenements_generiques) return;
-  state.evenements_generiques.splice(i, 1);
-  renderEvenementsGeneriques();
-  markDirty();
-  updateOverview();
-}
-
-function onEffetSelect(i, val) {
-  if (!state.evenements_generiques?.[i]) return;
-  if (val !== 'Effet personnalisé…') {
-    state.evenements_generiques[i].effet = val;
-    const card = document.getElementById(`evgen-${i}`);
-    if (card) {
-      const ta = card.querySelector('.evgen-textarea');
-      if (ta) ta.value = val;
-    }
-    markDirty();
-  }
-}
-
 // ─── Listes simples (équipement) ──────────────────────────────────────────────
 
 function renderSimpleList(key, icon, fields, labels) {
@@ -664,6 +564,581 @@ function renderSimpleList(key, icon, fields, labels) {
           </div>`).join('')}
       </div>
     </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NIVEAU 4 — ACTIONS JOUEUR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderActionsJoueur() {
+  const arr = getActionsJoueur();
+  const el  = document.getElementById('list-actions-joueur');
+  const badge = document.getElementById('nb-actions-joueur');
+  if (badge) badge.textContent = arr.length;
+
+  // Mettre à jour le badge du menu
+  const sidenavBadge = document.getElementById('sidenav-nb-actions-joueur');
+  if (sidenavBadge) sidenavBadge.textContent = arr.length;
+
+  if (!el) return;
+
+  if (!arr.length) {
+    el.innerHTML = `
+      <div class="cascade-empty cascade-empty--level4">
+        <div class="cascade-empty__icon">🎮</div>
+        <div class="cascade-empty__title">Aucune action joueur définie</div>
+        <div class="cascade-empty__desc">
+          Les actions joueur sont le <strong>niveau de base</strong> de la cascade.<br>
+          Elles décrivent ce que le joueur doit concrètement faire en jeu.<br>
+          Tous les autres niveaux dépendent d'elles.
+        </div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = arr.map((a, i) => `
+    <div class="card-entry card-entry--level4">
+      <div class="card-entry__header">
+        <span class="card-entry__badge card-entry__badge--level4">Niv. 4</span>
+        <span class="card-entry__num" style="color:#c06eed">${esc(a.icone || '🎮')} ${esc(a.nom || `Action ${i + 1}`)}</span>
+        <button class="btn-remove" onclick="window._admin.removeActionJoueur(${i})">✕</button>
+      </div>
+      <div class="fields--3">
+        <div class="field">
+          <label class="field__label">Icône</label>
+          <input type="text" value="${esc(a.icone || '')}" placeholder="ex : 🎯"
+            oninput="window._admin.setActionJoueurField(${i},'icone',this.value);window._admin.rerender('actions_joueur')">
+        </div>
+        <div class="field">
+          <label class="field__label">Nom de l'action</label>
+          <input type="text" value="${esc(a.nom || '')}" placeholder="ex : Lancer le dé de combat"
+            oninput="window._admin.setActionJoueurField(${i},'nom',this.value);window._admin.rerender('actions_joueur')">
+        </div>
+        <div class="field">
+          <label class="field__label">Type</label>
+          <select onchange="window._admin.setActionJoueurField(${i},'type',this.value)">
+            <option value="immediate" ${(a.type||'immediate')==='immediate' ? 'selected' : ''}>⚡ Immédiate</option>
+            <option value="choix"     ${a.type==='choix'     ? 'selected' : ''}>🎲 Choix du joueur</option>
+            <option value="duree"     ${a.type==='duree'     ? 'selected' : ''}>⏳ Sur durée</option>
+            <option value="cible"     ${a.type==='cible'     ? 'selected' : ''}>🎯 Cibler un joueur</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields--1" style="margin-top:6px">
+        <div class="field">
+          <label class="field__label">Description complète de ce que le joueur doit faire</label>
+          <textarea placeholder="Décrivez précisément l'action que le joueur doit réaliser…"
+            oninput="window._admin.setActionJoueurField(${i},'description',this.value)">${esc(a.description || '')}</textarea>
+        </div>
+      </div>
+      ${a.type === 'duree' ? `
+      <div class="fields--1" style="margin-top:6px">
+        <div class="field">
+          <label class="field__label">Durée (en nombre de tours)</label>
+          <input type="number" min="1" max="10" value="${a.duree_tours || 1}"
+            oninput="window._admin.setActionJoueurField(${i},'duree_tours',parseInt(this.value)||1)">
+        </div>
+      </div>` : ''}
+    </div>`).join('');
+}
+
+export function addActionJoueur() {
+  if (!Array.isArray(state.actions_joueur)) state.actions_joueur = [];
+  state.actions_joueur.push({
+    id:          uid(),
+    icone:       '',
+    nom:         '',
+    type:        'immediate',
+    description: '',
+  });
+  renderActionsJoueur();
+  // Rafraîchir les niveaux supérieurs qui référencent les actions
+  renderEffets();
+  markDirty();
+  updateOverview();
+  scrollToLastIn('list-actions-joueur');
+}
+
+function setActionJoueurField(i, field, val) {
+  if (!state.actions_joueur?.[i]) return;
+  state.actions_joueur[i][field] = val;
+  markDirty();
+}
+
+function removeActionJoueur(i) {
+  if (!state.actions_joueur) return;
+  const removedId = state.actions_joueur[i].id;
+  state.actions_joueur.splice(i, 1);
+  // Nettoyer les références dans les effets
+  if (state.effets) {
+    state.effets.forEach(ef => {
+      if (Array.isArray(ef.actions_joueur_ids))
+        ef.actions_joueur_ids = ef.actions_joueur_ids.filter(id => id !== removedId);
+    });
+  }
+  renderActionsJoueur();
+  renderEffets();
+  markDirty();
+  updateOverview();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NIVEAU 3 — EFFETS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderEffets() {
+  const arr     = getEffets();
+  const actions = getActionsJoueur();
+  const el      = document.getElementById('list-effets');
+  const badge   = document.getElementById('nb-effets');
+  if (badge) badge.textContent = arr.length;
+
+  const sidenavBadge = document.getElementById('sidenav-nb-effets');
+  if (sidenavBadge) sidenavBadge.textContent = arr.length;
+
+  if (!el) return;
+
+  const hasActions = actions.length > 0;
+
+  if (!arr.length) {
+    el.innerHTML = `
+      <div class="cascade-empty cascade-empty--level3">
+        <div class="cascade-empty__icon">⚡</div>
+        <div class="cascade-empty__title">Aucun effet défini</div>
+        <div class="cascade-empty__desc">
+          Les effets sont le <strong>niveau 3</strong> de la cascade.<br>
+          Chaque effet regroupe une ou plusieurs <strong>actions joueur</strong> (niveau 4).<br>
+          ${!hasActions ? '<strong style="color:#e07070">⚠ Définissez d\'abord des actions joueur.</strong>' : 'Vous pouvez maintenant créer des effets.'}
+        </div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = arr.map((ef, i) => {
+    const complet      = isEffetComplet(ef);
+    const selectedIds  = ef.actions_joueur_ids || [];
+    const nbSelected   = selectedIds.length;
+
+    return `
+    <div class="card-entry card-entry--level3 ${complet ? '' : 'card-entry--incomplete'}">
+      <div class="card-entry__header">
+        <span class="card-entry__badge card-entry__badge--level3">Niv. 3</span>
+        <span class="card-entry__num" style="color:#4ac8ff">${esc(ef.icone || '⚡')} ${esc(ef.nom || `Effet ${i + 1}`)}</span>
+        ${!complet ? '<span class="cascade-tag cascade-tag--warn">⚠ Incomplet</span>' : '<span class="cascade-tag cascade-tag--ok">✓ Complet</span>'}
+        <button class="btn-remove" onclick="window._admin.removeEffet(${i})">✕</button>
+      </div>
+      <div class="fields--3">
+        <div class="field">
+          <label class="field__label">Icône</label>
+          <input type="text" value="${esc(ef.icone || '')}" placeholder="ex : ⚡"
+            oninput="window._admin.setEffetField(${i},'icone',this.value);window._admin.rerender('effets')">
+        </div>
+        <div class="field">
+          <label class="field__label">Nom de l'effet</label>
+          <input type="text" value="${esc(ef.nom || '')}" placeholder="ex : Perte de ressources"
+            oninput="window._admin.setEffetField(${i},'nom',this.value);window._admin.rerender('effets')">
+        </div>
+        <div class="field">
+          <label class="field__label">Portée</label>
+          <select onchange="window._admin.setEffetField(${i},'portee',this.value)">
+            <option value="joueur"    ${(ef.portee||'joueur')==='joueur'    ? 'selected':''}>👤 Ce joueur uniquement</option>
+            <option value="adjacent"  ${ef.portee==='adjacent'  ? 'selected':''}>👥 Joueurs adjacents</option>
+            <option value="tous"      ${ef.portee==='tous'      ? 'selected':''}>🌍 Tous les joueurs</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields--1" style="margin-top:6px">
+        <div class="field">
+          <label class="field__label">Description de l'effet (visible sur la carte)</label>
+          <textarea placeholder="Décrivez l'effet tel qu'il apparaîtra sur la carte…"
+            oninput="window._admin.setEffetField(${i},'description',this.value)">${esc(ef.description || '')}</textarea>
+        </div>
+      </div>
+      <div class="cascade-link-block" style="margin-top:10px">
+        <div class="cascade-link-block__title">
+          🎮 Actions joueur liées
+          <span class="cascade-link-count">${nbSelected} sélectionnée(s)</span>
+          ${!hasActions ? '<span class="cascade-tag cascade-tag--warn" style="margin-left:6px">⚠ Aucune action disponible</span>' : ''}
+        </div>
+        ${hasActions ? `
+        <div class="cascade-link-block__hint">Maintenez Ctrl/Cmd pour sélectionner plusieurs actions</div>
+        <select multiple class="cascade-multiselect"
+          onchange="window._admin.setEffetActions(${i},this)"
+          size="${Math.min(5, actions.length)}">
+          ${actions.map(a => `
+            <option value="${esc(a.id)}" ${selectedIds.includes(a.id) ? 'selected' : ''}>
+              ${esc(a.icone || '🎮')} ${esc(a.nom || 'Sans nom')} (${esc(a.type || 'immediate')})
+            </option>`).join('')}
+        </select>
+        <div class="cascade-selected-chips">
+          ${selectedIds.map(id => {
+            const a = actions.find(x => x.id === id);
+            return a ? `<span class="cascade-chip cascade-chip--level4">${esc(a.icone || '🎮')} ${esc(a.nom || 'Sans nom')}</span>` : '';
+          }).join('')}
+        </div>` : `<div class="cascade-link-block__empty">→ Définissez d'abord des <a href="#" onclick="window._admin.switchTab('actions_joueur');return false">Actions Joueur (niveau 4)</a></div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+export function addEffet() {
+  if (!Array.isArray(state.effets)) state.effets = [];
+  const hasActions = getActionsJoueur().length > 0;
+  if (!hasActions) {
+    alert('⚠ Vous devez d\'abord créer au moins une Action Joueur (niveau 4) avant de créer un effet.');
+    switchTab('actions_joueur');
+    return;
+  }
+  state.effets.push({
+    id:               uid(),
+    icone:            '',
+    nom:              '',
+    portee:           'joueur',
+    description:      '',
+    actions_joueur_ids: [],
+  });
+  renderEffets();
+  renderEvenementsGeneriques();
+  markDirty();
+  updateOverview();
+  scrollToLastIn('list-effets');
+}
+
+function setEffetField(i, field, val) {
+  if (!state.effets?.[i]) return;
+  state.effets[i][field] = val;
+  markDirty();
+}
+
+function setEffetActions(i, selectEl) {
+  if (!state.effets?.[i]) return;
+  state.effets[i].actions_joueur_ids = Array.from(selectEl.selectedOptions).map(o => o.value);
+  renderEffets();
+  renderEvenementsGeneriques(); // rafraîchir les statuts complets en cascade
+  markDirty();
+  updateOverview();
+}
+
+function removeEffet(i) {
+  if (!state.effets) return;
+  const removedId = state.effets[i].id;
+  state.effets.splice(i, 1);
+  // Nettoyer les références dans les événements génériques
+  if (state.evenements_generiques) {
+    state.evenements_generiques.forEach(ev => {
+      if (Array.isArray(ev.effets_ids))
+        ev.effets_ids = ev.effets_ids.filter(id => id !== removedId);
+    });
+  }
+  renderEffets();
+  renderEvenementsGeneriques();
+  renderCartesMecaniques();
+  markDirty();
+  updateOverview();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NIVEAU 2 — ÉVÉNEMENTS GÉNÉRIQUES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderEvenementsGeneriques() {
+  const arr    = getEvenementsGeneriques();
+  const effets = getEffets();
+  const el     = document.getElementById('list-evenements-generiques');
+  const badge  = document.getElementById('nb-evgen');
+  if (badge) badge.textContent = arr.length;
+
+  const sidenavBadge = document.getElementById('sidenav-nb-evgen');
+  if (sidenavBadge) sidenavBadge.textContent = arr.length;
+
+  if (!el) return;
+
+  const hasEffets = effets.length > 0;
+
+  if (!arr.length) {
+    el.innerHTML = `
+      <div class="cascade-empty cascade-empty--level2">
+        <div class="cascade-empty__icon">🌊</div>
+        <div class="cascade-empty__title">Aucun événement générique défini</div>
+        <div class="cascade-empty__desc">
+          Les événements génériques sont le <strong>niveau 2</strong> de la cascade.<br>
+          Chaque événement regroupe un ou plusieurs <strong>effets</strong> (niveau 3).<br>
+          ${!hasEffets ? '<strong style="color:#e07070">⚠ Définissez d\'abord des effets.</strong>' : 'Vous pouvez maintenant créer des événements génériques.'}
+        </div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = arr.map((ev, i) => {
+    const complet     = isEvenementComplet(ev);
+    const selectedIds = ev.effets_ids || [];
+    const nbSelected  = selectedIds.length;
+    const effetsComplets = effets.filter(ef => isEffetComplet(ef));
+
+    return `
+    <div class="evgen-card card-entry--level2 ${complet ? '' : 'card-entry--incomplete'}">
+      <div class="evgen-card__header">
+        <span class="card-entry__badge card-entry__badge--level2">Niv. 2</span>
+        <div class="evgen-card__name-wrap">
+          <input class="evgen-name-input" type="text" value="${esc(ev.nom)}"
+            placeholder="Nom de l'événement générique…"
+            oninput="window._admin.setEvGenField(${i},'nom',this.value)"/>
+        </div>
+        ${!complet ? '<span class="cascade-tag cascade-tag--warn">⚠ Incomplet</span>' : '<span class="cascade-tag cascade-tag--ok">✓ Complet</span>'}
+        <div class="evgen-card__actions">
+          <button class="evgen-btn-del" onclick="window._admin.removeEvGen(${i})" title="Supprimer">✕</button>
+        </div>
+      </div>
+      <div class="evgen-card__body evgen-card__body--single">
+        <div class="evgen-field-group evgen-field-group--full">
+          <label class="evgen-label">Description générale</label>
+          <textarea class="evgen-textarea"
+            placeholder="Décrivez cet événement tel qu'il sera lu par le joueur…"
+            oninput="window._admin.setEvGenField(${i},'description',this.value)">${esc(ev.description || '')}</textarea>
+        </div>
+      </div>
+      <div class="cascade-link-block" style="margin:0 14px 14px">
+        <div class="cascade-link-block__title">
+          ⚡ Effets liés
+          <span class="cascade-link-count">${nbSelected} sélectionné(s)</span>
+          ${!hasEffets ? '<span class="cascade-tag cascade-tag--warn" style="margin-left:6px">⚠ Aucun effet disponible</span>' : ''}
+        </div>
+        ${hasEffets ? `
+        <div class="cascade-link-block__hint">
+          Maintenez Ctrl/Cmd pour sélectionner plusieurs effets.
+          ${effets.length !== effetsComplets.length ? `<span style="color:#e07070">${effets.length - effetsComplets.length} effet(s) incomplet(s) masqué(s).</span>` : ''}
+        </div>
+        <select multiple class="cascade-multiselect"
+          onchange="window._admin.setEvGenEffets(${i},this)"
+          size="${Math.min(5, effetsComplets.length || 1)}">
+          ${effetsComplets.map(ef => `
+            <option value="${esc(ef.id)}" ${selectedIds.includes(ef.id) ? 'selected' : ''}>
+              ${esc(ef.icone || '⚡')} ${esc(ef.nom || 'Sans nom')} — ${esc(ef.portee || 'joueur')}
+            </option>`).join('')}
+        </select>
+        <div class="cascade-selected-chips">
+          ${selectedIds.map(id => {
+            const ef = effets.find(x => x.id === id);
+            return ef ? `<span class="cascade-chip cascade-chip--level3">${esc(ef.icone || '⚡')} ${esc(ef.nom || 'Sans nom')}</span>` : '';
+          }).join('')}
+        </div>` : `<div class="cascade-link-block__empty">→ Définissez d'abord des <a href="#" onclick="window._admin.switchTab('effets');return false">Effets (niveau 3)</a></div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+export function addEvGen() {
+  if (!Array.isArray(state.evenements_generiques)) state.evenements_generiques = [];
+  const hasEffetsComplets = getEffets().some(isEffetComplet);
+  if (!hasEffetsComplets) {
+    alert('⚠ Vous devez d\'abord créer au moins un Effet complet (niveau 3) avant de créer un événement générique.\n\nUn effet est complet quand il a au moins une action joueur liée.');
+    switchTab('effets');
+    return;
+  }
+  state.evenements_generiques.push({
+    id:          uid(),
+    nom:         '',
+    description: '',
+    effets_ids:  [],
+  });
+  renderEvenementsGeneriques();
+  renderCartesMecaniques();
+  markDirty();
+  updateOverview();
+  scrollToLastIn('list-evenements-generiques');
+}
+
+function setEvGenField(i, field, val) {
+  if (!state.evenements_generiques?.[i]) return;
+  state.evenements_generiques[i][field] = val;
+  markDirty();
+  if (field === 'nom') {
+    const badge = document.getElementById('nb-evgen');
+    if (badge) badge.textContent = state.evenements_generiques.length;
+  }
+}
+
+function setEvGenEffets(i, selectEl) {
+  if (!state.evenements_generiques?.[i]) return;
+  state.evenements_generiques[i].effets_ids = Array.from(selectEl.selectedOptions).map(o => o.value);
+  renderEvenementsGeneriques();
+  renderCartesMecaniques(); // rafraîchir les cartes qui référencent les événements
+  markDirty();
+  updateOverview();
+}
+
+function removeEvGen(i) {
+  if (!state.evenements_generiques) return;
+  const removedId = state.evenements_generiques[i].id;
+  state.evenements_generiques.splice(i, 1);
+  // Nettoyer les références dans les cartes action/événement
+  ['action_offensive', 'action_defensive', 'evenement'].forEach(key => {
+    if (state[key]) {
+      state[key].forEach(c => {
+        if (Array.isArray(c.evenements_ids))
+          c.evenements_ids = c.evenements_ids.filter(id => id !== removedId);
+      });
+    }
+  });
+  renderEvenementsGeneriques();
+  renderCartesMecaniques();
+  markDirty();
+  updateOverview();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NIVEAU 1 — CARTES MÉCANIQUES (Actions offensives/défensives, Événements)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderCartesMecaniques() {
+  renderCartesList('action_offensive', '💥', 'offensive');
+  renderCartesList('action_defensive', '🛡', 'defensive');
+  renderCartesList('evenement',        '⚡', 'evenement');
+}
+
+function renderCartesList(key, icon, type) {
+  const arr = state[key] || [];
+  const evs = getEvenementsGeneriques().filter(ev => isEvenementComplet(ev));
+  const el  = document.getElementById(`list-${key}`);
+  if (!el) return;
+
+  const badgeMap = { action_offensive: 'nb-action-off', action_defensive: 'nb-action-def', evenement: 'nb-evenement' };
+  const badge = document.getElementById(badgeMap[key]);
+  if (badge) badge.textContent = arr.length;
+
+  if (!arr.length) {
+    const hasEvs = evs.length > 0;
+    el.innerHTML = `
+      <div class="cascade-empty cascade-empty--level1">
+        <div class="cascade-empty__icon">${icon}</div>
+        <div class="cascade-empty__title">Aucune carte ${type === 'offensive' ? 'offensive' : type === 'defensive' ? 'défensive' : 'événement'} définie</div>
+        <div class="cascade-empty__desc">
+          Les cartes sont le <strong>niveau 1</strong> — le niveau le plus haut.<br>
+          Elles s'appuient sur des <strong>événements génériques complets</strong> (niveau 2).<br>
+          ${!hasEvs ? '<strong style="color:#e07070">⚠ Définissez d\'abord des événements génériques complets.</strong>' : 'Vous pouvez maintenant créer des cartes.'}
+        </div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = arr.map((c, i) => {
+    const selectedIds = c.evenements_ids || [];
+    const complet     = selectedIds.length > 0 && selectedIds.every(id => evs.find(e => e.id === id));
+
+    return `
+    <div class="card-entry card-entry--level1 ${complet ? '' : 'card-entry--incomplete'}">
+      <div class="card-entry__header">
+        <span class="card-entry__badge card-entry__badge--level1">Niv. 1</span>
+        <span class="card-entry__num" style="color:${type==='offensive'?'#e07070':type==='defensive'?'#4aedcc':'#ffc832'}">${icon} ${esc(c.nom || `Carte ${i+1}`)}</span>
+        ${!complet ? '<span class="cascade-tag cascade-tag--warn">⚠ Incomplet</span>' : '<span class="cascade-tag cascade-tag--ok">✓ Complet</span>'}
+        <label class="toggle-wrap" style="margin-left:auto">
+          <span class="toggle">
+            <input type="checkbox" ${c.enabled !== false ? 'checked' : ''}
+              onchange="window._admin.setCarteField('${key}',${i},'enabled',this.checked)">
+            <span class="toggle__slider"></span>
+          </span>
+          <span style="font-size:.78rem">${c.enabled !== false ? 'Active' : 'Inactive'}</span>
+        </label>
+        <button class="btn-remove" onclick="window._admin.removeCarte('${key}',${i})">✕</button>
+      </div>
+      <div class="fields--3">
+        <div class="field">
+          <label class="field__label">Icône de la carte</label>
+          <input type="text" value="${esc(c.icone || icon)}" placeholder="${icon}"
+            oninput="window._admin.setCarteField('${key}',${i},'icone',this.value);window._admin.rerender('${key}')">
+        </div>
+        <div class="field">
+          <label class="field__label">Nom de la carte</label>
+          <input type="text" value="${esc(c.nom || '')}" placeholder="ex : Tempête de Boulets"
+            oninput="window._admin.setCarteField('${key}',${i},'nom',this.value);window._admin.rerender('${key}')">
+        </div>
+        <div class="field">
+          <label class="field__label">Rareté</label>
+          <select onchange="window._admin.setCarteField('${key}',${i},'rarete',this.value)">
+            <option value="commune"  ${(c.rarete||'commune')==='commune'  ? 'selected':''}>⚪ Commune</option>
+            <option value="rare"     ${c.rarete==='rare'     ? 'selected':''}>🔵 Rare</option>
+            <option value="epique"   ${c.rarete==='epique'   ? 'selected':''}>🟣 Épique</option>
+            <option value="legendaire" ${c.rarete==='legendaire' ? 'selected':''}>🟡 Légendaire</option>
+          </select>
+        </div>
+      </div>
+      <div class="fields--1" style="margin-top:6px">
+        <div class="field">
+          <label class="field__label">Texte de la carte (flavour text, visible par le joueur)</label>
+          <textarea placeholder="Texte narratif ou descriptif affiché sur la carte…"
+            oninput="window._admin.setCarteField('${key}',${i},'texte',this.value)">${esc(c.texte || '')}</textarea>
+        </div>
+      </div>
+      <div class="cascade-link-block" style="margin-top:10px">
+        <div class="cascade-link-block__title">
+          🌊 Événements génériques liés
+          <span class="cascade-link-count">${selectedIds.length} sélectionné(s)</span>
+          ${!evs.length ? '<span class="cascade-tag cascade-tag--warn" style="margin-left:6px">⚠ Aucun événement disponible</span>' : ''}
+        </div>
+        ${evs.length ? `
+        <div class="cascade-link-block__hint">Maintenez Ctrl/Cmd pour sélectionner plusieurs événements</div>
+        <select multiple class="cascade-multiselect"
+          onchange="window._admin.setCarteEvenements('${key}',${i},this)"
+          size="${Math.min(5, evs.length)}">
+          ${evs.map(ev => `
+            <option value="${esc(ev.id)}" ${selectedIds.includes(ev.id) ? 'selected' : ''}>
+              ${esc(ev.nom || 'Sans nom')}
+            </option>`).join('')}
+        </select>
+        <div class="cascade-selected-chips">
+          ${selectedIds.map(id => {
+            const ev = getEvenementsGeneriques().find(x => x.id === id);
+            return ev ? `<span class="cascade-chip cascade-chip--level2">🌊 ${esc(ev.nom || 'Sans nom')}</span>` : '';
+          }).join('')}
+        </div>` : `<div class="cascade-link-block__empty">→ Définissez d'abord des <a href="#" onclick="window._admin.switchTab('evenements_generiques');return false">Événements génériques (niveau 2)</a></div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+export function addCarte(key) {
+  if (!Array.isArray(state[key])) state[key] = [];
+  const hasEvsComplets = getEvenementsGeneriques().some(isEvenementComplet);
+  if (!hasEvsComplets) {
+    alert('⚠ Vous devez d\'abord créer au moins un Événement générique complet (niveau 2) avant de créer une carte.\n\nUn événement est complet quand il a au moins un effet complet lié.');
+    switchTab('evenements_generiques');
+    return;
+  }
+  const iconMap = { action_offensive: '💥', action_defensive: '🛡', evenement: '⚡' };
+  state[key].push({
+    id:            uid(),
+    icone:         iconMap[key] || '🃏',
+    nom:           '',
+    rarete:        'commune',
+    texte:         '',
+    enabled:       true,
+    evenements_ids: [],
+  });
+  renderCartesMecaniques();
+  markDirty();
+  updateOverview();
+}
+
+function setCarteField(key, i, field, val) {
+  if (!state[key]?.[i]) return;
+  state[key][i][field] = val;
+  markDirty();
+}
+
+function setCarteEvenements(key, i, selectEl) {
+  if (!state[key]?.[i]) return;
+  state[key][i].evenements_ids = Array.from(selectEl.selectedOptions).map(o => o.value);
+  renderCartesMecaniques();
+  markDirty();
+  updateOverview();
+}
+
+function removeCarte(key, i) {
+  if (!state[key]) return;
+  state[key].splice(i, 1);
+  renderCartesMecaniques();
+  markDirty();
+  updateOverview();
 }
 
 // ─── Îles ─────────────────────────────────────────────────────────────────────
@@ -803,16 +1278,28 @@ function renderTempete() {
 
 function updateOverview() {
   const s = state;
+  const actionsJoueur   = s.actions_joueur    || [];
+  const effets          = s.effets             || [];
+  const eventsGen       = s.evenements_generiques || [];
+  const actionOff       = s.action_offensive   || [];
+  const actionDef       = s.action_defensive   || [];
+  const evenements      = s.evenement          || [];
+
+  const effetsComplets    = countComplets(effets, isEffetComplet);
+  const eventsComplets    = countComplets(eventsGen, isEvenementComplet);
+  const cartesTotal       = actionOff.length + actionDef.length + evenements.length;
+  const cartesCompletes   = countComplets([...actionOff, ...actionDef, ...evenements], c => c.evenements_ids?.length > 0);
+
   const types = [
     { icon:'📜', lbl:'Parchemins',   n:(s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0), tab:'parchemin' },
     { icon:'🔍', lbl:'Énigmes',      n:(s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0), tab:'enigme' },
     { icon:'🗺',  lbl:'Anc. Parch.', n:(s.ancien_parchemin?.length||0), tab:'ancien_parchemin' },
     { icon:'⭐', lbl:'Reliques',     n:3, tab:'relique' },
     { icon:'⚙',  lbl:'Équipements', n:s.equipement?.length||0, tab:'equipement' },
-    { icon:'⚔',  lbl:'Actions',     n:0, tab:'action' },
-    { icon:'💨', lbl:'Atouts',       n:0, tab:'atout' },
-    { icon:'⚡', lbl:'Événements',   n:0, tab:'evenement' },
-    { icon:'🌊', lbl:'Évén. Génér.', n:s.evenements_generiques?.length||0, tab:'evenements_generiques' },
+    { icon:'🎮', lbl:'Actions joueur', n:actionsJoueur.length, tab:'actions_joueur', sub: '' },
+    { icon:'⚡', lbl:'Effets',       n:effets.length, tab:'effets', sub: `${effetsComplets}/${effets.length} complets` },
+    { icon:'🌊', lbl:'Évén. génér.', n:eventsGen.length, tab:'evenements_generiques', sub: `${eventsComplets}/${eventsGen.length} complets` },
+    { icon:'🃏', lbl:'Cartes',       n:cartesTotal, tab:'action', sub: `${cartesCompletes}/${cartesTotal} complètes` },
     { icon:'🏝', lbl:'Îles',         n:s.iles?.length||0, tab:'iles' },
     { icon:'⚓', lbl:'Ports',         n:s.ports?.length||0, tab:'port_commerce' },
     { icon:'💀', lbl:'Repaires',      n:s.repaires?.length||0, tab:'repaire_pirate' },
@@ -827,27 +1314,31 @@ function updateOverview() {
     `<div class="overview-chip overview-chip--total">
       <div class="overview-chip__icon">🃏</div>
       <div class="overview-chip__val">${total}</div>
-      <div class="overview-chip__label">Total cartes</div>
+      <div class="overview-chip__label">Total éléments</div>
     </div>` +
     types.map(t => `
       <div class="overview-chip" onclick="window._admin.switchTab('${t.tab}')">
         <div class="overview-chip__icon">${t.icon}</div>
         <div class="overview-chip__val">${t.n}</div>
         <div class="overview-chip__label">${t.lbl}</div>
+        ${t.sub ? `<div class="overview-chip__sub">${t.sub}</div>` : ''}
       </div>`).join('');
 
   const setBadge = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
-  setBadge('nb-parchemin', (s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0));
-  setBadge('nb-enigme',    (s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0));
-  setBadge('nb-equip',     s.equipement?.length||0);
-  setBadge('nb-atout',     0);
-  setBadge('nb-event',     0);
-  setBadge('nb-action',    0);
-  setBadge('nb-evgen',     s.evenements_generiques?.length||0);
-  setBadge('nb-iles',      s.iles?.length||0);
-  setBadge('nb-ports',     s.ports?.length||0);
-  setBadge('nb-repaires',  s.repaires?.length||0);
-  setBadge('nb-epaves',    s.epaves?.length||0);
+  setBadge('nb-parchemin',  (s.parchemin_ile?.length||0)+(s.parchemin_vierge?.count||0));
+  setBadge('nb-enigme',     (s.enigme_latitude?.length||0)+(s.enigme_longitude?.length||0)+(s.enigme_code?.length||0));
+  setBadge('nb-equip',      s.equipement?.length||0);
+  setBadge('nb-evgen',      eventsGen.length);
+  setBadge('nb-iles',       s.iles?.length||0);
+  setBadge('nb-ports',      s.ports?.length||0);
+  setBadge('nb-repaires',   s.repaires?.length||0);
+  setBadge('nb-epaves',     s.epaves?.length||0);
+  setBadge('sidenav-nb-actions-joueur', actionsJoueur.length);
+  setBadge('sidenav-nb-effets',         effets.length);
+  setBadge('sidenav-nb-evgen',          eventsGen.length);
+  setBadge('nb-action-off',             actionOff.length);
+  setBadge('nb-action-def',             actionDef.length);
+  setBadge('nb-evenement',              evenements.length);
 }
 
 function setCountDisplay(id, n) {
@@ -855,8 +1346,15 @@ function setCountDisplay(id, n) {
   if (el) el.textContent = n;
 }
 
+// ─── Utilitaire scroll ────────────────────────────────────────────────────────
+
+function scrollToLastIn(listId) {
+  const list = document.getElementById(listId);
+  if (list) setTimeout(() => list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// MUTATIONS
+// MUTATIONS GÉNÉRIQUES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function setField(key, i, field, val) {
@@ -966,13 +1464,16 @@ export function addLieu(key) {
 }
 
 function rerender(key) {
-  if (key === 'iles')             renderIles();
-  if (key === 'parchemin_ile')    renderParcheminIle();
-  if (key === 'ancien_parchemin') renderAncienParchemin();
-  if (key === 'enigme_latitude')  renderEnigmeLatitude();
-  if (key === 'enigme_longitude') renderEnigmeLongitude();
-  if (key === 'enigme_code')      renderEnigmeCode();
-  if (key === 'equipement')       renderSimpleList('equipement', '⚙', ['nom','description'], ['Nom','Description / effet']);
+  if (key === 'iles')              renderIles();
+  if (key === 'parchemin_ile')     renderParcheminIle();
+  if (key === 'ancien_parchemin')  renderAncienParchemin();
+  if (key === 'enigme_latitude')   renderEnigmeLatitude();
+  if (key === 'enigme_longitude')  renderEnigmeLongitude();
+  if (key === 'enigme_code')       renderEnigmeCode();
+  if (key === 'equipement')        renderSimpleList('equipement', '⚙', ['nom','description'], ['Nom','Description / effet']);
+  if (key === 'actions_joueur')    renderActionsJoueur();
+  if (key === 'effets')            renderEffets();
+  if (['action_offensive','action_defensive','evenement'].includes(key)) renderCartesMecaniques();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -988,11 +1489,25 @@ window._admin = {
   removeFrom, removeLieu,
   rerender,
   changeCount, addItem, addLieu,
-  // Événements génériques
+  // Niveau 4 — Actions joueur
+  addActionJoueur,
+  setActionJoueurField,
+  removeActionJoueur,
+  // Niveau 3 — Effets
+  addEffet,
+  setEffetField,
+  setEffetActions,
+  removeEffet,
+  // Niveau 2 — Événements génériques
   addEvGen,
   setEvGenField,
+  setEvGenEffets,
   removeEvGen,
-  onEffetSelect,
+  // Niveau 1 — Cartes mécaniques
+  addCarte,
+  setCarteField,
+  setCarteEvenements,
+  removeCarte,
   // Export
   openExportModal,
   closeExportModal,
